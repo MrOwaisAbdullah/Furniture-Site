@@ -1,0 +1,214 @@
+@import "tailwindcss";
+
+@theme inline {
+  /* === Brand Colors (authoritative — Design System v1.0.0) === */
+  /* Forest scale */
+  --color-forest-900: #0C231B;
+  --color-forest-700: #16352A;
+  --color-forest-500: #244C3C;
+  --color-forest-400: #3A6B57;
+  --color-forest-200: #6B9685;
+  --color-forest-100: #B9CEC4;
+  --color-forest: #16352A;
+
+  /* Gold scale */
+  --color-gold-900: #6E561C;
+  --color-gold-700: #9C7D2F;
+  --color-gold-500: #C9A24B;
+  --color-gold-300: #DDBE7A;
+  --color-gold-200: #EBD9AE;
+  --color-gold-100: #F5ECD6;
+  --color-gold: #C9A24B;
+
+  /* Neutrals */
+  --color-bone: #F2EEE6;
+  --color-ink: #1A2420;
+  --color-slate: #4A5A50;
+  --color-sage: #8A9A8E;
+  --color-mist: #D7DCD4;
+
+  /* Semantic surface tokens */
+  --color-surface: #F2EEE6;
+  --color-surface-raised: #ffffff;
+  --color-surface-sunken: #EBE7DF;
+  --color-border: #E4E0D6;
+  --color-border-strong: #D7DCD4;
+  --color-foreground: #1A2420;
+
+  /* State colors */
+  --color-focus-ring: #C9A24B;
+  --color-success: #3E7D5A;
+  --color-success-light: rgba(62,125,90,.12);
+  --color-warning: #C9A24B;
+  --color-error: #B0573C;
+  --color-error-light: rgba(176,87,60,.10);
+  --color-info: #3A6B7A;
+
+  /* Typography */
+  --font-display: "Instrument Serif", serif;
+  --font-heading: "Archivo", sans-serif;
+  --font-body: "Hanken Grotesk", sans-serif;
+  --font-mono: "Space Mono", monospace;
+
+  /* Elevation (forest-tinted shadows) */
+  --shadow-sm: 0 2px 6px -2px rgba(22,53,42,.18);
+  --shadow-md: 0 10px 22px -8px rgba(22,53,42,.30);
+  --shadow-lg: 0 22px 44px -16px rgba(22,53,42,.45);
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-pill: 999px;
+
+  /* Spacing (base-8 grid) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* Easing */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Scrollbar */
+  --scrollbar-track: #F2EEE6;
+  --scrollbar-thumb: #D7DCD4;
+  --scrollbar-thumb-hover: #8A9A8E;
+}
+
+:root {
+  --background: #F2EEE6;
+  --foreground: #1A2420;
+}
+
+/* === Scrollbar === */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-track { background: var(--scrollbar-track); border-radius: 4px; }
+*::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 4px; }
+*::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); }
+
+/* === Body === */
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* === Focus Ring (Accessible) === */
+:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* === Selection === */
+::selection {
+  background-color: #C9A24B40;
+  color: var(--foreground);
+}
+
+/* === Cursor Discipline === */
+button,
+[role="button"],
+a,
+input[type="submit"],
+input[type="button"],
+select,
+[role="tab"],
+[role="option"],
+[role="menuitem"],
+[role="radio"],
+[role="checkbox"],
+[role="switch"] {
+  cursor: pointer;
+}
+
+input:not([type="submit"]):not([type="button"]):not([type="checkbox"]):not([type="radio"]),
+textarea,
+select {
+  cursor: text;
+}
+
+/* === Overflow guard === */
+html, body {
+  overflow-x: clip;
+}
+
+/* === Animation Keyframes === */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(14px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* === Animation utility classes === */
+.animate-fade-up {
+  animation: fade-up 0.55s cubic-bezier(0.16,1,0.3,1) both;
+}
+.animate-fade-in {
+  animation: fade-in 0.4s ease both;
+}
+.animate-slide-in-right {
+  animation: slide-in-right 0.45s cubic-bezier(0.16,1,0.3,1) both;
+}
+.animate-scale-in {
+  animation: scale-in 0.35s cubic-bezier(0.16,1,0.3,1) both;
+}
+
+/* Stagger delays */
+.delay-75  { animation-delay: 75ms; }
+.delay-150 { animation-delay: 150ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+.delay-500 { animation-delay: 500ms; }
+
+/* Shimmer for skeleton loaders */
+.shimmer {
+  background: linear-gradient(90deg, #EBE7DF 25%, #F5F1E9 50%, #EBE7DF 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+/* === Reduced Motion === */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
