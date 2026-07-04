@@ -235,27 +235,18 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
             >
-              {gallery.map((img, i) => (
-                <div
-                  key={i}
-                  className={cn(
-                    "absolute inset-0 transition-opacity duration-300",
-                    i === activeImage ? "opacity-100 visible" : "opacity-0 invisible"
-                  )}
-                >
-                  {img && !imgErrors[i] && (
-                    <Image
-                      src={img}
-                      alt={product.name}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 1024px) 100vw, 50vw"
-                      onError={() => setImgErrors((prev) => ({ ...prev, [i]: true }))}
-                      unoptimized
-                    />
-                  )}
-                </div>
-              ))}
+              {gallery[activeImage] && !imgErrors[activeImage] && (
+                <Image
+                  key={activeImage}
+                  src={gallery[activeImage]!}
+                  alt={product.name}
+                  fill
+                  className="absolute inset-0 object-cover"
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  onError={() => setImgErrors((prev) => ({ ...prev, [activeImage]: true }))}
+                  unoptimized
+                />
+              )}
               <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-transparent to-black/20 pointer-events-none" />
 
               {/* Sale badge */}
