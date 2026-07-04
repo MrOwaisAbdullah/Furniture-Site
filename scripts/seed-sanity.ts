@@ -1,5 +1,5 @@
 /**
- * Run: npx tsx scripts/seed-sanity.ts
+ * Run: npm run seed:sanity
  * Requires: NEXT_PUBLIC_SANITY_PROJECT_ID, NEXT_PUBLIC_SANITY_DATASET, SANITY_API_WRITE_TOKEN in .env.local
  *
  * Uses createOrReplace (not createIfNotExists) so re-running this after the
@@ -7,9 +7,11 @@
  * script already created — createIfNotExists is a no-op once a doc with
  * that _id exists, which is why products had no preview thumbnails before.
  */
+import { config } from "dotenv"
+import { resolve } from "path"
+config({ path: resolve(process.cwd(), ".env.local") })
+
 import { createClient } from "@sanity/client"
-// Load env: run with `npx dotenv-cli -e .env.local tsx scripts/seed-sanity.ts`
-// or set env vars inline before running
 
 const client = createClient({
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID!,

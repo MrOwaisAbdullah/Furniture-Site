@@ -52,7 +52,7 @@ export function Hero() {
               className="mt-5 max-w-[380px] leading-[1.65] text-bone/65"
               style={{ fontSize: "15.5px" }}
             >
-              Workshop-built bedroom sets, fairly priced. See them in person — or order on WhatsApp in minutes.
+              Workshop-built bedroom sets, fairly priced. See them in person, or order on WhatsApp in minutes.
             </motion.p>
 
             {/* Trust signals */}

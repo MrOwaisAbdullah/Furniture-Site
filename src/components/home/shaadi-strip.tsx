@@ -60,7 +60,7 @@ export function ShaadiStrip() {
         </h2>
 
         <p className="relative mt-2.5 max-w-lg text-[13px] leading-[1.55] text-bone/70">
-          Bed, dressing table, side tables &amp; wardrobe — booked together, delivered together.
+          Bed, dressing table, side tables &amp; wardrobe, booked together, delivered together.
         </p>
 
         <div className="relative mt-5 flex items-center gap-3">

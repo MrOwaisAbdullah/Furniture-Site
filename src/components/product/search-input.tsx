@@ -42,7 +42,7 @@ export function SearchInput({ className, placeholder = "Search sets, beds, wardr
 
   return (
     <div ref={containerRef} className={cn("relative", className)}>
-      <div className="flex items-center gap-2 rounded-[12px] border border-border-strong bg-white px-4 shadow-sm focus-within:border-forest focus-within:ring-1 focus-within:ring-forest/20">
+      <div className="flex items-center gap-2 rounded-[12px] border border-border-strong bg-white px-4 shadow-sm">
         <Search className="h-4.5 w-4.5 shrink-0 stroke-sage" strokeWidth={2} />
         <input
           ref={inputRef}
@@ -51,7 +51,7 @@ export function SearchInput({ className, placeholder = "Search sets, beds, wardr
           onChange={(e) => { setQuery(e.target.value); setOpen(true) }}
           onFocus={() => setOpen(true)}
           placeholder={placeholder}
-          className="flex-1 bg-transparent py-3.5 text-[13.5px] text-ink placeholder:text-sage/60 focus:outline-none"
+          className="flex-1 bg-transparent py-3.5 text-[13.5px] text-ink placeholder:text-sage/60 focus:outline-none focus-visible:outline-none"
         />
         {query && (
           <button onClick={() => { setQuery(""); inputRef.current?.focus() }} aria-label="Clear search">

@@ -17,7 +17,7 @@ const steps = [
   {
     n: "03",
     title: "Pay advance to confirm",
-    body: "A 30–50% advance secures your build slot. Balance on delivery — no surprises.",
+    body: "A 30–50% advance secures your build slot. Balance on delivery, no surprises.",
   },
   {
     n: "04",

@@ -12,10 +12,10 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
-    "seed:sanity": "dotenv -e .env.local -- npx tsx scripts/seed-sanity.ts",
-    "admin:create-user": "dotenv -e .env.local -- npx tsx scripts/create-admin-user.ts",
-    "seed:cost-sheet": "dotenv -e .env.local -- npx tsx scripts/seed-cost-sheet.ts",
-    "seed:preview": "dotenv -e .env.local -- npx tsx scripts/seed-preview-data.ts"
+    "seed:sanity": "tsx scripts/seed-sanity.ts",
+    "admin:create-user": "tsx scripts/create-admin-user.ts",
+    "seed:cost-sheet": "tsx scripts/seed-cost-sheet.ts",
+    "seed:preview": "tsx scripts/seed-preview-data.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1075.0",
@@ -48,6 +48,7 @@
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/qrcode": "^1.5.6",
+    "tsx": "^4.22.4",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^6.0.3",

@@ -20,7 +20,7 @@ const reasons = [
   {
     icon: BadgeCheck,
     title: "Honest about materials",
-    body: "16mm Lasani MDF, deco polish, solid sheesham. No vague 'engineered wood'.",
+    body: "16/17 mm Lasani MDF, deco polish. No vague 'engineered wood'.",
     callout: "Transparent specs",
   },
   {

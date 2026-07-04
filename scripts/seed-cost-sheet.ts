@@ -4,6 +4,10 @@
  *
  * Usage: npm run seed:cost-sheet
  */
+import { config } from "dotenv"
+import { resolve } from "path"
+config({ path: resolve(process.cwd(), ".env.local") })
+
 import { upsertMaterialRate, upsertPieceCost, upsertCategoryCost } from "../src/lib/neon/queries"
 import { DEFAULT_MATERIAL_RATES, DEFAULT_PIECE_COSTS } from "../src/lib/cost-sheet"
 

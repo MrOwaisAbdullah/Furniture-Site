@@ -33,7 +33,7 @@ const stats = [
 const values = [
   {
     title: "Honest materials",
-    body: "We tell you exactly what your furniture is made of — 16mm Lasani MDF, hand-applied deco polish, solid sheesham. No vague 'engineered wood' or misleading claims.",
+    body: "We tell you exactly what your furniture is made of — 16/17 mm Lasani MDF, hand-applied deco polish. No vague 'engineered wood' or misleading claims.",
   },
   {
     title: "Workshop-direct",
@@ -103,7 +103,7 @@ export default function AboutPage() {
               you can visit and a WhatsApp you can message.
             </p>
             <p>
-              We work in 16mm Lasani MDF with hand-applied deco polish. We tell you exactly what your
+              We work in 16/17 mm Lasani MDF with hand-applied deco polish. We tell you exactly what your
               furniture is made of, what it costs, and when it&apos;ll be ready. No inflated
               &ldquo;solid wood&rdquo; claims — just well-built pieces, made to your size.
             </p>

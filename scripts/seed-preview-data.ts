@@ -6,6 +6,10 @@
  *
  * Usage: npm run seed:preview
  */
+import { config } from "dotenv"
+import { resolve } from "path"
+config({ path: resolve(process.cwd(), ".env.local") })
+
 import { createOrder, createAffiliateApplication, approveAffiliate, getAffiliateByEmail } from "../src/lib/neon/queries"
 
 const PREVIEW_PHONE = "03001234567"

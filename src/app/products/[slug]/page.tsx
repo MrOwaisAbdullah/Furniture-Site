@@ -542,7 +542,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
           <div className="rounded-[14px] border border-border bg-white p-5">
             <h3 className="mb-2 font-heading font-bold text-[15px] text-ink">Material &amp; care</h3>
             <p className="text-[13.5px] leading-[1.65] text-slate">
-              {product.careInstructions} Built from 16mm Lasani MDF with hand-applied deco polish.
+              {product.careInstructions} Built from 16/17 mm Lasani MDF with hand-applied deco polish.
             </p>
           </div>
           <div className="rounded-[14px] border border-border bg-white p-5">
