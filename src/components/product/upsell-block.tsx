@@ -1,57 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import Link from "next/link"
 import { AnimatePresence, motion } from "framer-motion"
 import { Check, X, ChevronRight, ShoppingBag } from "lucide-react"
 import { formatPrice } from "@/lib/utils"
-
-export const TIERS = [
-  {
-    slug: "tier-1",
-    name: "Bed + Tables",
-    tagline: "Bed frame + 2 side tables",
-    price: 190000,
-    badge: null as string | null,
-    highlight: false,
-    pieces: [
-      { included: true,  text: "Bed frame (your size & finish)" },
-      { included: true,  text: "2 side tables" },
-      { included: false, text: "Dressing table" },
-      { included: false, text: "3-door wardrobe" },
-    ],
-  },
-  {
-    slug: "tier-2",
-    name: "Bedroom Set",
-    tagline: "Bed, tables + dressing table",
-    price: 250000,
-    badge: "Most popular" as string | null,
-    highlight: false,
-    pieces: [
-      { included: true,  text: "Bed frame (your size & finish)" },
-      { included: true,  text: "2 side tables" },
-      { included: true,  text: "Dressing table + stool" },
-      { included: false, text: "3-door wardrobe" },
-    ],
-  },
-  {
-    slug: "tier-3",
-    name: "Full Bedroom",
-    tagline: "Everything — bed, dressing table & wardrobe",
-    price: 330000,
-    badge: "Best value" as string | null,
-    highlight: true,
-    pieces: [
-      { included: true, text: "Bed frame (your size & finish)" },
-      { included: true, text: "2 side tables" },
-      { included: true, text: "Dressing table + stool" },
-      { included: true, text: "3-door wardrobe" },
-    ],
-  },
-] as const
-
-type Tier = (typeof TIERS)[number]
+import type { RoomTier } from "@/lib/recommendations"
 
 function PieceRow({ piece, size = "sm" }: { piece: { included: boolean; text: string }; size?: "sm" | "md" }) {
   const iconSize = size === "md" ? "h-4 w-4" : "h-3 w-3"
@@ -78,7 +31,7 @@ function PieceRow({ piece, size = "sm" }: { piece: { included: boolean; text: st
 }
 
 /* ─── Tier detail popup (deepest layer) ─── */
-function TierPopup({ tier, onClose }: { tier: Tier; onClose: () => void }) {
+function TierPopup({ tier, onClose, onBook }: { tier: RoomTier; onClose: () => void; onBook: (tier: RoomTier) => void }) {
   const advanceLow  = Math.round(tier.price * 0.3)
   const advanceHigh = Math.round(tier.price * 0.5)
 
@@ -153,13 +106,13 @@ function TierPopup({ tier, onClose }: { tier: Tier; onClose: () => void }) {
         </div>
 
         <div className="flex flex-col gap-2.5 px-5">
-          <Link
-            href={`/checkout?tier=${tier.slug}`}
+          <button
+            onClick={() => onBook(tier)}
             className="flex items-center justify-center gap-2 rounded-[12px] bg-forest py-4 font-heading font-black text-[15px] text-bone shadow-[0_6px_20px_-8px_rgba(22,53,42,.5)] transition-colors hover:bg-forest-700"
           >
             Book this set
             <ChevronRight className="h-4 w-4" strokeWidth={2.5} />
-          </Link>
+          </button>
           <button
             onClick={onClose}
             className="rounded-[12px] py-3.5 font-mono text-[12px] text-sage hover:text-ink"
@@ -172,7 +125,7 @@ function TierPopup({ tier, onClose }: { tier: Tier; onClose: () => void }) {
   )
 }
 
-function TierSheetCard({ tier, onSelect }: { tier: Tier; onSelect: (t: Tier) => void }) {
+function TierSheetCard({ tier, onSelect }: { tier: RoomTier; onSelect: (t: RoomTier) => void }) {
   return (
     <div
       className={`flex flex-col overflow-hidden rounded-[14px] border transition-shadow ${
@@ -221,24 +174,30 @@ function TierSheetCard({ tier, onSelect }: { tier: Tier; onSelect: (t: Tier) => 
   )
 }
 
-/* ─── Post-cart intercept sheet — fires BEFORE cart add on bed pages ─── */
+/* ─── Post-cart intercept sheet — fires BEFORE cart add on anchor-category pages ─── */
 export function TierUpsellSheet({
   open,
   onClose,
-  onAddBedOnly,
+  onAddAnchorOnly,
+  onBookTier,
   productName,
+  tiers,
 }: {
   open: boolean
   onClose: () => void
-  onAddBedOnly: (fromEl?: HTMLElement | null) => void
+  onAddAnchorOnly: (fromEl?: HTMLElement | null) => void
+  onBookTier: (tier: RoomTier) => void
   productName?: string
+  tiers: RoomTier[]
 }) {
-  const [selectedTier, setSelectedTier] = useState<Tier | null>(null)
+  const [selectedTier, setSelectedTier] = useState<RoomTier | null>(null)
 
   const handleClose = () => {
     setSelectedTier(null)
     onClose()
   }
+
+  if (tiers.length === 0) return null
 
   return (
     <AnimatePresence>
@@ -276,33 +235,33 @@ export function TierUpsellSheet({
                 Complete your bedroom?
               </p>
               <p className="mt-1 font-mono text-[11px] text-sage">
-                You&apos;re getting <span className="font-bold text-ink">{productName ?? "this bed"}</span>. Add matching pieces and save.
+                You&apos;re getting <span className="font-bold text-ink">{productName ?? "this piece"}</span>. Add matching pieces and save.
               </p>
             </div>
 
             {/* Tier cards — 2-col on desktop, stacked on mobile */}
             <div className="grid grid-cols-1 gap-3 px-5 pb-3 sm:grid-cols-2">
-              {/* Tier 1 + Tier 2 — one per column on desktop */}
-              {TIERS.slice(0, 2).map((tier) => (
-                <TierSheetCard key={tier.slug} tier={tier} onSelect={setSelectedTier} />
+              {tiers.slice(0, 2).map((tier) => (
+                <TierSheetCard key={tier.key} tier={tier} onSelect={setSelectedTier} />
               ))}
-              {/* Tier 3 — full width */}
-              <div className="sm:col-span-2">
-                <TierSheetCard tier={TIERS[2]} onSelect={setSelectedTier} />
-              </div>
+              {tiers[2] && (
+                <div className="sm:col-span-2">
+                  <TierSheetCard tier={tiers[2]} onSelect={setSelectedTier} />
+                </div>
+              )}
             </div>
 
-            {/* Just the bed */}
+            {/* Just the anchor piece */}
             <div className="px-5 pt-1">
               <button
                 onClick={(e) => {
-                  onAddBedOnly(e.currentTarget)
+                  onAddAnchorOnly(e.currentTarget)
                   handleClose()
                 }}
                 className="flex w-full items-center justify-center gap-2 rounded-[12px] border border-border py-3.5 font-heading font-semibold text-[13px] text-slate hover:border-forest/30 hover:text-ink transition-colors"
               >
                 <ShoppingBag className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-                Just the bed — add to cart
+                Just this piece — add to cart
               </button>
             </div>
           </motion.div>
@@ -315,15 +274,20 @@ export function TierUpsellSheet({
           key="us-tier-popup"
           tier={selectedTier}
           onClose={() => setSelectedTier(null)}
+          onBook={onBookTier}
         />
       )}
     </AnimatePresence>
   )
 }
 
-/* ─── Inline upsell block (shown below product info on bed pages) ─── */
-export function UpsellBlock() {
-  const [selectedTier, setSelectedTier] = useState<Tier | null>(null)
+/* ─── Inline upsell block ("Complete the room" — shown below product info) ─── */
+export function UpsellBlock({ tiers, onBookTier }: { tiers: RoomTier[]; onBookTier: (tier: RoomTier) => void }) {
+  const [selectedTier, setSelectedTier] = useState<RoomTier | null>(null)
+
+  if (tiers.length === 0) return null
+
+  const tier3 = tiers[2]
 
   return (
     <>
@@ -342,10 +306,9 @@ export function UpsellBlock() {
         {/* Tier grid: 2-col on desktop, stacked on mobile */}
         <div className="p-4">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {/* Tier 1 and Tier 2 — each a card */}
-            {TIERS.slice(0, 2).map((tier) => (
+            {tiers.slice(0, 2).map((tier) => (
               <div
-                key={tier.slug}
+                key={tier.key}
                 className="flex flex-col rounded-[12px] border border-border bg-white p-4"
               >
                 {tier.badge && (
@@ -373,52 +336,58 @@ export function UpsellBlock() {
             ))}
 
             {/* Tier 3 — full width, horizontal layout on desktop */}
-            <div
-              className="col-span-1 overflow-hidden rounded-[12px] border border-gold/50 sm:col-span-2"
-              style={{ background: "linear-gradient(135deg,#f9f6f0,#fffdf9)" }}
-            >
-              <div className="flex flex-col sm:flex-row sm:items-stretch">
-                {/* Info side */}
-                <div className="flex flex-col justify-center border-b border-gold/30 px-5 py-4 sm:w-[200px] sm:shrink-0 sm:border-b-0 sm:border-r">
-                  <span className="mb-2 self-start rounded-full bg-gold px-2.5 py-0.5 font-mono text-[8px] uppercase tracking-[1px] text-forest">
-                    {TIERS[2].badge}
-                  </span>
-                  <p className="font-heading font-bold text-[16px] text-ink">{TIERS[2].name}</p>
-                  <p className="mt-0.5 font-mono text-[10px] text-sage">{TIERS[2].tagline}</p>
-                  <p className="mt-2.5 font-mono font-bold text-[18px] text-forest">{formatPrice(TIERS[2].price)}</p>
-                </div>
-
-                {/* Pieces side */}
-                <div className="flex flex-1 flex-col justify-between px-5 py-4">
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
-                    {TIERS[2].pieces.map((piece) => (
-                      <PieceRow key={piece.text} piece={piece} size="sm" />
-                    ))}
+            {tier3 && (
+              <div
+                className="col-span-1 overflow-hidden rounded-[12px] border border-gold/50 sm:col-span-2"
+                style={{ background: "linear-gradient(135deg,#f9f6f0,#fffdf9)" }}
+              >
+                <div className="flex flex-col sm:flex-row sm:items-stretch">
+                  {/* Info side */}
+                  <div className="flex flex-col justify-center border-b border-gold/30 px-5 py-4 sm:w-[200px] sm:shrink-0 sm:border-b-0 sm:border-r">
+                    {tier3.badge && (
+                      <span className="mb-2 self-start rounded-full bg-gold px-2.5 py-0.5 font-mono text-[8px] uppercase tracking-[1px] text-forest">
+                        {tier3.badge}
+                      </span>
+                    )}
+                    <p className="font-heading font-bold text-[16px] text-ink">{tier3.name}</p>
+                    <p className="mt-0.5 font-mono text-[10px] text-sage">{tier3.tagline}</p>
+                    <p className="mt-2.5 font-mono font-bold text-[18px] text-forest">{formatPrice(tier3.price)}</p>
                   </div>
-                  <button
-                    onClick={() => setSelectedTier(TIERS[2])}
-                    className="mt-4 flex items-center justify-center gap-1.5 rounded-[8px] bg-gold py-2.5 font-heading font-bold text-[12px] text-forest transition-colors hover:bg-gold/85"
-                  >
-                    See what&apos;s inside
-                  </button>
+
+                  {/* Pieces side */}
+                  <div className="flex flex-1 flex-col justify-between px-5 py-4">
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
+                      {tier3.pieces.map((piece) => (
+                        <PieceRow key={piece.text} piece={piece} size="sm" />
+                      ))}
+                    </div>
+                    <button
+                      onClick={() => setSelectedTier(tier3)}
+                      className="mt-4 flex items-center justify-center gap-1.5 rounded-[8px] bg-gold py-2.5 font-heading font-bold text-[12px] text-forest transition-colors hover:bg-gold/85"
+                    >
+                      See what&apos;s inside
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="border-t border-border bg-surface px-5 py-3">
-          <p className="text-center font-mono text-[10px] text-sage">
-            Others charge <span className="font-bold text-ink">Rs 270,000</span> for just a bed and 2 tables.
-            Our full bedroom is <span className="font-bold text-forest">Rs 330,000</span> — dressing table and wardrobe included.
-          </p>
-        </div>
+        {/* Footer — only shown when there's a real savings claim to make */}
+        {tier3?.savings != null && (
+          <div className="border-t border-border bg-surface px-5 py-3">
+            <p className="text-center font-mono text-[10px] text-sage">
+              Buying the pieces separately costs <span className="font-bold text-ink">{formatPrice(tier3.price + tier3.savings)}</span>.
+              Our full bedroom is <span className="font-bold text-forest">{formatPrice(tier3.price)}</span> — you save {formatPrice(tier3.savings)}.
+            </p>
+          </div>
+        )}
       </div>
 
       <AnimatePresence>
         {selectedTier && (
-          <TierPopup tier={selectedTier} onClose={() => setSelectedTier(null)} />
+          <TierPopup tier={selectedTier} onClose={() => setSelectedTier(null)} onBook={onBookTier} />
         )}
       </AnimatePresence>
     </>

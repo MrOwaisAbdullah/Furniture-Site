@@ -308,7 +308,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
   )
 }
 
-export function ProductCardCompact({ product }: ProductCardProps) {
+export function ProductCardCompact({ product, onAdd }: ProductCardProps & { onAdd?: (product: Product) => void }) {
   const tone = categoryToneMap[product.category.slug] ?? "linear-gradient(150deg,#3A6B57,#16352A)"
   const price = formatPrice(product.salePrice ?? product.basePrice)
   const primaryImage = product.images[0]
@@ -343,6 +343,18 @@ export function ProductCardCompact({ product }: ProductCardProps) {
         <p className="mt-1.5 font-mono font-bold text-forest" style={{ fontSize: "11.5px" }}>
           {price}
         </p>
+        {onAdd && (
+          <button
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              onAdd(product)
+            }}
+            className="mt-2 flex w-full items-center justify-center gap-1 rounded-[7px] bg-forest/8 py-1.5 font-mono text-[10px] font-bold text-forest transition-colors hover:bg-forest/15"
+          >
+            + Add
+          </button>
+        )}
       </div>
     </Link>
   )

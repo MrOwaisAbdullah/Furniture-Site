@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Loader2 } from "lucide-react"
@@ -9,7 +9,11 @@ import { StepDetails, type DetailsForm } from "@/components/checkout/step-detail
 import { StepDelivery, type DeliveryMode } from "@/components/checkout/step-delivery"
 import { StepConfirm } from "@/components/checkout/step-confirm"
 import { StepPayment, type PaymentMethod } from "@/components/checkout/step-payment"
+import { CheckoutUpsellModal } from "@/components/checkout/checkout-upsell-modal"
 import { trackEvent } from "@/lib/track-event"
+import { getCheckoutUpsells } from "@/lib/recommendations"
+import { sampleProducts } from "@/data/sample-products"
+import type { Product } from "@/types"
 
 const STEP_LABELS = ["Your details", "Delivery", "Review & advance", "Payment"]
 const STEP_KEYS = ["details", "delivery", "review", "payment"]
@@ -26,10 +30,11 @@ export default function CheckoutPage() {
   const [form, setForm] = useState<DetailsForm>({ name: "", phone: "", area: "", address: "" })
   const [delivery, setDelivery] = useState<DeliveryMode>("deliver")
   const [payment, setPayment] = useState<PaymentMethod>("bank")
+  const [screenshotFile, setScreenshotFile] = useState<File | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const { items, totalPrice, clearCart } = useCartStore()
+  const { items, totalPrice, clearCart, addItem } = useCartStore()
   const advance = Math.round(totalPrice / 2)
 
   const startedTracking = useRef(false)
@@ -39,9 +44,82 @@ export default function CheckoutPage() {
     trackEvent("checkout_started", { itemCount: items.length, subtotal: totalPrice })
   }, [items.length, totalPrice])
 
+  const cartProductIds = items.map((i) => i.productId).join(",")
+  const upsellSuggestions = useMemo(
+    () => getCheckoutUpsells(items, sampleProducts, 3),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [cartProductIds]
+  )
+  const [showUpsell, setShowUpsell] = useState(false)
+
+  useEffect(() => {
+    if (items.length === 0 || upsellSuggestions.length === 0) return
+    if (sessionStorage.getItem("yl_checkout_upsell_seen")) return
+    const timer = setTimeout(() => {
+      setShowUpsell(true)
+      trackEvent("checkout_upsell_shown", { productIds: upsellSuggestions.map((p) => p._id) })
+    }, 600)
+    return () => clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items.length, upsellSuggestions])
+
+  function dismissUpsell() {
+    sessionStorage.setItem("yl_checkout_upsell_seen", "1")
+    setShowUpsell(false)
+    trackEvent("checkout_upsell_dismissed", {})
+  }
+
+  function addUpsellProduct(product: Product) {
+    addItem({
+      productId: product._id,
+      name: product.name,
+      price: product.salePrice ?? product.basePrice,
+      variantId: product.variants[0]?._id,
+      finishId: product.finishes[0]?._id,
+      finishName: product.finishes[0]?.name,
+    })
+    trackEvent("checkout_upsell_added", { productId: product._id, name: product.name, price: product.salePrice ?? product.basePrice })
+  }
+
   function goToStep(next: number) {
     trackEvent("checkout_step_completed", { step: STEP_KEYS[step] })
     setStep(next)
+  }
+
+  async function uploadScreenshot(orderRef: string): Promise<string | null> {
+    if (!screenshotFile) return null
+
+    try {
+      // Get presigned URL
+      const presignRes = await fetch("/api/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderRef, fileName: screenshotFile.name }),
+      })
+      const presignData = await presignRes.json()
+
+      if (!presignRes.ok || !presignData.uploadUrl) {
+        console.error("[upload] Failed to get presigned URL")
+        return null
+      }
+
+      // Upload file to R2
+      const uploadRes = await fetch(presignData.uploadUrl, {
+        method: "PUT",
+        body: screenshotFile,
+        headers: { "Content-Type": screenshotFile.type },
+      })
+
+      if (!uploadRes.ok) {
+        console.error("[upload] Failed to upload to R2")
+        return null
+      }
+
+      return presignData.publicUrl as string
+    } catch (err) {
+      console.error("[upload] Error:", err)
+      return null
+    }
   }
 
   async function submitOrder() {
@@ -50,6 +128,7 @@ export default function CheckoutPage() {
 
     const promoCode = readCookie("promo_code")
 
+    // First, create the order without screenshot
     const payload = {
       customerName: form.name,
       customerPhone: form.phone,
@@ -85,6 +164,14 @@ export default function CheckoutPage() {
         setError(body?.error ?? "Something went wrong — please check your details and try again.")
         setSubmitting(false)
         return
+      }
+
+      // Upload screenshot if selected (non-blocking)
+      if (screenshotFile && body.ref) {
+        uploadScreenshot(body.ref).catch(() => {
+          // Screenshot upload failed, but order is already created
+          // Admin can still follow up via WhatsApp
+        })
       }
 
       trackEvent("order_completed", { orderRef: body.ref, total: totalPrice, itemCount: items.length })
@@ -149,7 +236,7 @@ export default function CheckoutPage() {
             <StepConfirm items={items} totalPrice={totalPrice} advance={advance} />
           )}
           {step === 3 && (
-            <StepPayment advance={advance} method={payment} onMethod={setPayment} />
+            <StepPayment advance={advance} method={payment} onMethod={setPayment} onScreenshot={setScreenshotFile} />
           )}
         </div>
 
@@ -188,6 +275,13 @@ export default function CheckoutPage() {
           )}
         </div>
       </div>
+
+      <CheckoutUpsellModal
+        open={showUpsell}
+        products={upsellSuggestions}
+        onAdd={addUpsellProduct}
+        onClose={dismissUpsell}
+      />
     </div>
   )
 }

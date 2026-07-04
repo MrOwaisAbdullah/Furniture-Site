@@ -123,6 +123,15 @@ body {
   border-radius: 4px;
 }
 
+/* Search bars show focus via their border instead of the default outline —
+ * the outline's square corners clash with the pill shape. Written unlayered
+ * (like the rule above) so it isn't beaten by Tailwind's layered utilities. */
+.search-input-shell:focus-within,
+.search-input-shell:focus-within input,
+input.search-input-shell:focus-visible {
+  outline: none;
+}
+
 /* === Selection === */
 ::selection {
   background-color: #C9A24B40;

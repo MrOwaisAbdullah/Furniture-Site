@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { Upload, Copy, Check } from "lucide-react"
+import { useState, useRef } from "react"
+import { Upload, Copy, Check, X, FileImage } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { formatPrice } from "@/lib/utils"
 import {
@@ -15,6 +15,7 @@ interface StepPaymentProps {
   advance: number
   method: PaymentMethod
   onMethod: (m: PaymentMethod) => void
+  onScreenshot?: (file: File | null) => void
 }
 
 const METHODS: { id: PaymentMethod; label: string }[] = [
@@ -35,13 +36,45 @@ const EASYPAISA_ROWS = [
   { label: "Name",    value: EASYPAISA_ACCOUNT_NAME,   mono: false },
 ]
 
-export function StepPayment({ advance, method, onMethod }: StepPaymentProps) {
+export function StepPayment({ advance, method, onMethod, onScreenshot }: StepPaymentProps) {
   const [copied, setCopied] = useState<string | null>(null)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [preview, setPreview] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const copyValue = (val: string) => {
     navigator.clipboard.writeText(val)
     setCopied(val)
     setTimeout(() => setCopied(null), 2000)
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const maxSize = 5 * 1024 * 1024
+    if (file.size > maxSize) {
+      alert("File is too large. Maximum size is 5 MB.")
+      return
+    }
+
+    setSelectedFile(file)
+    onScreenshot?.(file)
+
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      setPreview(ev.target?.result as string)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const removeFile = () => {
+    setSelectedFile(null)
+    setPreview(null)
+    onScreenshot?.(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
   }
 
   const infoRows = method === "bank" ? BANK_ROWS : method === "easypaisa" ? EASYPAISA_ROWS : []
@@ -125,15 +158,54 @@ export function StepPayment({ advance, method, onMethod }: StepPaymentProps) {
       )}
 
       {/* Screenshot upload (bank + easypaisa only) */}
-      {method !== "cash" && (
+      {method !== "cash" && !selectedFile && (
         <label className="relative mt-4 flex cursor-pointer select-none flex-col items-center gap-2 rounded-[11px] border-2 border-dashed border-gold bg-gold/5 py-6 transition-colors hover:bg-gold/10">
           <div className="pointer-events-none flex h-10 w-10 items-center justify-center rounded-full bg-gold/15">
             <Upload className="h-5 w-5 stroke-gold-700" />
           </div>
           <p className="pointer-events-none font-body font-semibold text-[12.5px] text-gold-900">Upload payment screenshot</p>
           <p className="pointer-events-none text-[10.5px] text-sage">JPG · PNG · PDF · max 5 MB</p>
-          <input type="file" accept="image/*,.pdf" className="sr-only" aria-label="Upload payment screenshot" />
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*,.pdf"
+            className="sr-only"
+            aria-label="Upload payment screenshot"
+            onChange={handleFileChange}
+          />
         </label>
+      )}
+
+      {/* File preview */}
+      {method !== "cash" && selectedFile && (
+        <div className="mt-4 rounded-[11px] border border-border bg-white p-3">
+          <div className="flex items-center gap-3">
+            {preview && selectedFile.type.startsWith("image/") ? (
+              <img
+                src={preview}
+                alt="Payment screenshot preview"
+                className="h-16 w-16 rounded-[8px] border border-border object-cover"
+              />
+            ) : (
+              <div className="flex h-16 w-16 items-center justify-center rounded-[8px] bg-surface">
+                <FileImage className="h-6 w-6 text-sage" />
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="truncate font-heading font-bold text-[12.5px] text-ink">{selectedFile.name}</p>
+              <p className="font-mono text-[10px] text-sage">
+                {(selectedFile.size / 1024).toFixed(0)} KB
+              </p>
+            </div>
+            <button
+              onClick={removeFile}
+              className="flex h-8 w-8 items-center justify-center rounded-full text-sage hover:bg-error/10 hover:text-error"
+              aria-label="Remove file"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
       )}
 
       <p className="mt-3 text-[11px] text-sage leading-[1.55]">

@@ -1,16 +1,16 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useMemo } from "react"
 import Link from "next/link"
-import Image from "next/image"
 import { use } from "react"
-import { notFound } from "next/navigation"
+import { notFound, useRouter } from "next/navigation"
 import {
   CheckCircle, Clock, MapPin, Heart, ShoppingBag,
   Minus, Plus, Trash2, ChevronLeft, ChevronRight,
 } from "lucide-react"
 import { FaWhatsapp } from "react-icons/fa"
 import { ProductCard } from "@/components/product/product-card"
+import { ProductGallery } from "@/components/product/product-gallery"
 import { FinishSwatch } from "@/components/product/finish-swatch"
 import { AuthenticityStrip } from "@/components/product/authenticity-strip"
 import { UpsellBlock, TierUpsellSheet } from "@/components/product/upsell-block"
@@ -28,6 +28,7 @@ import { trackEvent } from "@/lib/track-event"
 import { usePageEngagementTracking } from "@/lib/use-page-engagement-tracking"
 import { ReviewForm } from "@/components/product/review-form"
 import { ReviewsSection } from "@/components/product/reviews-section"
+import { getRelatedProducts, buildRoomTiers, ANCHOR_CATEGORIES, type RoomTier } from "@/lib/recommendations"
 
 const categoryTone: Record<string, string> = {
   "bedroom-sets":    "linear-gradient(150deg,#244C3C,#0c231b)",
@@ -44,13 +45,13 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
   const [activeFinish, setActiveFinish] = useState(0)
   const [activeVariant, setActiveVariant] = useState(0)
-  const [activeImage, setActiveImage] = useState(0)
   const [wishlisted, setWishlisted] = useState(() => wishlistClient.has(product._id))
   const [cartAdded, setCartAdded] = useState(false)
   const [qty, setQty] = useState(1)
-  const [imgErrors, setImgErrors] = useState<Record<number, boolean>>({})
   const [showUpsellPrompt, setShowUpsellPrompt] = useState(false)
   const [reviews, setReviews] = useState<{ id: number; name: string; rating: number; body: string; photoUrl?: string | null; createdAt: Date | string }[]>([])
+  const [roomPricing, setRoomPricing] = useState<Record<string, number> | null>(null)
+  const router = useRouter()
 
   useEffect(() => {
     trackEvent("product_view", { name: product.name, categorySlug: product.category.slug, price: product.salePrice ?? product.basePrice }, { productId: product._id })
@@ -63,6 +64,17 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
       .then((data) => { if (data.reviews) setReviews(data.reviews) })
       .catch(() => {})
   }, [slug])
+
+  // Cost-sheet-derived bundle pricing — the product page is client-rendered
+  // and resolveProductCost() is a Neon-backed server function, so it's
+  // fetched via a small API route instead of called directly.
+  useEffect(() => {
+    if (!ANCHOR_CATEGORIES.includes(product.category.slug)) return
+    fetch("/api/pricing/room-tiers")
+      .then((r) => r.json())
+      .then((data) => { if (data.pricing) setRoomPricing(data.pricing) })
+      .catch(() => {})
+  }, [product.category.slug])
 
   usePageEngagementTracking(`/products/${slug}`, product._id)
 
@@ -86,7 +98,11 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   const inCart = !!cartItem
 
   const tone = categoryTone[product.category.slug] ?? "linear-gradient(150deg,#3A6B57,#16352A)"
-  const related = sampleProducts.filter((p) => p._id !== product._id).slice(0, 4)
+  const related = useMemo(() => getRelatedProducts(product, sampleProducts, 4), [product])
+  const tiers = useMemo(
+    () => (roomPricing ? buildRoomTiers(product, sampleProducts, roomPricing) : []),
+    [product, roomPricing]
+  )
   const selectedVariant = product.variants[activeVariant]
   const selectedFinish = product.finishes[activeFinish]
   const price = formatPrice(
@@ -98,7 +114,6 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     ? formatPrice(product.basePrice + (selectedVariant?.priceModifier ?? 0))
     : null
 
-  const gallery = product.images.length > 0 ? product.images : [null, null, null]
   const waMessage = encodeURIComponent(
     `Hi, I'm interested in the *${product.name}* (${selectedFinish?.name ?? ""})\nQty: ${qty}\nPrice: ${price}\nCan you share more details?`
   )
@@ -128,12 +143,28 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
       removeItem(product._id, variantId, finishId)
       return
     }
-    // On bed pages, intercept: show upsell popup first, add to cart only after user decides
-    if (product.category.slug === "beds") {
+    // On bed/wardrobe/dressing-table pages, intercept: show the "complete
+    // the room" upsell first, add to cart only after the user decides.
+    if (ANCHOR_CATEGORIES.includes(product.category.slug) && tiers.length > 0) {
       setShowUpsellPrompt(true)
       return
     }
     doAddToCart(fromEl)
+  }
+
+  const handleBookTier = (tier: RoomTier) => {
+    for (const component of tier.components) {
+      addItem({
+        productId: component._id,
+        name: component.name,
+        price: component.salePrice ?? component.basePrice,
+        variantId: component.variants[0]?._id,
+        finishId: component.finishes[0]?._id,
+        finishName: component.finishes[0]?.name,
+      })
+    }
+    setShowUpsellPrompt(false)
+    router.push("/checkout")
   }
 
   const handleWishlist = (fromEl?: HTMLElement | null) => {
@@ -147,48 +178,6 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     setWishlisted(isNow)
     if (isNow) trackEvent("wishlist_add", { name: product.name }, { productId: product._id })
     if (fromEl && isNow) flyToTarget(fromEl, "[data-nav-wishlist]", "#ef4444")
-  }
-
-  const prevImage = () => setActiveImage((i) => (i - 1 + gallery.length) % gallery.length)
-  const nextImage = () => setActiveImage((i) => (i + 1) % gallery.length)
-
-  const touchStartX = useRef<number>(0)
-  const touchStartY = useRef<number>(0)
-  const isSwiping = useRef<boolean>(false)
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    const touch = e.touches[0]
-    if (!touch) return
-    touchStartX.current = touch.clientX
-    touchStartY.current = touch.clientY
-    isSwiping.current = false
-  }
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    const touch = e.touches[0]
-    if (!touch) return
-    const diffX = touchStartX.current - touch.clientX
-    const diffY = touchStartY.current - touch.clientY
-    // If horizontal movement is greater than vertical, it's a swipe
-    if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 10) {
-      isSwiping.current = true
-      e.preventDefault()
-    }
-  }
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (!isSwiping.current) return
-    const touch = e.changedTouches[0]
-    if (!touch) return
-    const diff = touchStartX.current - touch.clientX
-    if (Math.abs(diff) > 40) {
-      if (diff > 0) {
-        nextImage()
-      } else {
-        prevImage()
-      }
-    }
-    isSwiping.current = false
   }
 
   return (
@@ -227,104 +216,12 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
           {/* ── Gallery ── */}
           <div className="lg:flex-[1.15] lg:sticky lg:top-24">
-            {/* Main image */}
-            <div
-              className="relative overflow-hidden rounded-2xl"
-              style={{ background: tone, aspectRatio: "4/3", touchAction: "pan-y" }}
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-            >
-              {gallery[activeImage] && !imgErrors[activeImage] && (
-                <Image
-                  key={activeImage}
-                  src={gallery[activeImage]!}
-                  alt={product.name}
-                  fill
-                  className="absolute inset-0 object-cover"
-                  sizes="(max-width: 1024px) 100vw, 50vw"
-                  onError={() => setImgErrors((prev) => ({ ...prev, [activeImage]: true }))}
-                  unoptimized
-                />
-              )}
-              <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-transparent to-black/20 pointer-events-none" />
-
-              {/* Sale badge */}
-              {product.salePrice && (
-                <div className="absolute left-3 top-3 z-10 rounded-full bg-gold px-3 py-1 font-mono text-[9px] font-bold tracking-[1.5px] text-forest">
-                  SALE
-                </div>
-              )}
-
-              {/* Desktop prev/next arrows */}
-              {gallery.length > 1 && (
-                <>
-                  <button
-                    onClick={prevImage}
-                    aria-label="Previous image"
-                    className="absolute left-3 top-1/2 z-10 -translate-y-1/2 hidden h-9 w-9 items-center justify-center rounded-full bg-black/30 text-white backdrop-blur-sm transition-all hover:bg-black/50 lg:flex"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={nextImage}
-                    aria-label="Next image"
-                    className="absolute right-3 top-1/2 z-10 -translate-y-1/2 hidden h-9 w-9 items-center justify-center rounded-full bg-black/30 text-white backdrop-blur-sm transition-all hover:bg-black/50 lg:flex"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </button>
-                </>
-              )}
-
-              {/* Dot indicators */}
-              {gallery.length > 1 && (
-                <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5">
-                  {gallery.map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setActiveImage(i)}
-                      aria-label={`Image ${i + 1}`}
-                      className={cn(
-                        "h-[6px] rounded-full transition-all",
-                        i === activeImage ? "w-5 bg-bone" : "w-[6px] bg-bone/40"
-                      )}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Thumbnail strip — below main image */}
-            {gallery.length > 1 && (
-              <div className="mt-3 flex gap-2">
-                {gallery.slice(0, 5).map((img, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setActiveImage(i)}
-                    aria-label={`View image ${i + 1}`}
-                    className={cn(
-                      "h-[62px] w-[62px] shrink-0 overflow-hidden rounded-[10px] border-2 transition-all",
-                      i === activeImage
-                        ? "border-forest shadow-sm"
-                        : "border-transparent opacity-50 hover:opacity-75"
-                    )}
-                    style={{ background: tone }}
-                  >
-                    {img && !imgErrors[i] && (
-                      <Image
-                        src={img}
-                        alt=""
-                        fill
-                        className="object-cover"
-                        sizes="62px"
-                        onError={() => setImgErrors((prev) => ({ ...prev, [i]: true }))}
-                        unoptimized
-                      />
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
+            <ProductGallery
+              images={product.images}
+              name={product.name}
+              tone={tone}
+              onSale={!!product.salePrice}
+            />
           </div>
 
           {/* ── Info Panel ── */}
@@ -564,7 +461,9 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
         </div>
 
         <div className="mt-14">
-          {product.category.slug === "beds" && <UpsellBlock />}
+          {ANCHOR_CATEGORIES.includes(product.category.slug) && tiers.length > 0 && (
+            <UpsellBlock tiers={tiers} onBookTier={handleBookTier} />
+          )}
         </div>
 
         {/* Reviews */}
@@ -582,7 +481,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
             className="mb-6 font-heading font-black text-ink"
             style={{ fontSize: "clamp(20px,3vw,28px)", letterSpacing: "-0.6px" }}
           >
-            Complete the room
+            You might also like
           </h2>
           <div className="hidden grid-cols-4 gap-5 lg:grid">
             {related.map((p) => <ProductCard key={p._id} product={p} />)}
@@ -665,12 +564,14 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
         </div>
       </div>
 
-      {/* Tier upsell intercept — shown on bed pages before cart add */}
+      {/* Tier upsell intercept — shown on bed/wardrobe/dressing-table pages before cart add */}
       <TierUpsellSheet
         open={showUpsellPrompt}
         onClose={() => setShowUpsellPrompt(false)}
-        onAddBedOnly={(fromEl) => doAddToCart(fromEl)}
+        onAddAnchorOnly={(fromEl) => doAddToCart(fromEl)}
+        onBookTier={handleBookTier}
         productName={product.name}
+        tiers={tiers}
       />
     </div>
   )

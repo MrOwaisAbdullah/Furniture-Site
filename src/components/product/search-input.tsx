@@ -42,7 +42,7 @@ export function SearchInput({ className, placeholder = "Search sets, beds, wardr
 
   return (
     <div ref={containerRef} className={cn("relative", className)}>
-      <div className="flex items-center gap-2 rounded-[12px] border border-border-strong bg-white px-4 shadow-sm">
+      <div className="search-input-shell flex items-center gap-2 rounded-[12px] border border-border-strong bg-white px-4 shadow-sm transition-colors focus-within:border-forest">
         <Search className="h-4.5 w-4.5 shrink-0 stroke-sage" strokeWidth={2} />
         <input
           ref={inputRef}

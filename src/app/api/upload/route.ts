@@ -1,40 +1,28 @@
 import { NextRequest, NextResponse } from "next/server"
-import { z } from "zod"
-import { createPresignedUploadUrl, paymentScreenshotKey } from "@/lib/r2"
-
-const ALLOWED_TYPES: Record<string, string> = {
-  "image/jpeg": "jpg",
-  "image/jpg":  "jpg",
-  "image/png":  "png",
-  "application/pdf": "pdf",
-}
-const MAX_BYTES = 5 * 1024 * 1024 // 5 MB
-
-const schema = z.object({
-  orderRef:    z.string().min(1),
-  contentType: z.string(),
-  byteSize:    z.number().int().min(1),
-})
+import { createPresignedUploadUrl, getPublicUrl, paymentScreenshotKey } from "@/lib/r2"
 
 export async function POST(req: NextRequest) {
-  const body = await req.json()
-  const parsed = schema.safeParse(body)
-  if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid request" }, { status: 400 })
+  try {
+    const { orderRef, fileName } = await req.json()
+
+    if (!orderRef || !fileName) {
+      return NextResponse.json({ error: "orderRef and fileName are required" }, { status: 400 })
+    }
+
+    const ext = fileName.split(".").pop()?.toLowerCase() ?? "jpg"
+    const allowedExts = ["jpg", "jpeg", "png", "pdf"]
+    if (!allowedExts.includes(ext)) {
+      return NextResponse.json({ error: "Only JPG, PNG, and PDF files are allowed" }, { status: 400 })
+    }
+
+    const key = paymentScreenshotKey(orderRef, ext)
+    const contentType = ext === "pdf" ? "application/pdf" : `image/${ext === "jpg" ? "jpeg" : ext}`
+    const uploadUrl = await createPresignedUploadUrl(key, contentType)
+    const publicUrl = getPublicUrl(key)
+
+    return NextResponse.json({ uploadUrl, publicUrl, key })
+  } catch (err) {
+    console.error("[upload] error", err)
+    return NextResponse.json({ error: "Failed to create upload URL" }, { status: 500 })
   }
-
-  const { orderRef, contentType, byteSize } = parsed.data
-
-  const ext = ALLOWED_TYPES[contentType]
-  if (!ext) {
-    return NextResponse.json({ error: "File type not allowed. JPG, PNG, or PDF only." }, { status: 400 })
-  }
-  if (byteSize > MAX_BYTES) {
-    return NextResponse.json({ error: "File too large. Maximum 5 MB." }, { status: 400 })
-  }
-
-  const key = paymentScreenshotKey(orderRef, ext)
-  const presignedUrl = await createPresignedUploadUrl(key, contentType)
-
-  return NextResponse.json({ presignedUrl, key })
 }

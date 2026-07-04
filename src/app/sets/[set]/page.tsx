@@ -6,29 +6,29 @@ import { sampleProducts } from "@/data/sample-products"
 import { formatPrice } from "@/lib/utils"
 import { waLink } from "@/lib/site-config"
 
-const TIER_MAP = {
-  "tier-1": {
+const SET_MAP = {
+  "essentials": {
     label: "Essentials",
     tagline: "Everything you need to sleep well.",
-    desc: "The Essentials tier gives you the core bedroom pieces — a bed and matching side tables — built to your size and finish. Add more later, or keep it clean.",
+    desc: "The Essentials set gives you the core bedroom pieces — a bed and matching side tables — built to your size and finish. Add more later, or keep it clean.",
     priceFrom: 85000,
     priceTo: 120000,
     pieces: ["Bed (custom size)", "Side Tables (×2)", "Finish of your choice"],
     categorySlugs: ["beds", "side-tables"],
   },
-  "tier-2": {
+  "complete": {
     label: "Complete",
     tagline: "The room looks finished the day it arrives.",
-    desc: "The Complete tier adds a dressing table and stool to your essentials. A matched set that makes the room look intentional from the first day.",
+    desc: "The Complete set adds a dressing table and stool to your essentials. A matched set that makes the room look intentional from the first day.",
     priceFrom: 165000,
     priceTo: 220000,
     pieces: ["Bed (custom size)", "Side Tables (×2)", "Dressing Table with Mirror", "Stool", "Finish of your choice"],
     categorySlugs: ["beds", "side-tables", "dressing-tables"],
   },
-  "tier-3": {
+  "full-house": {
     label: "Full House",
     tagline: "One order. One delivery. Everything matched.",
-    desc: "The Full House tier is the complete bedroom — every piece ordered together, built in the same finish, and delivered in one go. No hunting for matching furniture later.",
+    desc: "The Full House set is the complete bedroom — every piece ordered together, built in the same finish, and delivered in one go. No hunting for matching furniture later.",
     priceFrom: 330000,
     priceTo: 420000,
     pieces: ["Bed (custom size)", "Side Tables (×2)", "Dressing Table with Mirror", "Stool", "3-door Wardrobe", "Finish of your choice"],
@@ -36,15 +36,15 @@ const TIER_MAP = {
   },
 }
 
-type TierSlug = keyof typeof TIER_MAP
+type SetSlug = keyof typeof SET_MAP
 
-export default async function TierPage({ params }: { params: Promise<{ tier: string }> }) {
-  const { tier: tierSlug } = await params
-  const tier = TIER_MAP[tierSlug as TierSlug]
-  if (!tier) notFound()
+export default async function SetPage({ params }: { params: Promise<{ set: string }> }) {
+  const { set: setSlug } = await params
+  const set = SET_MAP[setSlug as SetSlug]
+  if (!set) notFound()
 
   const products = sampleProducts.filter((p) =>
-    tier.categorySlugs.includes(p.category.slug)
+    set.categorySlugs.includes(p.category.slug)
   )
 
   return (
@@ -62,20 +62,20 @@ export default async function TierPage({ params }: { params: Promise<{ tier: str
         </Link>
 
         <p className="font-mono uppercase text-gold" style={{ fontSize: "10px", letterSpacing: "3px" }}>
-          {tierSlug.replace("-", " ").toUpperCase()} — BEDROOM SET
+          {set.label.toUpperCase()} — BEDROOM SET
         </p>
 
         <h1
           className="mt-3 font-display text-bone leading-[1.05]"
           style={{ fontSize: "clamp(28px,6vw,48px)" }}
         >
-          The {tier.label} Set.
+          The {set.label} Set.
           <br />
-          <span className="italic text-gold">{tier.tagline}</span>
+          <span className="italic text-gold">{set.tagline}</span>
         </h1>
 
         <p className="mt-4 max-w-lg text-[13.5px] leading-[1.7] text-bone/60">
-          {tier.desc}
+          {set.desc}
         </p>
 
         {/* Price range + pieces */}
@@ -83,7 +83,7 @@ export default async function TierPage({ params }: { params: Promise<{ tier: str
           <div>
             <p className="font-mono text-[9.5px] uppercase tracking-[2px] text-bone/40">Price range</p>
             <p className="mt-1 font-mono font-bold text-gold" style={{ fontSize: "22px" }}>
-              {formatPrice(tier.priceFrom)} – {formatPrice(tier.priceTo)}
+              {formatPrice(set.priceFrom)} – {formatPrice(set.priceTo)}
             </p>
             <p className="mt-1 font-mono text-[10.5px] text-bone/35">
               Varies by size · includes delivery
@@ -92,7 +92,7 @@ export default async function TierPage({ params }: { params: Promise<{ tier: str
           <div>
             <p className="font-mono text-[9.5px] uppercase tracking-[2px] text-bone/40">Includes</p>
             <div className="mt-1.5 flex flex-col gap-1.5">
-              {tier.pieces.map((piece) => (
+              {set.pieces.map((piece) => (
                 <div key={piece} className="flex items-center gap-2">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#C9A24B" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <polyline points="20 6 9 17 4 12" />
@@ -146,7 +146,7 @@ export default async function TierPage({ params }: { params: Promise<{ tier: str
             <div>
               <p className="font-mono text-[10px] uppercase tracking-[2px] text-gold/70">Ready to order?</p>
               <p className="mt-1 font-heading font-black text-[20px] text-bone leading-tight">
-                Get the full {tier.label} set<br />
+                Get the full {set.label} set<br />
                 <span className="font-display italic text-gold">built to your size.</span>
               </p>
               <p className="mt-2 text-[12.5px] text-bone/50">
@@ -155,7 +155,7 @@ export default async function TierPage({ params }: { params: Promise<{ tier: str
             </div>
             <div className="flex shrink-0 flex-col gap-2 sm:items-end">
               <a
-                href={waLink(`Hi, I'm interested in the ${tier.label} bedroom set (${tierSlug}). Price range: ${formatPrice(tier.priceFrom)} – ${formatPrice(tier.priceTo)}. Please share more details.`)}
+                href={waLink(`Hi, I'm interested in the ${set.label} bedroom set (${setSlug}). Price range: ${formatPrice(set.priceFrom)} – ${formatPrice(set.priceTo)}. Please share more details.`)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2.5 rounded-[10px] bg-gold px-7 py-3.5 font-heading font-bold text-[14px] text-forest transition-colors hover:bg-gold/85"

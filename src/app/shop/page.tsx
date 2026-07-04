@@ -160,7 +160,7 @@ export default function ShopPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search beds, wardrobes, dressing tables…"
-            className="w-full rounded-[11px] border border-border-strong bg-white py-3 pl-10 pr-9 text-[13.5px] text-ink placeholder:text-sage/60 focus:border-forest focus:outline-none"
+            className="search-input-shell w-full rounded-[11px] border border-border-strong bg-white py-3 pl-10 pr-9 text-[13.5px] text-ink placeholder:text-sage/60 transition-colors focus:border-forest"
           />
           {query && (
             <button

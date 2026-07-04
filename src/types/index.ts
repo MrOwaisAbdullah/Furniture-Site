@@ -23,6 +23,11 @@ export interface Product {
   reviewCount?: number;
   createdAt: string;
   updatedAt: string;
+  /** Category slugs this product's bundle already covers (e.g. a full
+   * bedroom set covering beds/wardrobes/dressing-tables/side-tables) — used
+   * to avoid suggesting "add a bed" on a page/cart that already has one via
+   * a bundle SKU, not as a separate line item. */
+  bundleCoversCategories?: string[];
 }
 
 export interface Variant {

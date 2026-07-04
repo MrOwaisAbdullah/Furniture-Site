@@ -67,6 +67,14 @@ export const product = {
       of: [{ type: "string" }],
       options: { layout: "tags" },
     },
+    {
+      name: "bundleCoversCategories",
+      type: "array",
+      title: "Bundle covers categories (only for full sets)",
+      description: "Category slugs this product already includes (e.g. beds, wardrobes) — stops the site suggesting 'add a bed' when this bundle already has one.",
+      of: [{ type: "string" }],
+      options: { layout: "tags" },
+    },
   ],
   preview: {
     select: { title: "name", subtitle: "category.name", media: "images.0" },
