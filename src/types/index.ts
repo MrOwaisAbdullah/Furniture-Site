@@ -19,6 +19,8 @@ export interface Product {
   stockCount: number;
   sku: string;
   tags: string[];
+  rating?: number;
+  reviewCount?: number;
   createdAt: string;
   updatedAt: string;
 }

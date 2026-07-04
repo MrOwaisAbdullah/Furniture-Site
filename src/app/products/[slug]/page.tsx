@@ -50,7 +50,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   const [qty, setQty] = useState(1)
   const [imgErrors, setImgErrors] = useState<Record<number, boolean>>({})
   const [showUpsellPrompt, setShowUpsellPrompt] = useState(false)
-  const [reviews, setReviews] = useState<{ id: number; name: string; rating: number; body: string; createdAt: Date | string }[]>([])
+  const [reviews, setReviews] = useState<{ id: number; name: string; rating: number; body: string; photoUrl?: string | null; createdAt: Date | string }[]>([])
 
   useEffect(() => {
     trackEvent("product_view", { name: product.name, categorySlug: product.category.slug, price: product.salePrice ?? product.basePrice }, { productId: product._id })
@@ -240,7 +240,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                   key={i}
                   className={cn(
                     "absolute inset-0 transition-opacity duration-300",
-                    i === activeImage ? "opacity-100" : "opacity-0 pointer-events-none"
+                    i === activeImage ? "opacity-100 visible" : "opacity-0 invisible"
                   )}
                 >
                   {img && !imgErrors[i] && (

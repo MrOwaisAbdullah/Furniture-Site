@@ -1,6 +1,7 @@
 "use client"
 
-import { Star } from "lucide-react"
+import { useState } from "react"
+import { Star, ChevronDown, ChevronUp } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface Review {
@@ -8,6 +9,7 @@ interface Review {
   name: string
   rating: number
   body: string
+  photoUrl?: string | null
   createdAt: Date | string
 }
 
@@ -49,10 +51,13 @@ function RatingBar({ stars, count, total }: { stars: number; count: number; tota
 }
 
 export function ReviewsSection({ reviews, averageRating, totalReviews }: ReviewsSectionProps) {
+  const [showAll, setShowAll] = useState(false)
   const ratingDistribution = [5, 4, 3, 2, 1].map((stars) => ({
     stars,
     count: reviews.filter((r) => r.rating === stars).length,
   }))
+
+  const visibleReviews = showAll ? reviews : reviews.slice(0, 3)
 
   return (
     <div className="rounded-[14px] border border-border bg-white">
@@ -88,7 +93,7 @@ export function ReviewsSection({ reviews, averageRating, totalReviews }: Reviews
       {/* Individual reviews */}
       {reviews.length > 0 && (
         <div className="divide-y divide-border">
-          {reviews.map((review) => (
+          {visibleReviews.map((review) => (
             <div key={review.id} className="px-5 py-4">
               <div className="flex items-start justify-between gap-2">
                 <div>
@@ -104,8 +109,39 @@ export function ReviewsSection({ reviews, averageRating, totalReviews }: Reviews
                 </p>
               </div>
               <p className="mt-2 text-[12.5px] leading-[1.6] text-slate">{review.body}</p>
+              {review.photoUrl && (
+                <div className="mt-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- review photos from external URLs */}
+                  <img
+                    src={review.photoUrl}
+                    alt={`Photo from ${review.name}'s review`}
+                    className="h-20 w-20 rounded-[8px] border border-border object-cover"
+                  />
+                </div>
+              )}
             </div>
           ))}
+
+          {/* Show more/less */}
+          {reviews.length > 3 && (
+            <div className="border-t border-border px-5 py-3 text-center">
+              <button
+                type="button"
+                onClick={() => setShowAll(!showAll)}
+                className="inline-flex min-h-[44px] items-center gap-1.5 font-heading font-bold text-[12px] text-forest transition-colors hover:text-forest/80"
+              >
+                {showAll ? (
+                  <>
+                    Show less <ChevronUp className="h-3.5 w-3.5" />
+                  </>
+                ) : (
+                  <>
+                    Show all {reviews.length} reviews <ChevronDown className="h-3.5 w-3.5" />
+                  </>
+                )}
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

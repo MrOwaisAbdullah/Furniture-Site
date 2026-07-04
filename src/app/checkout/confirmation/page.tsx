@@ -1,24 +1,24 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useMemo } from "react"
 import Link from "next/link"
 import { CheckCircle } from "lucide-react"
 import { FaWhatsapp } from "react-icons/fa"
 import { formatPrice } from "@/lib/utils"
 
-export default function ConfirmationPage() {
-  const [order, setOrder] = useState<{ ref: string; advance: number } | null>(null)
+function readOrderFromSession(): { ref: string; advance: number } | null {
+  if (typeof window === "undefined") return null
+  const raw = sessionStorage.getItem("yl_last_order")
+  if (!raw) return null
+  try {
+    return JSON.parse(raw) as { ref: string; advance: number }
+  } catch {
+    return null
+  }
+}
 
-  useEffect(() => {
-    const raw = sessionStorage.getItem("yl_last_order")
-    if (raw) {
-      try {
-        setOrder(JSON.parse(raw))
-      } catch {
-        // ignore malformed value
-      }
-    }
-  }, [])
+export default function ConfirmationPage() {
+  const order = useMemo(() => readOrderFromSession(), [])
 
   return (
     <div className="min-h-screen bg-surface flex items-center justify-center px-4 py-12">

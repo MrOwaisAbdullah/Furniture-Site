@@ -7,7 +7,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { useState, useSyncExternalStore } from "react"
-import { Heart, ShoppingBag, ShoppingCart } from "lucide-react"
+import { Heart, ShoppingBag, ShoppingCart, Star } from "lucide-react"
 import { FaWhatsapp } from "react-icons/fa"
 import { cn, formatPrice } from "@/lib/utils"
 import { useCartStore } from "@/lib/store"
@@ -219,6 +219,23 @@ export function ProductCard({ product, className }: ProductCardProps) {
           <p className="font-mono uppercase text-gold-700" style={{ fontSize: "8px", letterSpacing: "1.2px" }}>
             {product.category.name}
           </p>
+          {/* Star rating */}
+          {product.rating && product.reviewCount && product.reviewCount > 0 && (
+            <div className="mt-1 flex items-center gap-1">
+              <div className="flex gap-0.5">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Star
+                    key={i}
+                    className={cn(
+                      "h-2.5 w-2.5",
+                      i < Math.round(product.rating!) ? "fill-gold text-gold" : "fill-mist text-mist"
+                    )}
+                  />
+                ))}
+              </div>
+              <span className="font-mono text-[8px] text-sage">({product.reviewCount})</span>
+            </div>
+          )}
           <h3
             className="mt-1 flex-1 font-heading font-bold leading-[1.2] text-ink transition-colors group-hover:text-forest text-[13px] sm:text-[15.5px] sm:mt-1.5 sm:leading-[1.15]"
             style={{ letterSpacing: "-0.2px" }}
