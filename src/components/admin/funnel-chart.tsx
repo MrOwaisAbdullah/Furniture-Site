@@ -37,9 +37,9 @@ export function FunnelChart({ stages }: { stages: FunnelStage[] }) {
             {i < stages.length - 1 && (
               <div className="my-1.5 flex items-center justify-center gap-1.5">
                 <div className="h-3 w-px bg-border-strong" />
-                {s.dropOffPct !== null && s.dropOffPct !== undefined && (
-                  <span className={`font-mono text-[10px] ${stages[i + 1].dropOffPct! > 50 ? "text-error" : "text-sage"}`}>
-                    {stages[i + 1].dropOffPct}% drop-off
+                {s.dropOffPct !== null && s.dropOffPct !== undefined && stages[i + 1] && (
+                  <span className={`font-mono text-[10px] ${stages[i + 1]!.dropOffPct! > 50 ? "text-error" : "text-sage"}`}>
+                    {stages[i + 1]!.dropOffPct}% drop-off
                   </span>
                 )}
               </div>
