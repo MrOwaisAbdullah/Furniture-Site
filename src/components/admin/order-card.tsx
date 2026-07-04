@@ -5,7 +5,10 @@ import { formatPrice } from "@/lib/utils"
 import { cn } from "@/lib/utils"
 import { Loader2 } from "lucide-react"
 import type { AdminOrder } from "./kanban-board"
-import { ORDER_PIPELINE } from "./kanban-board"
+import { ORDER_PIPELINE } from "@/lib/order-pipeline"
+import { ThemedSelect } from "@/components/ui/themed-select"
+
+const STATUS_OPTIONS = [...ORDER_PIPELINE.map((s) => ({ value: s.key, label: s.label })), { value: "cancelled", label: "Cancelled" }]
 
 export function OrderCard({
   order,
@@ -18,8 +21,7 @@ export function OrderCard({
   const items = Array.isArray(order.items) ? order.items as Array<{ name?: string; qty?: number }> : []
   const itemSummary = items.map((i) => i.name).filter(Boolean).join(", ") || "—"
 
-  async function handleChange(e: React.ChangeEvent<HTMLSelectElement>) {
-    const next = e.target.value
+  async function handleChange(next: string) {
     setUpdating(true)
     await onStatusChange(order.ref, next)
     setUpdating(false)
@@ -47,17 +49,9 @@ export function OrderCard({
         )}
       </div>
       <div className="mt-2.5 flex items-center gap-2">
-        <select
-          value={order.status}
-          onChange={handleChange}
-          disabled={updating}
-          className="w-full rounded-[8px] border border-border-strong bg-surface px-2 py-1.5 text-[11px] text-ink focus:border-forest focus:outline-none disabled:opacity-60"
-        >
-          {ORDER_PIPELINE.map((s) => (
-            <option key={s.key} value={s.key}>{s.label}</option>
-          ))}
-          <option value="cancelled">Cancelled</option>
-        </select>
+        <div className="flex-1">
+          <ThemedSelect value={order.status} onChange={handleChange} options={STATUS_OPTIONS} />
+        </div>
         {updating && <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-sage" />}
       </div>
     </div>

@@ -1,13 +1,14 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Image from "next/image"
-import { ChevronDown, SlidersHorizontal, X, Check } from "lucide-react"
+import { ChevronDown, SlidersHorizontal, X, Check, Search } from "lucide-react"
 import { AnimatePresence, motion } from "framer-motion"
 import { ProductCard } from "@/components/product/product-card"
 import { sampleProducts } from "@/data/sample-products"
 import { sampleCategories } from "@/data/sample-categories"
 import { cn } from "@/lib/utils"
+import { trackEvent } from "@/lib/track-event"
 
 const SHOP_HERO = "https://images.unsplash.com/photo-1631049552057-403cdb8f0658?auto=format&fit=crop&w=1400&q=80"
 const ALL_CAT = "__all__"
@@ -84,15 +85,34 @@ export default function ShopPage() {
   const [activeFinish, setActiveFinish]   = useState<string | null>(null)
   const [sort, setSort]                   = useState<SortKey>("featured")
   const [mobileFilters, setMobileFilters] = useState(false)
+  const [query, setQuery]                 = useState("")
 
   let filtered = activeCat === ALL_CAT
     ? sampleProducts
     : sampleProducts.filter((p) => p.category.slug === activeCat)
 
   if (activeFinish) filtered = filtered.filter((p) => p.finishes.some((f) => f.name === activeFinish))
+
+  const trimmedQuery = query.trim().toLowerCase()
+  if (trimmedQuery) {
+    filtered = filtered.filter((p) =>
+      p.name.toLowerCase().includes(trimmedQuery) || p.category.name.toLowerCase().includes(trimmedQuery)
+    )
+  }
+
   if (sort === "price-asc")  filtered = [...filtered].sort((a, b) => (a.salePrice ?? a.basePrice) - (b.salePrice ?? b.basePrice))
   if (sort === "price-desc") filtered = [...filtered].sort((a, b) => (b.salePrice ?? b.basePrice) - (a.salePrice ?? a.basePrice))
   if (sort === "featured")   filtered = [...filtered].sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0))
+
+  // Debounced search tracking — fires once typing settles, not per keystroke.
+  useEffect(() => {
+    if (!trimmedQuery) return
+    const timer = setTimeout(() => {
+      trackEvent("search", { term: trimmedQuery, resultCount: filtered.length })
+    }, 600)
+    return () => clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trimmedQuery])
 
   return (
     <div className="min-h-screen bg-surface">
@@ -131,6 +151,27 @@ export default function ShopPage() {
       </div>
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-14">
+
+        {/* ── Search ── */}
+        <div className="relative mt-5 max-w-md">
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-sage" />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search beds, wardrobes, dressing tables…"
+            className="w-full rounded-[11px] border border-border-strong bg-white py-3 pl-10 pr-9 text-[13.5px] text-ink placeholder:text-sage/60 focus:border-forest focus:outline-none"
+          />
+          {query && (
+            <button
+              onClick={() => setQuery("")}
+              aria-label="Clear search"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-sage hover:text-ink"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
 
         {/* ── Mobile filter bar ── */}
         <div className="flex items-center gap-2 border-b border-border py-3 lg:hidden">
@@ -224,10 +265,12 @@ export default function ShopPage() {
 
             {filtered.length === 0 ? (
               <div className="py-24 text-center">
-                <p className="font-heading font-bold text-[18px] text-ink">No products in this category</p>
+                <p className="font-heading font-bold text-[18px] text-ink">
+                  {trimmedQuery ? `No results for "${query.trim()}"` : "No products in this category"}
+                </p>
                 <p className="mt-2 text-[13px] text-slate">Try a different filter or browse all products.</p>
                 <button
-                  onClick={() => setActiveCat(ALL_CAT)}
+                  onClick={() => { setActiveCat(ALL_CAT); setQuery("") }}
                   className="mt-5 rounded-[10px] bg-forest px-6 py-3 font-heading font-bold text-[13.5px] text-bone"
                 >
                   Show all

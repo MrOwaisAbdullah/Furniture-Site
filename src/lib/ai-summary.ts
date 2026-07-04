@@ -4,21 +4,21 @@ import OpenAI from "openai"
 import { redis } from "@/lib/redis"
 
 /**
- * Provider-agnostic AI summary layer. The real LiteLLM project is
- * Python-only (pip install litellm) — there is no maintained Node port, so
- * this reimplements the same contract the spec asks for (one function, one
- * model-per-type env var, swap providers without touching call sites) using
- * the official OpenAI SDK. OpenRouter and most other providers speak the
- * OpenAI wire protocol, so pointing AI_PROVIDER_BASE_URL + AI_API_KEY at a
- * different provider is the same "change an env var" swap the spec wants.
+ * Provider-agnostic AI summary layer, wired to OpenRouter by default. The
+ * real LiteLLM project is Python-only (pip install litellm) — there is no
+ * maintained Node port, so this reimplements the same contract the spec
+ * asks for (one function, one model-per-type env var, swap providers
+ * without touching call sites) using the official OpenAI SDK, since
+ * OpenRouter speaks the OpenAI wire protocol. Swapping to a different
+ * OpenAI-compatible provider is still just an env var change.
  */
 
 export type SummaryType = "pnl" | "funnel" | "affiliate"
 
 const MODELS: Record<SummaryType, string> = {
-  pnl:       process.env.AI_MODEL_PNL ?? "gpt-4o-mini",
-  funnel:    process.env.AI_MODEL_FUNNEL ?? "gpt-4o-mini",
-  affiliate: process.env.AI_MODEL_AFFILIATE ?? "gpt-4o-mini",
+  pnl:       process.env.AI_MODEL_PNL ?? "openai/gpt-4o-mini",
+  funnel:    process.env.AI_MODEL_FUNNEL ?? "openai/gpt-4o-mini",
+  affiliate: process.env.AI_MODEL_AFFILIATE ?? "openai/gpt-4o-mini",
 }
 
 const SYSTEM_PROMPTS: Record<SummaryType, string> = {
@@ -32,7 +32,7 @@ function client() {
   if (!apiKey) return null
   return new OpenAI({
     apiKey,
-    baseURL: process.env.AI_PROVIDER_BASE_URL, // unset = OpenAI default; set to OpenRouter etc. to swap providers
+    baseURL: process.env.AI_PROVIDER_BASE_URL ?? "https://openrouter.ai/api/v1",
   })
 }
 

@@ -14,6 +14,7 @@ import { useCartStore } from "@/lib/store"
 import { wishlistClient } from "@/lib/wishlist-client"
 import { flyToTarget } from "@/lib/fly-animation"
 import { waLink } from "@/lib/site-config"
+import { trackEvent } from "@/lib/track-event"
 import type { Product } from "@/types"
 
 const categoryToneMap: Record<string, string> = {
@@ -60,6 +61,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
     e.stopPropagation()
     const isNow = !wished
     if (isNow) {
+      trackEvent("wishlist_add", { name: product.name }, { productId: product._id })
       flyToTarget(e.currentTarget as HTMLElement, "[data-nav-wishlist]", "#ef4444", () => {
         wishlistClient.toggle({
           productId: product._id,
@@ -84,6 +86,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
     if (inCart) {
       removeItem(product._id, product.variants[0]?._id, product.finishes[0]?._id)
     } else {
+      trackEvent("add_to_cart", { name: product.name, price: product.salePrice ?? product.basePrice, qty: 1 }, { productId: product._id })
       flyToTarget(e.currentTarget as HTMLElement, "[data-nav-cart]", "#C9A24B", () => {
         addItem({
           productId: product._id,

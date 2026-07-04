@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { formatPrice } from "@/lib/utils"
 import { ChevronDown, ChevronUp, Loader2 } from "lucide-react"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 
 export interface AdminAffiliate {
   id: number
@@ -39,6 +40,7 @@ function AffiliateRow({ affiliate: a }: { affiliate: AdminAffiliate }) {
   const [followerCount, setFollowerCount] = useState(String(a.followerCount ?? ""))
   const [contentType, setContentType] = useState(a.contentType ?? "")
   const [collabNotes, setCollabNotes] = useState(a.collabNotes ?? "")
+  const [confirmingApprove, setConfirmingApprove] = useState(false)
 
   const pending = !a.approvedAt
 
@@ -50,6 +52,7 @@ function AffiliateRow({ affiliate: a }: { affiliate: AdminAffiliate }) {
       body: JSON.stringify({ action: "approve" }),
     })
     setBusy(false)
+    setConfirmingApprove(false)
     router.refresh()
   }
 
@@ -85,14 +88,26 @@ function AffiliateRow({ affiliate: a }: { affiliate: AdminAffiliate }) {
           <p className="font-mono text-[10px] text-sage">{a.totalOrders} orders</p>
         </div>
         {pending ? (
-          <button
-            type="button"
-            onClick={approve}
-            disabled={busy}
-            className="rounded-full bg-forest px-3 py-1.5 font-mono text-[10px] uppercase text-bone disabled:opacity-60"
-          >
-            {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : "Approve"}
-          </button>
+          <>
+            <button
+              type="button"
+              onClick={() => setConfirmingApprove(true)}
+              disabled={busy}
+              className="rounded-full bg-forest px-3 py-1.5 font-mono text-[10px] uppercase text-bone disabled:opacity-60"
+            >
+              {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : "Approve"}
+            </button>
+            <ConfirmDialog
+              open={confirmingApprove}
+              onClose={() => setConfirmingApprove(false)}
+              onConfirm={approve}
+              title={`Approve ${a.name}?`}
+              description="They'll get portal access and their referral code becomes active immediately."
+              confirmLabel="Approve"
+              variant="success"
+              loading={busy}
+            />
+          </>
         ) : (
           <span className={`rounded-full px-2.5 py-1 font-mono text-[9px] uppercase ${a.active ? "bg-success/12 text-success" : "bg-gold/12 text-gold-700"}`}>
             {a.active ? "active" : "inactive"}

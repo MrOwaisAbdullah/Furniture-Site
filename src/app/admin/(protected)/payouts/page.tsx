@@ -9,10 +9,7 @@ export default async function AdminPayoutsPage() {
 
   return (
     <div className="p-6">
-      <h1 className="font-heading font-black text-[22px] text-ink" style={{ letterSpacing: "-0.4px" }}>
-        Payouts
-      </h1>
-      <p className="mt-0.5 font-mono text-[11px] text-sage">{owed.length} owed · {payouts.length} total</p>
+      <p className="font-mono text-[11px] text-sage">{owed.length} owed · {payouts.length} total</p>
 
       <PayoutsList payouts={payouts} />
     </div>

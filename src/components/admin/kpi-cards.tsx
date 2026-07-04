@@ -1,61 +1,61 @@
-import { TrendingUp, ShoppingBag, BarChart3, DollarSign } from "lucide-react"
+import { TrendingUp, TrendingDown } from "lucide-react"
 import { formatPrice } from "@/lib/utils"
 
-export function KpiCards({
-  orderCount,
-  revenue,
-  avgOrderValue,
-  netRevenue,
-}: {
-  orderCount: number
-  revenue: number
-  avgOrderValue: number
-  netRevenue: number
-}) {
-  const kpis = [
-    {
-      label: "Orders this period",
-      value: String(orderCount),
-      sub: "Online + showroom",
-      icon: ShoppingBag,
-      color: "#16352A",
-    },
-    {
-      label: "Revenue",
-      value: formatPrice(revenue),
-      sub: "Gross, this period",
-      icon: DollarSign,
-      color: "#C9A24B",
-    },
-    {
-      label: "Avg order value",
-      value: formatPrice(avgOrderValue),
-      sub: "Per booking",
-      icon: BarChart3,
-      color: "#3A6B7A",
-    },
-    {
-      label: "Net revenue",
-      value: formatPrice(netRevenue),
-      sub: "After discounts + commissions",
-      icon: TrendingUp,
-      color: "#3E7D5A",
-    },
-  ]
+export interface Kpi {
+  label: string
+  value: string
+  sub: string
+  delta: number | null // percent change vs previous period, null = no comparison available
+  dot: string
+}
 
+function pct(current: number, previous: number): number | null {
+  if (previous === 0) return current > 0 ? 100 : null
+  return ((current - previous) / previous) * 100
+}
+
+export function buildKpis(opts: {
+  ordersOnline: number; ordersOnlinePrev: number
+  ordersShowroom: number; ordersShowroomPrev: number
+  totalOrders: number; totalOrdersPrev: number
+  aov: number; aovPrev: number
+  revenueOnline: number; revenueOnlinePrev: number
+  revenueShowroom: number; revenueShowroomPrev: number
+  combinedRevenue: number; combinedRevenuePrev: number
+  netProfit: number; netProfitPrev: number
+}): Kpi[] {
+  const green = "#3E7D6A", gold = "#9c7d2f", ink = "#16352A"
+  return [
+    { label: "Orders · Online", value: String(opts.ordersOnline), sub: `vs ${opts.ordersOnlinePrev} last period`, delta: pct(opts.ordersOnline, opts.ordersOnlinePrev), dot: green },
+    { label: "Orders · Showroom", value: String(opts.ordersShowroom), sub: `vs ${opts.ordersShowroomPrev} last period`, delta: pct(opts.ordersShowroom, opts.ordersShowroomPrev), dot: gold },
+    { label: "Total Orders", value: String(opts.totalOrders), sub: `vs ${opts.totalOrdersPrev} last period`, delta: pct(opts.totalOrders, opts.totalOrdersPrev), dot: ink },
+    { label: "Avg Order Value", value: formatPrice(opts.aov), sub: `vs ${formatPrice(opts.aovPrev)}`, delta: pct(opts.aov, opts.aovPrev), dot: ink },
+    { label: "Revenue · Online", value: formatPrice(opts.revenueOnline), sub: formatPrice(opts.revenueOnline), delta: pct(opts.revenueOnline, opts.revenueOnlinePrev), dot: green },
+    { label: "Revenue · Showroom", value: formatPrice(opts.revenueShowroom), sub: formatPrice(opts.revenueShowroom), delta: pct(opts.revenueShowroom, opts.revenueShowroomPrev), dot: gold },
+    { label: "Combined Revenue", value: formatPrice(opts.combinedRevenue), sub: formatPrice(opts.combinedRevenue), delta: pct(opts.combinedRevenue, opts.combinedRevenuePrev), dot: ink },
+    { label: "Net Revenue", value: formatPrice(opts.netProfit), sub: "After discounts & commissions", delta: pct(opts.netProfit, opts.netProfitPrev), dot: "#C9A24B" },
+  ]
+}
+
+export function KpiCards({ kpis }: { kpis: Kpi[] }) {
   return (
     <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-      {kpis.map(({ label, value, sub, icon: Icon, color }) => (
-        <div key={label} className="rounded-[14px] border border-border bg-white p-4">
-          <div
-            className="flex h-9 w-9 items-center justify-center rounded-[9px]"
-            style={{ background: color + "18" }}
-          >
-            <Icon className="h-4.5 w-4.5" style={{ stroke: color }} strokeWidth={2} />
+      {kpis.map((k) => (
+        <div key={k.label} className="rounded-[16px] border border-[#E4E0D6] bg-white p-4.5 shadow-[0_1px_2px_rgba(22,53,42,.04)]">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full" style={{ background: k.dot }} />
+              <span className="font-mono text-[10px] uppercase tracking-[.5px] text-sage">{k.label}</span>
+            </div>
+            {k.delta !== null && (
+              <div className={`flex items-center gap-0.5 font-mono text-[10.5px] font-bold ${k.delta >= 0 ? "text-success" : "text-error"}`}>
+                {k.delta >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                {Math.abs(k.delta).toFixed(1)}%
+              </div>
+            )}
           </div>
-          <p className="mt-3 font-mono font-bold text-[20px] text-ink">{value}</p>
-          <p className="mt-0.5 text-[12px] text-slate">{label}</p>
-          <p className="mt-1 font-mono text-[10px] text-sage">{sub}</p>
+          <p className="mt-3 font-heading font-black text-[24px] text-forest" style={{ letterSpacing: "-0.5px" }}>{k.value}</p>
+          <p className="mt-0.5 text-[11.5px] text-sage">{k.sub}</p>
         </div>
       ))}
     </div>

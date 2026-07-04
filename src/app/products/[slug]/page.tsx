@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { use } from "react"
@@ -24,6 +24,8 @@ import { useCartStore } from "@/lib/store"
 import { wishlistClient } from "@/lib/wishlist-client"
 import { flyToTarget } from "@/lib/fly-animation"
 import { ProductJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld"
+import { trackEvent } from "@/lib/track-event"
+import { usePageEngagementTracking } from "@/lib/use-page-engagement-tracking"
 
 const categoryTone: Record<string, string> = {
   "bedroom-sets":    "linear-gradient(150deg,#244C3C,#0c231b)",
@@ -46,6 +48,13 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   const [qty, setQty] = useState(1)
   const [imgErrors, setImgErrors] = useState<Record<number, boolean>>({})
   const [showUpsellPrompt, setShowUpsellPrompt] = useState(false)
+
+  useEffect(() => {
+    trackEvent("product_view", { name: product.name, categorySlug: product.category.slug, price: product.salePrice ?? product.basePrice }, { productId: product._id })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product._id])
+
+  usePageEngagementTracking(`/products/${slug}`, product._id)
 
   const relatedScrollRef = useRef<HTMLDivElement>(null)
 
@@ -97,6 +106,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
     })
     if (qty > 1) updateQuantity(product._id, variantId, finishId, qty)
     if (fromEl) flyToTarget(fromEl, "[data-nav-cart]")
+    trackEvent("add_to_cart", { name: product.name, price: product.salePrice ?? product.basePrice, qty }, { productId: product._id })
     setCartAdded(true)
     setTimeout(() => setCartAdded(false), 1800)
   }
@@ -125,6 +135,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
       finishName: selectedFinish?.name,
     })
     setWishlisted(isNow)
+    if (isNow) trackEvent("wishlist_add", { name: product.name }, { productId: product._id })
     if (fromEl && isNow) flyToTarget(fromEl, "[data-nav-wishlist]", "#ef4444")
   }
 

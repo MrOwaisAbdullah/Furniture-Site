@@ -205,6 +205,30 @@ export const costMode = pgTable("cost_mode", {
   mode:         text("mode").notNull().default("average"), // "average" | "per_product"
 })
 
+// Per-product cost entry, matching the admin dashboard design's cost sheet
+// table. Material line items (board/foam/rexine/patex) are QUANTITIES —
+// the actual PKR amount is quantity × the shared global rate from
+// materialRates, so a rate change recalculates every product automatically.
+// Hardware/labour/deco/wastage stay flat PKR since they're genuinely bespoke
+// per product, not a quantity of a shared material.
+// A product with a row here always overrides its category's average — see
+// resolveProductCost() in queries.ts.
+export const productCosts = pgTable("product_costs", {
+  id:           serial("id").primaryKey(),
+  productSlug:  text("product_slug").notNull().unique(),
+  categorySlug: text("category_slug").notNull(),
+  boardQty:     decimal("board_qty", { precision: 6, scale: 2 }).notNull().default("0"),  // sheets of MDF/Lasani
+  foamQty:      decimal("foam_qty", { precision: 6, scale: 2 }).notNull().default("0"),   // units of foam (per bed)
+  rexineQty:    decimal("rexine_qty", { precision: 6, scale: 2 }).notNull().default("0"), // units of rexine (per bed)
+  patexQty:     decimal("patex_qty", { precision: 6, scale: 2 }).notNull().default("0"),  // sheets of patex/sunmica — 0 for most
+  hardware:     decimal("hardware", { precision: 10, scale: 2 }).notNull().default("0"),
+  labour:       decimal("labour", { precision: 10, scale: 2 }).notNull().default("0"),
+  deco:         decimal("deco", { precision: 10, scale: 2 }).notNull().default("0"),
+  wastage:      decimal("wastage", { precision: 10, scale: 2 }).notNull().default("0"),
+  marginPct:    decimal("margin_pct", { precision: 5, scale: 2 }).notNull().default("40"),
+  updatedAt:    timestamp("updated_at").defaultNow().notNull(),
+})
+
 // ── Leads (inquiry inbox) ──────────────────────────────────────────────────────
 
 export const leads = pgTable("leads", {

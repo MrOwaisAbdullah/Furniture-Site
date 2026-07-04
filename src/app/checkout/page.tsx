@@ -1,23 +1,101 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { Loader2 } from "lucide-react"
 import { useCartStore } from "@/lib/store"
 import { StepDetails, type DetailsForm } from "@/components/checkout/step-details"
 import { StepDelivery, type DeliveryMode } from "@/components/checkout/step-delivery"
 import { StepConfirm } from "@/components/checkout/step-confirm"
 import { StepPayment, type PaymentMethod } from "@/components/checkout/step-payment"
+import { trackEvent } from "@/lib/track-event"
 
 const STEP_LABELS = ["Your details", "Delivery", "Review & advance", "Payment"]
+const STEP_KEYS = ["details", "delivery", "review", "payment"]
+
+function readCookie(name: string): string | undefined {
+  if (typeof document === "undefined") return undefined
+  const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`))
+  return match ? decodeURIComponent(match[1]) : undefined
+}
 
 export default function CheckoutPage() {
+  const router = useRouter()
   const [step, setStep] = useState(0)
   const [form, setForm] = useState<DetailsForm>({ name: "", phone: "", area: "", address: "" })
   const [delivery, setDelivery] = useState<DeliveryMode>("deliver")
   const [payment, setPayment] = useState<PaymentMethod>("bank")
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const { items, totalPrice } = useCartStore()
+  const { items, totalPrice, clearCart } = useCartStore()
   const advance = Math.round(totalPrice / 2)
+
+  const startedTracking = useRef(false)
+  useEffect(() => {
+    if (startedTracking.current || items.length === 0) return
+    startedTracking.current = true
+    trackEvent("checkout_started", { itemCount: items.length, subtotal: totalPrice })
+  }, [items.length, totalPrice])
+
+  function goToStep(next: number) {
+    trackEvent("checkout_step_completed", { step: STEP_KEYS[step] })
+    setStep(next)
+  }
+
+  async function submitOrder() {
+    setSubmitting(true)
+    setError(null)
+
+    const promoCode = readCookie("promo_code")
+
+    const payload = {
+      customerName: form.name,
+      customerPhone: form.phone,
+      deliveryArea: form.area || undefined,
+      deliveryAddress: form.address || undefined,
+      deliveryMethod: delivery === "deliver" ? "delivery" as const : "showroom" as const,
+      items: items.map((i) => ({
+        productId: i.productId,
+        name: i.name,
+        price: i.price,
+        qty: i.quantity,
+        variantId: i.variantId,
+        finishId: i.finishId,
+        finishName: i.finishName,
+      })),
+      subtotal: totalPrice,
+      discount: 0,
+      advance,
+      paymentMethod: payment,
+      couponCode: promoCode,
+      affiliateCode: promoCode,
+    }
+
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
+      const body = await res.json()
+
+      if (!res.ok) {
+        setError(body?.error ?? "Something went wrong — please check your details and try again.")
+        setSubmitting(false)
+        return
+      }
+
+      trackEvent("order_completed", { orderRef: body.ref, total: totalPrice, itemCount: items.length })
+      sessionStorage.setItem("yl_last_order", JSON.stringify({ ref: body.ref, advance }))
+      clearCart()
+      router.push("/checkout/confirmation")
+    } catch {
+      setError("Network error — please try again.")
+      setSubmitting(false)
+    }
+  }
 
   if (items.length === 0) {
     return (
@@ -75,31 +153,38 @@ export default function CheckoutPage() {
           )}
         </div>
 
+        {error && (
+          <div className="mt-4 rounded-[10px] bg-error/10 px-3.5 py-2.5 text-[12.5px] text-error">{error}</div>
+        )}
+
         {/* Navigation */}
         <div className="mt-8 flex gap-2.5">
           {step > 0 && (
             <button
               onClick={() => setStep(step - 1)}
-              className="rounded-[11px] border border-border-strong px-5 py-3.5 font-heading font-bold text-[14px] text-slate transition-colors hover:bg-surface-sunken"
+              disabled={submitting}
+              className="rounded-[11px] border border-border-strong px-5 py-3.5 font-heading font-bold text-[14px] text-slate transition-colors hover:bg-surface-sunken disabled:opacity-60"
             >
               Back
             </button>
           )}
           {step < STEP_LABELS.length - 1 ? (
             <button
-              onClick={() => setStep(step + 1)}
+              onClick={() => goToStep(step + 1)}
               className="flex-1 rounded-[11px] bg-forest py-3.5 font-heading font-bold text-[15px] text-bone transition-transform active:scale-[.99]"
             >
               Continue
             </button>
           ) : (
-            <Link
-              href="/checkout/confirmation"
-              className="flex-1 rounded-[11px] bg-gold py-3.5 text-center font-heading font-black text-[15px] text-forest shadow-md"
+            <button
+              onClick={submitOrder}
+              disabled={submitting}
+              className="flex flex-1 items-center justify-center gap-2 rounded-[11px] bg-gold py-3.5 text-center font-heading font-black text-[15px] text-forest shadow-md disabled:opacity-70"
               style={{ boxShadow: "0 8px 22px -10px rgba(201,162,75,.6)" }}
             >
-              Confirm booking
-            </Link>
+              {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+              {submitting ? "Confirming…" : "Confirm booking"}
+            </button>
           )}
         </div>
       </div>

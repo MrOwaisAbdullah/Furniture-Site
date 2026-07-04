@@ -4,6 +4,8 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { QrCode, Plus, Loader2, X } from "lucide-react"
 import { CouponQrModal } from "./coupon-qr-modal"
+import { ThemedSelect } from "@/components/ui/themed-select"
+import { DatePicker } from "@/components/ui/date-picker"
 
 export interface AdminCoupon {
   id: number
@@ -29,7 +31,7 @@ function CreateCouponForm({ onClose }: { onClose: () => void }) {
   const [maxUses, setMaxUses] = useState("")
   const [perUserLimit, setPerUserLimit] = useState("1")
   const [combinable, setCombinable] = useState(false)
-  const [expiresAt, setExpiresAt] = useState("")
+  const [expiresAt, setExpiresAt] = useState<Date | null>(null)
   const [targetPhone, setTargetPhone] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -47,7 +49,7 @@ function CreateCouponForm({ onClose }: { onClose: () => void }) {
         maxUses: maxUses ? Number(maxUses) : undefined,
         perUserLimit: perUserLimit ? Number(perUserLimit) : undefined,
         combinable,
-        expiresAt: expiresAt || undefined,
+        expiresAt: expiresAt ? expiresAt.toISOString() : undefined,
         targetPhone: targetPhone || undefined,
       }),
     })
@@ -77,66 +79,84 @@ function CreateCouponForm({ onClose }: { onClose: () => void }) {
         {error && <div className="mb-3 rounded-[10px] bg-error/10 px-3 py-2 text-[12px] text-error">{error}</div>}
 
         <div className="flex flex-col gap-3">
-          <input
-            required
-            placeholder="Code (e.g. SHAADI10)"
-            value={code}
-            onChange={(e) => setCode(e.target.value.toUpperCase())}
-            className="min-h-[44px] rounded-[10px] border border-border-strong px-3 font-mono text-[13.5px] focus:border-forest focus:outline-none"
-          />
-
-          <div className="flex gap-2">
-            <select
-              value={type}
-              onChange={(e) => setType(e.target.value as "percent" | "flat")}
-              className="min-h-[44px] rounded-[10px] border border-border-strong px-3 text-[13px] focus:border-forest focus:outline-none"
-            >
-              <option value="percent">% off</option>
-              <option value="flat">Rs off</option>
-            </select>
+          <div>
+            <label className="mb-1 block font-mono text-[10.5px] uppercase tracking-[1px] text-sage">Code</label>
             <input
               required
-              placeholder="Value"
-              inputMode="numeric"
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-              className="min-h-[44px] flex-1 rounded-[10px] border border-border-strong px-3 text-[13.5px] focus:border-forest focus:outline-none"
+              placeholder="e.g. SHAADI10"
+              value={code}
+              onChange={(e) => setCode(e.target.value.toUpperCase())}
+              className="min-h-[44px] w-full rounded-[10px] border border-border-strong px-3 font-mono text-[13.5px] focus:border-forest focus:outline-none"
             />
           </div>
 
           <div className="flex gap-2">
-            <input
-              placeholder="Max uses (blank = unlimited)"
-              inputMode="numeric"
-              value={maxUses}
-              onChange={(e) => setMaxUses(e.target.value)}
-              className="min-h-[44px] flex-1 rounded-[10px] border border-border-strong px-3 text-[13px] focus:border-forest focus:outline-none"
-            />
-            <input
-              placeholder="Per-customer limit"
-              inputMode="numeric"
-              value={perUserLimit}
-              onChange={(e) => setPerUserLimit(e.target.value)}
-              className="min-h-[44px] w-40 rounded-[10px] border border-border-strong px-3 text-[13px] focus:border-forest focus:outline-none"
-            />
+            <div className="w-32">
+              <label className="mb-1 block font-mono text-[10.5px] uppercase tracking-[1px] text-sage">Type</label>
+              <ThemedSelect
+                value={type}
+                onChange={(v) => setType(v as "percent" | "flat")}
+                options={[
+                  { value: "percent", label: "% off" },
+                  { value: "flat", label: "Rs off" },
+                ]}
+              />
+            </div>
+            <div className="flex-1">
+              <label className="mb-1 block font-mono text-[10.5px] uppercase tracking-[1px] text-sage">Value</label>
+              <input
+                required
+                placeholder={type === "percent" ? "e.g. 10" : "e.g. 2500"}
+                inputMode="numeric"
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                className="min-h-[44px] w-full rounded-[10px] border border-border-strong px-3 text-[13.5px] focus:border-forest focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <label className="mb-1 block font-mono text-[10.5px] uppercase tracking-[1px] text-sage">Max uses</label>
+              <input
+                placeholder="Blank = unlimited"
+                inputMode="numeric"
+                value={maxUses}
+                onChange={(e) => setMaxUses(e.target.value)}
+                className="min-h-[44px] w-full rounded-[10px] border border-border-strong px-3 text-[13px] focus:border-forest focus:outline-none"
+              />
+            </div>
+            <div className="w-36">
+              <label className="mb-1 block font-mono text-[10.5px] uppercase tracking-[1px] text-sage">Per customer</label>
+              <input
+                placeholder="e.g. 1"
+                inputMode="numeric"
+                value={perUserLimit}
+                onChange={(e) => setPerUserLimit(e.target.value)}
+                className="min-h-[44px] w-full rounded-[10px] border border-border-strong px-3 text-[13px] focus:border-forest focus:outline-none"
+              />
+            </div>
           </div>
 
           <div>
             <label className="mb-1 block font-mono text-[10.5px] uppercase tracking-[1px] text-sage">Expiry date</label>
-            <input
-              type="date"
+            <DatePicker
               value={expiresAt}
-              onChange={(e) => setExpiresAt(e.target.value)}
-              className="min-h-[44px] w-full rounded-[10px] border border-border-strong px-3 text-[13px] focus:border-forest focus:outline-none"
+              onChange={setExpiresAt}
+              minDate={new Date()}
+              placeholder="No expiry"
             />
           </div>
 
-          <input
-            placeholder="Assign to customer phone (optional — targeted coupon)"
-            value={targetPhone}
-            onChange={(e) => setTargetPhone(e.target.value)}
-            className="min-h-[44px] rounded-[10px] border border-border-strong px-3 text-[13px] focus:border-forest focus:outline-none"
-          />
+          <div>
+            <label className="mb-1 block font-mono text-[10.5px] uppercase tracking-[1px] text-sage">Assign to customer (optional)</label>
+            <input
+              placeholder="Customer phone — makes this a targeted coupon"
+              value={targetPhone}
+              onChange={(e) => setTargetPhone(e.target.value)}
+              className="min-h-[44px] w-full rounded-[10px] border border-border-strong px-3 text-[13px] focus:border-forest focus:outline-none"
+            />
+          </div>
 
           <label className="flex items-center gap-2 text-[12.5px] text-slate">
             <input type="checkbox" checked={combinable} onChange={(e) => setCombinable(e.target.checked)} />
@@ -178,10 +198,7 @@ export function CouponsManager({ coupons }: { coupons: AdminCoupon[] }) {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <h1 className="font-heading font-black text-[22px] text-ink" style={{ letterSpacing: "-0.4px" }}>
-          Coupons
-        </h1>
+      <div className="flex items-center justify-end">
         <button
           type="button"
           onClick={() => setShowForm(true)}

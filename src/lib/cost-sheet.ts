@@ -84,8 +84,16 @@ export const DEFAULT_MATERIAL_RATES: MaterialRate[] = [
   { key: "mdf16mm",          label: "MDF / Lasani 16mm (raw, 4x8)", rate: 5800,  unit: "per sheet" },
   { key: "thinBoard",        label: "Thin board 6–9mm",             rate: 2000,  unit: "per sheet" },
   { key: "foamRexinePerBed", label: "Foam + Rexine (per bed)",      rate: 20000, unit: "per bed" },
+  // Split out for the per-product cost sheet, which prices foam and rexine
+  // as separate line items rather than one combined figure.
+  { key: "foamPerBed",       label: "Foam (per bed)",                rate: 12000, unit: "per bed" },
+  { key: "rexinePerBed",     label: "Rexine (per bed)",               rate: 8000,  unit: "per bed" },
   { key: "mirrorGlass",      label: "Dressing/side-table mirror",   rate: 9000,  unit: "per unit" },
   { key: "thapary",          label: "Thapary (below mattress)",     rate: 6500,  unit: "per bed" },
+  // Not used on most pieces — only some items need a patex/sunmica laminate
+  // sheet finish. Kept as a general rate so the rare item that needs it
+  // doesn't need its own one-off number.
+  { key: "patexSheet",       label: "Patex / Sunmica laminate sheet", rate: 1200, unit: "per sheet" },
 ]
 
 export const DEFAULT_PIECE_COSTS: PieceCost[] = [

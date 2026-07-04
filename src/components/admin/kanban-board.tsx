@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { OrderCard } from "./order-card"
+import { ORDER_PIPELINE } from "@/lib/order-pipeline"
 
 export interface AdminOrder {
   id: number
@@ -19,16 +20,6 @@ export interface AdminOrder {
   paymentScreenshot: string | null
   createdAt: Date | string
 }
-
-export const ORDER_PIPELINE = [
-  { key: "payment_pending",   label: "Pending Payment" },
-  { key: "payment_confirmed", label: "Payment Confirmed" },
-  { key: "building",          label: "Workshop Building" },
-  { key: "polishing",         label: "Polishing / Deco" },
-  { key: "finishing",         label: "Final Finishing" },
-  { key: "ready",             label: "Ready for Delivery" },
-  { key: "delivered",         label: "Delivered" },
-]
 
 interface KanbanBoardProps {
   orders: AdminOrder[]

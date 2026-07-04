@@ -1,8 +1,25 @@
+"use client"
+
+import { useEffect, useState } from "react"
 import Link from "next/link"
-import { CheckCircle, Gift } from "lucide-react"
+import { CheckCircle } from "lucide-react"
 import { FaWhatsapp } from "react-icons/fa"
+import { formatPrice } from "@/lib/utils"
 
 export default function ConfirmationPage() {
+  const [order, setOrder] = useState<{ ref: string; advance: number } | null>(null)
+
+  useEffect(() => {
+    const raw = sessionStorage.getItem("yl_last_order")
+    if (raw) {
+      try {
+        setOrder(JSON.parse(raw))
+      } catch {
+        // ignore malformed value
+      }
+    }
+  }, [])
+
   return (
     <div className="min-h-screen bg-surface flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md text-center">
@@ -24,37 +41,27 @@ export default function ConfirmationPage() {
         </p>
 
         {/* Order summary card */}
-        <div className="mt-6 rounded-[13px] border border-border bg-white p-5 text-left">
-          {[
-            { label: "Order ref",        value: "YL-26-0418", mono: true },
-            { label: "Delivery window",  value: "28 Jun – 2 Jul" },
-          ].map((row, i, arr) => (
-            <div key={row.label} className={i < arr.length - 1 ? "mb-3" : ""}>
-              <div className="flex justify-between">
-                <span className="text-[12px] text-sage">{row.label}</span>
-                <span className={row.mono ? "font-mono font-bold text-[13px] text-forest" : "text-[13px] text-ink"}>
-                  {row.value}
-                </span>
-              </div>
+        {order && (
+          <div className="mt-6 rounded-[13px] border border-border bg-white p-5 text-left">
+            <div className="flex justify-between">
+              <span className="text-[12px] text-sage">Order ref</span>
+              <span className="font-mono font-bold text-[13px] text-forest">{order.ref}</span>
             </div>
-          ))}
-        </div>
-
-        {/* Referral code — separate card with context */}
-        <div className="mt-3 rounded-[13px] border border-gold/30 bg-gold/5 p-4 text-left">
-          <div className="flex items-start gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gold/15">
-              <Gift className="h-4 w-4 stroke-gold-700" strokeWidth={1.75} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-mono text-[9px] uppercase tracking-[1.5px] text-gold-700">Your referral code</p>
-              <p className="mt-0.5 font-mono font-black text-[20px] text-forest tracking-wider">AHMED-5OFF</p>
-              <p className="mt-1.5 text-[11.5px] leading-[1.5] text-slate">
-                Share this code with friends — they get <strong className="text-ink">5% off</strong> their first order,
-                and you earn a commission when they book.
-              </p>
+            <div className="mt-3 flex justify-between">
+              <span className="text-[12px] text-sage">Advance to pay</span>
+              <span className="text-[13px] text-ink">{formatPrice(order.advance)}</span>
             </div>
           </div>
+        )}
+
+        {/* Referral CTA */}
+        <div className="mt-3 rounded-[13px] border border-gold/30 bg-gold/5 p-4 text-left">
+          <p className="text-[12.5px] leading-[1.55] text-slate">
+            Love your order? Become an affiliate and earn a commission every time someone books using your code.
+          </p>
+          <Link href="/affiliate" className="mt-2 inline-block font-heading font-bold text-[12.5px] text-gold-700">
+            Join the affiliate program →
+          </Link>
         </div>
 
         <Link

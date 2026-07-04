@@ -10,10 +10,7 @@ export default async function AdminLeadsPage() {
 
   return (
     <div className="p-6">
-      <h1 className="font-heading font-black text-[22px] text-ink" style={{ letterSpacing: "-0.4px" }}>
-        Leads inbox
-      </h1>
-      <p className="mt-0.5 font-mono text-[11px] text-sage">{leads.length} inquiries</p>
+      <p className="font-mono text-[11px] text-sage">{leads.length} inquiries</p>
 
       <div className="mt-5">
         {leads.length === 0 ? (

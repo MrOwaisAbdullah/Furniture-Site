@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Plus, Trash2, Loader2, X } from "lucide-react"
+import { ThemedSelect } from "@/components/ui/themed-select"
 
 interface LineItem {
   name: string
@@ -92,23 +93,30 @@ export function NewOrderForm({ onClose }: { onClose: () => void }) {
 
           <div className="flex flex-col gap-2">
             <p className="font-mono text-[10.5px] uppercase tracking-[1px] text-sage">Items</p>
+            <div className="flex gap-2 pr-[42px]">
+              <span className="flex-1 font-mono text-[9px] uppercase tracking-[.5px] text-sage">Name</span>
+              <span className="w-24 font-mono text-[9px] uppercase tracking-[.5px] text-sage">Price</span>
+              <span className="w-16 font-mono text-[9px] uppercase tracking-[.5px] text-sage">Qty</span>
+            </div>
             {items.map((item, i) => (
               <div key={i} className="flex gap-2">
                 <input
-                  placeholder="Item name"
+                  aria-label="Item name"
+                  placeholder="e.g. King Foam Bed"
                   value={item.name}
                   onChange={(e) => updateItem(i, { name: e.target.value })}
                   className="min-h-[40px] flex-1 rounded-[8px] border border-border-strong px-2.5 text-[12.5px] focus:border-forest focus:outline-none"
                 />
                 <input
-                  placeholder="Price"
+                  aria-label="Price"
+                  placeholder="e.g. 65000"
                   inputMode="numeric"
                   value={item.price}
                   onChange={(e) => updateItem(i, { price: e.target.value })}
                   className="min-h-[40px] w-24 rounded-[8px] border border-border-strong px-2.5 text-[12.5px] focus:border-forest focus:outline-none"
                 />
                 <input
-                  placeholder="Qty"
+                  aria-label="Quantity"
                   inputMode="numeric"
                   value={item.qty}
                   onChange={(e) => updateItem(i, { qty: e.target.value })}
@@ -135,32 +143,39 @@ export function NewOrderForm({ onClose }: { onClose: () => void }) {
           </div>
 
           <div className="flex gap-2">
-            <input
-              placeholder="Discount (Rs)"
-              inputMode="numeric"
-              value={discount}
-              onChange={(e) => setDiscount(e.target.value)}
-              className="min-h-[44px] flex-1 rounded-[10px] border border-border-strong px-3 text-[13.5px] focus:border-forest focus:outline-none"
-            />
-            <input
-              required
-              placeholder="Advance received (Rs)"
-              inputMode="numeric"
-              value={advance}
-              onChange={(e) => setAdvance(e.target.value)}
-              className="min-h-[44px] flex-1 rounded-[10px] border border-border-strong px-3 text-[13.5px] focus:border-forest focus:outline-none"
-            />
+            <div className="flex-1">
+              <label className="mb-1 block font-mono text-[10.5px] uppercase tracking-[1px] text-sage">Discount (Rs)</label>
+              <input
+                inputMode="numeric"
+                value={discount}
+                onChange={(e) => setDiscount(e.target.value)}
+                className="min-h-[44px] w-full rounded-[10px] border border-border-strong px-3 text-[13.5px] focus:border-forest focus:outline-none"
+              />
+            </div>
+            <div className="flex-1">
+              <label className="mb-1 block font-mono text-[10.5px] uppercase tracking-[1px] text-sage">Advance received (Rs)</label>
+              <input
+                required
+                inputMode="numeric"
+                value={advance}
+                onChange={(e) => setAdvance(e.target.value)}
+                className="min-h-[44px] w-full rounded-[10px] border border-border-strong px-3 text-[13.5px] focus:border-forest focus:outline-none"
+              />
+            </div>
           </div>
 
-          <select
-            value={paymentMethod}
-            onChange={(e) => setPaymentMethod(e.target.value as typeof paymentMethod)}
-            className="min-h-[44px] rounded-[10px] border border-border-strong px-3 text-[13.5px] focus:border-forest focus:outline-none"
-          >
-            <option value="cash">Cash</option>
-            <option value="bank">Bank transfer</option>
-            <option value="easypaisa">EasyPaisa / JazzCash</option>
-          </select>
+          <div>
+            <label className="mb-1 block font-mono text-[10.5px] uppercase tracking-[1px] text-sage">Payment method</label>
+            <ThemedSelect
+              value={paymentMethod}
+              onChange={(v) => setPaymentMethod(v as typeof paymentMethod)}
+              options={[
+                { value: "cash", label: "Cash" },
+                { value: "bank", label: "Bank transfer" },
+                { value: "easypaisa", label: "EasyPaisa / JazzCash" },
+              ]}
+            />
+          </div>
 
           <button
             type="submit"

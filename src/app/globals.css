@@ -98,6 +98,15 @@
 *::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 4px; }
 *::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); }
 
+/* Dark variant for the admin sidebar (dark green bg) — the default light
+   scrollbar reads as a bright, mismatched box against it. */
+.scrollbar-dark {
+  scrollbar-color: rgba(242, 238, 230, .18) transparent;
+}
+.scrollbar-dark::-webkit-scrollbar-track { background: transparent; }
+.scrollbar-dark::-webkit-scrollbar-thumb { background: rgba(242, 238, 230, .18); }
+.scrollbar-dark::-webkit-scrollbar-thumb:hover { background: rgba(242, 238, 230, .32); }
+
 /* === Body === */
 body {
   background: var(--background);

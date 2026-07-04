@@ -6,7 +6,8 @@ import { usePathname, useRouter } from "next/navigation"
 import { LogOut, Menu, X, MoreHorizontal } from "lucide-react"
 import { Logo } from "@/components/ui/logo"
 import { cn } from "@/lib/utils"
-import { adminNavItems, mobilePrimaryNavHrefs } from "@/lib/admin-nav"
+import { adminNavItems, mobilePrimaryNavHrefs, OPERATIONS_LABEL, GROWTH_LABEL } from "@/lib/admin-nav"
+import { crumbFor } from "@/lib/admin-nav-meta"
 import { signOut } from "@/lib/auth-client"
 
 function isActive(pathname: string, href: string, exact?: boolean) {
@@ -37,36 +38,54 @@ function SignOutButton({ className }: { className?: string }) {
   )
 }
 
-function Sidebar() {
-  const pathname = usePathname()
-
+function NavGroup({ label, items, pathname }: { label: string; items: typeof adminNavItems; pathname: string }) {
   return (
-    <aside className="hidden lg:flex flex-col bg-forest text-bone" style={{ minWidth: 220 }}>
-      <div className="flex h-16 items-center px-5 border-b border-white/10">
-        <Logo variant="compact" on="forest" />
-      </div>
-
-      <nav className="flex-1 flex flex-col gap-1 p-3 pt-4">
-        {adminNavItems.map(({ href, label, icon: Icon, exact }) => {
+    <>
+      <div className="px-3 pb-2 pt-4 font-mono text-[9px] uppercase tracking-[2px] text-bone/35">{label}</div>
+      <div className="flex flex-col gap-0.5">
+        {items.map(({ href, label, icon: Icon, exact }) => {
           const active = isActive(pathname, href, exact)
           return (
             <Link
               key={href}
               href={href}
               className={cn(
-                "flex items-center gap-3 rounded-[9px] px-3.5 py-2.5 text-[13.5px] font-medium transition-colors",
-                active ? "bg-white/15 text-bone" : "text-bone/60 hover:bg-white/8 hover:text-bone"
+                "relative flex items-center gap-3 rounded-[9px] px-3.5 py-2.5 text-[13.5px] font-medium transition-colors",
+                active ? "bg-gold/[.14] text-bone" : "text-bone/60 hover:bg-white/[.06] hover:text-bone"
               )}
             >
-              <Icon className="h-4.5 w-4.5" strokeWidth={active ? 2.5 : 2} />
+              <span
+                className="absolute left-0 top-[9px] bottom-[9px] w-[3px] rounded-sm"
+                style={{ background: active ? "#C9A24B" : "transparent" }}
+              />
+              <Icon className="h-4.5 w-4.5" strokeWidth={active ? 2.5 : 2} style={{ color: active ? "#C9A24B" : undefined }} />
               {label}
             </Link>
           )
         })}
+      </div>
+    </>
+  )
+}
+
+function Sidebar() {
+  const pathname = usePathname()
+  const operations = adminNavItems.filter((i) => i.group === "operations")
+  const growth = adminNavItems.filter((i) => i.group === "growth")
+
+  return (
+    <aside className="hidden lg:flex flex-col text-bone" style={{ minWidth: 248, background: "#12281F" }}>
+      <div className="flex h-16 items-center px-5 border-b border-white/[.08]">
+        <Logo variant="compact" on="forest" />
+      </div>
+
+      <nav className="scrollbar-dark flex-1 flex flex-col gap-0 overflow-y-auto p-3 pt-1">
+        <NavGroup label={OPERATIONS_LABEL} items={operations} pathname={pathname} />
+        <NavGroup label={GROWTH_LABEL} items={growth} pathname={pathname} />
       </nav>
 
-      <div className="p-3 border-t border-white/10">
-        <SignOutButton className="w-full text-bone/50 hover:text-bone hover:bg-white/8" />
+      <div className="p-3 border-t border-white/[.08]">
+        <SignOutButton className="w-full text-bone/50 hover:text-bone hover:bg-white/[.06]" />
       </div>
     </aside>
   )
@@ -169,18 +188,25 @@ function MobileNav() {
 function Topbar({ userEmail }: { userEmail: string }) {
   const pathname = usePathname()
   const current = [...adminNavItems].reverse().find((item) => isActive(pathname, item.href, item.exact))
+  const crumb = crumbFor(current?.href)
 
   return (
-    <header className="flex h-14 items-center justify-between border-b border-border bg-white px-4 lg:h-16 lg:px-6">
+    <header
+      className="sticky top-0 z-10 flex min-h-16 items-center justify-between border-b border-border px-4 py-3 backdrop-blur-md lg:px-8 lg:py-4"
+      style={{ background: "rgba(238,234,225,.9)" }}
+    >
       <div className="flex items-center gap-2 lg:hidden">
         <Menu className="h-5 w-5 text-slate" />
         <span className="font-heading font-bold text-[15px] text-ink">
           {current?.label ?? "Admin"}
         </span>
       </div>
-      <h1 className="hidden font-heading font-bold text-[17px] text-ink lg:block">
-        {current?.label ?? "Admin"}
-      </h1>
+      <div className="hidden lg:block">
+        <div className="font-mono text-[10px] uppercase tracking-[2px] text-gold-700">{crumb}</div>
+        <h1 className="mt-0.5 font-heading font-black text-[25px] text-forest" style={{ letterSpacing: "-0.5px" }}>
+          {current?.label ?? "Admin"}
+        </h1>
+      </div>
       <span className="font-mono text-[11px] text-sage">{userEmail}</span>
     </header>
   )
@@ -194,7 +220,7 @@ export function AdminShell({
   children: React.ReactNode
 }) {
   return (
-    <div className="flex h-screen overflow-hidden bg-surface">
+    <div className="flex h-screen overflow-hidden" style={{ background: "#EEEAE1" }}>
       <Sidebar />
       <div className="flex flex-1 flex-col overflow-hidden">
         <Topbar userEmail={userEmail} />

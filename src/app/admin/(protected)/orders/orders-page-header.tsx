@@ -9,12 +9,7 @@ export function OrdersPageHeader({ count }: { count: number }) {
 
   return (
     <div className="flex items-center justify-between">
-      <div>
-        <h1 className="font-heading font-black text-[22px] text-ink" style={{ letterSpacing: "-0.4px" }}>
-          Orders
-        </h1>
-        <p className="mt-0.5 font-mono text-[11px] text-sage">{count} orders</p>
-      </div>
+      <p className="font-mono text-[11px] text-sage">{count} orders</p>
       <button
         type="button"
         onClick={() => setShowForm(true)}

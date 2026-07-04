@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { formatPrice } from "@/lib/utils"
 import { Loader2 } from "lucide-react"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 
 interface Payout {
   id: number
@@ -19,6 +20,7 @@ interface Payout {
 export function PayoutsList({ payouts: initialPayouts }: { payouts: Payout[] }) {
   const [payouts, setPayouts] = useState(initialPayouts)
   const [busyId, setBusyId] = useState<number | null>(null)
+  const [confirming, setConfirming] = useState<Payout | null>(null)
 
   async function markPaid(id: number) {
     setBusyId(id)
@@ -29,6 +31,7 @@ export function PayoutsList({ payouts: initialPayouts }: { payouts: Payout[] }) 
     })
     setPayouts((prev) => prev.map((p) => (p.id === id ? { ...p, payoutStatus: "paid", paidAt: new Date() } : p)))
     setBusyId(null)
+    setConfirming(null)
   }
 
   return (
@@ -48,7 +51,7 @@ export function PayoutsList({ payouts: initialPayouts }: { payouts: Payout[] }) 
             ) : (
               <button
                 type="button"
-                onClick={() => markPaid(p.id)}
+                onClick={() => setConfirming(p)}
                 disabled={busyId === p.id}
                 className="flex items-center gap-1.5 rounded-full bg-gold/15 px-2.5 py-1 font-mono text-[9px] uppercase text-gold-700 disabled:opacity-60"
               >
@@ -59,6 +62,17 @@ export function PayoutsList({ payouts: initialPayouts }: { payouts: Payout[] }) 
           </div>
         ))
       )}
+
+      <ConfirmDialog
+        open={!!confirming}
+        onClose={() => setConfirming(null)}
+        onConfirm={() => confirming && markPaid(confirming.id)}
+        title="Mark this payout as paid?"
+        description={confirming ? `${formatPrice(Number(confirming.payoutOwed))} to ${confirming.affiliateName ?? "this affiliate"} for order ${confirming.orderRef}. This can't be undone from here.` : undefined}
+        confirmLabel="Mark paid"
+        variant="success"
+        loading={busyId === confirming?.id}
+      />
     </div>
   )
 }

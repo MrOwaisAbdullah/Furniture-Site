@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { getAllowedAdminSession } from "@/lib/admin-session"
-import { upsertMaterialRate, upsertPieceCost, upsertCategoryCost, setCostMode } from "@/lib/neon/queries"
+import { upsertMaterialRate, upsertPieceCost, upsertCategoryCost, setCostMode, upsertProductCost } from "@/lib/neon/queries"
 
 const payloadSchema = z.object({
   rates: z.array(z.object({
@@ -18,6 +18,12 @@ const payloadSchema = z.object({
   })).optional(),
   modes: z.array(z.object({
     categorySlug: z.string(), mode: z.enum(["average", "per_product"]),
+  })).optional(),
+  products: z.array(z.object({
+    productSlug: z.string(), categorySlug: z.string(),
+    boardQty: z.number().min(0), foamQty: z.number().min(0), rexineQty: z.number().min(0), patexQty: z.number().min(0),
+    hardware: z.number().min(0), labour: z.number().min(0), deco: z.number().min(0),
+    wastage: z.number().min(0), marginPct: z.number().min(0),
   })).optional(),
 })
 
@@ -44,6 +50,12 @@ export async function PUT(req: NextRequest) {
     })),
     ...(data.categories ?? []).map((c) => upsertCategoryCost(c.categorySlug, String(c.manufacturingCost), String(c.showroomMarginPct))),
     ...(data.modes ?? []).map((m) => setCostMode(m.categorySlug, m.mode)),
+    ...(data.products ?? []).map((p) => upsertProductCost({
+      productSlug: p.productSlug, categorySlug: p.categorySlug,
+      boardQty: String(p.boardQty), foamQty: String(p.foamQty), rexineQty: String(p.rexineQty), patexQty: String(p.patexQty),
+      hardware: String(p.hardware), labour: String(p.labour), deco: String(p.deco),
+      wastage: String(p.wastage), marginPct: String(p.marginPct),
+    })),
   ])
 
   return NextResponse.json({ ok: true })

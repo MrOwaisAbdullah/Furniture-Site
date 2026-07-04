@@ -1,6 +1,11 @@
 /**
  * Run: npx tsx scripts/seed-sanity.ts
  * Requires: NEXT_PUBLIC_SANITY_PROJECT_ID, NEXT_PUBLIC_SANITY_DATASET, SANITY_API_WRITE_TOKEN in .env.local
+ *
+ * Uses createOrReplace (not createIfNotExists) so re-running this after the
+ * images change actually updates docs an earlier, image-less run of this
+ * script already created — createIfNotExists is a no-op once a doc with
+ * that _id exists, which is why products had no preview thumbnails before.
  */
 import { createClient } from "@sanity/client"
 // Load env: run with `npx dotenv-cli -e .env.local tsx scripts/seed-sanity.ts`
@@ -13,6 +18,37 @@ const client = createClient({
   useCdn:    false,
   token:     process.env.SANITY_API_WRITE_TOKEN!,
 })
+
+// Same stock photos already used in src/data/sample-products.ts, reused here
+// so Studio previews show something real instead of nothing.
+const IMG_URLS = {
+  bed:       "https://images.unsplash.com/photo-1631049552057-403cdb8f0658?auto=format&fit=crop&w=900&q=80",
+  wardrobe:  "https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=900&q=80",
+  dressing:  "https://images.unsplash.com/photo-1618220179428-22790b461013?auto=format&fit=crop&w=900&q=80",
+  sideTable: "https://images.unsplash.com/photo-1555041469-43e06d39c136?auto=format&fit=crop&w=900&q=80",
+  set:       "https://images.unsplash.com/photo-1600121848594-d8644e57abab?auto=format&fit=crop&w=900&q=80",
+}
+
+const uploadedAssetIds = new Map<string, string>()
+
+async function uploadImage(url: string) {
+  const cached = uploadedAssetIds.get(url)
+  if (cached) return cached
+
+  const res = await fetch(url)
+  if (!res.ok) throw new Error(`Failed to fetch ${url}: ${res.status}`)
+  const buffer = Buffer.from(await res.arrayBuffer())
+  const filename = url.split("/").pop()!.split("?")[0] + ".jpg"
+
+  const asset = await client.assets.upload("image", buffer, { filename })
+  uploadedAssetIds.set(url, asset._id)
+  return asset._id
+}
+
+async function imageField(url: string, key: string) {
+  const assetId = await uploadImage(url)
+  return { _type: "image", _key: key, asset: { _type: "reference", _ref: assetId } }
+}
 
 const categories = [
   { _type: "category", name: "Bedroom Sets",    slug: { current: "bedroom-sets"    }, order: 1, description: "Complete bedroom furniture packages" },
@@ -34,6 +70,16 @@ async function seed() {
   // Resolve category refs
   const catMap = Object.fromEntries(catDocs.map((c: any) => [c.slug.current, c._id]))
 
+  console.log("Uploading images…")
+  const images = {
+    bed: [await imageField(IMG_URLS.bed, "img1")],
+    wardrobe: [await imageField(IMG_URLS.wardrobe, "img1")],
+    dressing: [await imageField(IMG_URLS.dressing, "img1")],
+    sideTable: [await imageField(IMG_URLS.sideTable, "img1")],
+    set: [await imageField(IMG_URLS.set, "img1")],
+  }
+  console.log(`✓ ${uploadedAssetIds.size} images uploaded`)
+
   const products = [
     {
       _type: "product",
@@ -41,6 +87,7 @@ async function seed() {
       name:  "King Foam Bed",
       slug:  { current: "king-foam-bed" },
       category: { _type: "reference", _ref: catMap["beds"] },
+      images: images.bed,
       basePrice: 65000,
       inStock:   true,
       featured:  true,
@@ -65,6 +112,7 @@ async function seed() {
       name:  "3-Door Wardrobe",
       slug:  { current: "3-door-wardrobe" },
       category: { _type: "reference", _ref: catMap["wardrobes"] },
+      images: images.wardrobe,
       basePrice: 75000,
       inStock:   true,
       featured:  false,
@@ -85,6 +133,7 @@ async function seed() {
       name:  "Dressing Table with Mirror",
       slug:  { current: "dressing-table-with-mirror" },
       category: { _type: "reference", _ref: catMap["dressing-tables"] },
+      images: images.dressing,
       basePrice: 45000,
       inStock:   true,
       featured:  false,
@@ -105,6 +154,7 @@ async function seed() {
       name:  "Side Table Pair",
       slug:  { current: "side-table-pair" },
       category: { _type: "reference", _ref: catMap["side-tables"] },
+      images: images.sideTable,
       basePrice: 18000,
       inStock:   true,
       featured:  false,
@@ -125,6 +175,7 @@ async function seed() {
       name:  "Full Bedroom Set",
       slug:  { current: "full-bedroom-set" },
       category: { _type: "reference", _ref: catMap["bedroom-sets"] },
+      images: images.set,
       basePrice: 330000,
       inStock:   true,
       featured:  true,
@@ -145,7 +196,7 @@ async function seed() {
   ]
 
   console.log("Seeding products…")
-  const prodDocs = await Promise.all(products.map((p) => client.createIfNotExists(p)))
+  const prodDocs = await Promise.all(products.map((p) => client.createOrReplace(p)))
   console.log(`✓ ${prodDocs.length} products seeded`)
   console.log("Seed complete.")
 }

@@ -10,10 +10,7 @@ export default async function AdminReviewsPage() {
 
   return (
     <div className="p-6">
-      <h1 className="font-heading font-black text-[22px] text-ink" style={{ letterSpacing: "-0.4px" }}>
-        Reviews
-      </h1>
-      <p className="mt-0.5 font-mono text-[11px] text-sage">{reviews.length} reviews</p>
+      <p className="font-mono text-[11px] text-sage">{reviews.length} reviews</p>
 
       <div className="mt-5">
         {reviews.length === 0 ? (

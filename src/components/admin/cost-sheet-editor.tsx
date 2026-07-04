@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react"
 import { Loader2, Save, CheckCircle, AlertCircle } from "lucide-react"
 import { formatPrice } from "@/lib/utils"
+import { ThemedSelect } from "@/components/ui/themed-select"
 import {
   computeSetCosts, computePricingLadder, computePromoRoom,
   type MaterialRate, type PieceCost,
@@ -241,14 +242,16 @@ export function CostSheetEditor({
               <NumberInput value={cat.manufacturingCost} onChange={(v) => updateCategory(cat.categorySlug, { manufacturingCost: v })} className="w-28" />
               <label className="font-mono text-[10.5px] text-sage">Margin %</label>
               <NumberInput value={cat.showroomMarginPct} onChange={(v) => updateCategory(cat.categorySlug, { showroomMarginPct: v })} className="w-20" />
-              <select
-                value={mode}
-                onChange={(e) => updateMode(cat.categorySlug, e.target.value as CostMode["mode"])}
-                className="min-h-[36px] rounded-[8px] border border-border-strong bg-white px-2 text-[12px] focus:border-forest focus:outline-none"
-              >
-                <option value="average">Average</option>
-                <option value="per_product">Per-product</option>
-              </select>
+              <div className="w-36">
+                <ThemedSelect
+                  value={mode}
+                  onChange={(v) => updateMode(cat.categorySlug, v as CostMode["mode"])}
+                  options={[
+                    { value: "average", label: "Average" },
+                    { value: "per_product", label: "Per-product" },
+                  ]}
+                />
+              </div>
             </div>
           )
         })}

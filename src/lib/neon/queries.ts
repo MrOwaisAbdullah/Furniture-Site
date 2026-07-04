@@ -2,6 +2,7 @@ import { db } from "@/lib/neon"
 import {
   orders, events, coupons, couponRedemptions, wishlistItems, affiliates, affiliatePayouts,
   emailSubscribers, leads, reviews, gifts, materialRates, pieceCosts, categoryCosts, costMode,
+  productCosts,
 } from "./schema"
 import { eq, desc, and, gte, lte, sql } from "drizzle-orm"
 import { nanoid } from "nanoid"
@@ -126,6 +127,116 @@ export async function purgeOldEvents() {
   const sixMonthsAgo = new Date()
   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
   return db.delete(events).where(lte(events.createdAt, sixMonthsAgo))
+}
+
+const FUNNEL_STAGES = ["product_view", "add_to_cart", "checkout_started", "checkout_step_completed", "order_completed"] as const
+
+/** Distinct-session counts per funnel stage — the basis for drop-off % between
+ * each step ("in which step have they stopped"). */
+export async function getFunnelCounts(from: Date, to: Date) {
+  const stagesList = sql.join(FUNNEL_STAGES.map((s) => sql`${s}`), sql`, `)
+  const rows = await db.execute<{ event: string; sessions: string }>(sql`
+    SELECT ${events.event} AS event, COUNT(DISTINCT ${events.sessionId}) AS sessions
+    FROM ${events}
+    WHERE ${events.createdAt} >= ${from} AND ${events.createdAt} <= ${to}
+      AND ${events.event} IN (${stagesList})
+    GROUP BY ${events.event}
+  `)
+  const counts = Object.fromEntries(rows.rows.map((r) => [r.event, Number(r.sessions)]))
+  return FUNNEL_STAGES.map((stage) => ({ stage, sessions: counts[stage] ?? 0 }))
+}
+
+/** View-velocity trend per product: trailing window vs the prior window of
+ * equal length, so "trending" reflects rate of change, not just raw views. */
+export async function getTrendingProducts(days = 7, limit = 8) {
+  const now = new Date()
+  const windowStart = new Date(now.getTime() - days * 86400000)
+  const priorStart = new Date(windowStart.getTime() - days * 86400000)
+
+  const rows = await db.execute<{ product_id: string; name: string; recent: string; prior: string }>(sql`
+    SELECT
+      ${events.productId} AS product_id,
+      MAX(${events.meta}->>'name') AS name,
+      COUNT(*) FILTER (WHERE ${events.createdAt} >= ${windowStart}) AS recent,
+      COUNT(*) FILTER (WHERE ${events.createdAt} >= ${priorStart} AND ${events.createdAt} < ${windowStart}) AS prior
+    FROM ${events}
+    WHERE ${events.event} = 'product_view' AND ${events.productId} IS NOT NULL
+      AND ${events.createdAt} >= ${priorStart}
+    GROUP BY ${events.productId}
+    ORDER BY recent DESC
+    LIMIT ${limit}
+  `)
+  return rows.rows.map((r) => {
+    const recent = Number(r.recent)
+    const prior = Number(r.prior)
+    const changePct = prior > 0 ? ((recent - prior) / prior) * 100 : recent > 0 ? 100 : 0
+    return { productId: r.product_id, name: r.name ?? r.product_id, recentViews: recent, priorViews: prior, changePct }
+  })
+}
+
+/** Most-wishlisted products in the window. */
+export async function getWishlistCounts(from: Date, to: Date, limit = 8) {
+  const rows = await db.execute<{ product_id: string; name: string; count: string }>(sql`
+    SELECT ${events.productId} AS product_id, MAX(${events.meta}->>'name') AS name, COUNT(*) AS count
+    FROM ${events}
+    WHERE ${events.event} = 'wishlist_add' AND ${events.productId} IS NOT NULL
+      AND ${events.createdAt} >= ${from} AND ${events.createdAt} <= ${to}
+    GROUP BY ${events.productId}
+    ORDER BY count DESC
+    LIMIT ${limit}
+  `)
+  return rows.rows.map((r) => ({ productId: r.product_id, name: r.name ?? r.product_id, count: Number(r.count) }))
+}
+
+/** Cart-add counts vs actually-purchased units per product — the "people are
+ * adding it but not buying" signal. Purchases come from real completed
+ * orders' line items, not a separate tracked event. */
+export async function getCartAbandonmentByProduct(from: Date, to: Date, limit = 8) {
+  const added = await db.execute<{ product_id: string; name: string; added: string }>(sql`
+    SELECT ${events.productId} AS product_id, MAX(${events.meta}->>'name') AS name, COUNT(*) AS added
+    FROM ${events}
+    WHERE ${events.event} = 'add_to_cart' AND ${events.productId} IS NOT NULL
+      AND ${events.createdAt} >= ${from} AND ${events.createdAt} <= ${to}
+    GROUP BY ${events.productId}
+  `)
+
+  const purchased = await db.execute<{ product_id: string; qty: string }>(sql`
+    SELECT item->>'productId' AS product_id, SUM((item->>'qty')::numeric) AS qty
+    FROM ${orders}, jsonb_array_elements(${orders.items}) AS item
+    WHERE ${orders.createdAt} >= ${from} AND ${orders.createdAt} <= ${to}
+      AND ${orders.status} NOT IN ('cancelled', 'payment_pending')
+    GROUP BY item->>'productId'
+  `)
+  const purchasedMap = Object.fromEntries(purchased.rows.map((r) => [r.product_id, Number(r.qty)]))
+
+  return added.rows
+    .map((r) => {
+      const addedCount = Number(r.added)
+      const purchasedCount = purchasedMap[r.product_id] ?? 0
+      const abandoned = Math.max(0, addedCount - purchasedCount)
+      return {
+        productId: r.product_id,
+        name: r.name ?? r.product_id,
+        added: addedCount,
+        purchased: purchasedCount,
+        abandonRate: addedCount > 0 ? (abandoned / addedCount) * 100 : 0,
+      }
+    })
+    .sort((a, b) => b.abandonRate - a.abandonRate)
+    .slice(0, limit)
+}
+
+/** Search terms typed on /shop — surfaces demand signals and zero-result gaps. */
+export async function getSearchTerms(from: Date, to: Date, limit = 20) {
+  const rows = await db.execute<{ term: string; count: string; avg_results: string }>(sql`
+    SELECT ${events.meta}->>'term' AS term, COUNT(*) AS count, AVG((${events.meta}->>'resultCount')::numeric) AS avg_results
+    FROM ${events}
+    WHERE ${events.event} = 'search' AND ${events.createdAt} >= ${from} AND ${events.createdAt} <= ${to}
+    GROUP BY ${events.meta}->>'term'
+    ORDER BY count DESC
+    LIMIT ${limit}
+  `)
+  return rows.rows.map((r) => ({ term: r.term, count: Number(r.count), avgResults: Math.round(Number(r.avg_results)) }))
 }
 
 // ── Coupons ───────────────────────────────────────────────────────────────────
@@ -291,6 +402,53 @@ export async function getRevenueStatsByChannel(from: Date, to: Date) {
       sql`${orders.status} NOT IN ('cancelled', 'payment_pending')`
     )
   ).groupBy(orders.channel)
+  return rows
+}
+
+export async function getWeeklyRevenue(from: Date, to: Date) {
+  const rows = await db.execute<{ week: string; channel: string; total: string }>(sql`
+    SELECT date_trunc('week', ${orders.createdAt})::date::text AS week,
+           ${orders.channel} AS channel,
+           SUM(${orders.total}) AS total
+    FROM ${orders}
+    WHERE ${orders.createdAt} >= ${from} AND ${orders.createdAt} <= ${to}
+      AND ${orders.status} NOT IN ('cancelled', 'payment_pending')
+    GROUP BY week, channel
+    ORDER BY week ASC
+  `)
+  return rows.rows as unknown as { week: string; channel: string; total: string }[]
+}
+
+export async function getOrderStatusCounts() {
+  const rows = await db.select({
+    status: orders.status,
+    count: sql<number>`COUNT(*)`,
+  }).from(orders).where(sql`${orders.status} != 'cancelled'`).groupBy(orders.status)
+  return rows
+}
+
+export async function getTopProductsByRevenue(from: Date, to: Date, limit = 5) {
+  const rows = await db.execute<{ name: string; revenue: string }>(sql`
+    SELECT item->>'name' AS name, SUM((item->>'price')::numeric * (item->>'qty')::numeric) AS revenue
+    FROM ${orders}, jsonb_array_elements(${orders.items}) AS item
+    WHERE ${orders.createdAt} >= ${from} AND ${orders.createdAt} <= ${to}
+      AND ${orders.status} NOT IN ('cancelled', 'payment_pending')
+    GROUP BY item->>'name'
+    ORDER BY revenue DESC
+    LIMIT ${limit}
+  `)
+  return rows.rows as unknown as { name: string; revenue: string }[]
+}
+
+export async function getCouponROI(from: Date, to: Date) {
+  const rows = await db.select({
+    code: coupons.code,
+    discount: sql<string>`SUM(${couponRedemptions.discountApplied})`,
+    revenue: sql<string>`SUM(${couponRedemptions.orderValue})`,
+  }).from(couponRedemptions)
+    .innerJoin(coupons, eq(couponRedemptions.couponId, coupons.id))
+    .where(and(gte(couponRedemptions.redeemedAt, from), lte(couponRedemptions.redeemedAt, to)))
+    .groupBy(coupons.code)
   return rows
 }
 
@@ -551,4 +709,86 @@ export async function getCostModes() {
 export async function setCostMode(categorySlug: string, mode: "average" | "per_product") {
   return db.insert(costMode).values({ categorySlug, mode })
     .onConflictDoUpdate({ target: costMode.categorySlug, set: { mode } })
+}
+
+// ── Per-product costs (design's flat board/foam/rexine/hardware/labour/deco table) ──
+
+export async function getProductCosts() {
+  return db.select().from(productCosts)
+}
+
+export async function getProductCostBySlug(productSlug: string) {
+  const rows = await db.select().from(productCosts).where(eq(productCosts.productSlug, productSlug)).limit(1)
+  return rows[0] ?? null
+}
+
+export async function upsertProductCost(data: {
+  productSlug: string
+  categorySlug: string
+  boardQty: string
+  foamQty: string
+  rexineQty: string
+  patexQty: string
+  hardware: string
+  labour: string
+  deco: string
+  wastage: string
+  marginPct: string
+}) {
+  return db.insert(productCosts).values(data)
+    .onConflictDoUpdate({ target: productCosts.productSlug, set: { ...data, updatedAt: new Date() } })
+}
+
+/** quantity × global material rate for board/foam/rexine/patex, matching
+ * getMaterialRates()'s key naming (mdf16mm, foamPerBed, rexinePerBed, patexSheet). */
+function materialAmounts(specific: Awaited<ReturnType<typeof getProductCostBySlug>>, rates: { key: string; rate: string }[]) {
+  const rate = (key: string) => Number(rates.find((r) => r.key === key)?.rate ?? 0)
+  if (!specific) return { board: 0, foam: 0, rexine: 0, patex: 0 }
+  return {
+    board:  Number(specific.boardQty)  * rate("mdf16mm"),
+    foam:   Number(specific.foamQty)   * rate("foamPerBed"),
+    rexine: Number(specific.rexineQty) * rate("rexinePerBed"),
+    patex:  Number(specific.patexQty)  * rate("patexSheet"),
+  }
+}
+
+/**
+ * "General cost, and a product specific cost — default to general one if
+ * not set." A product-specific row in product_costs always wins when
+ * present; otherwise falls back to that category's average. Material line
+ * items (board/foam/rexine/patex) are quantity × the shared global rate, so
+ * changing a rate recalculates every product automatically.
+ */
+export async function resolveProductCost(productSlug: string, categorySlug: string) {
+  const specific = await getProductCostBySlug(productSlug)
+  if (specific) {
+    const rates = await getMaterialRates()
+    const amounts = materialAmounts(specific, rates)
+    const mfg = amounts.board + amounts.foam + amounts.rexine + amounts.patex
+      + Number(specific.hardware) + Number(specific.labour) + Number(specific.deco) + Number(specific.wastage)
+    const wholesale = mfg * (1 + Number(specific.marginPct) / 100)
+    return {
+      source: "product" as const,
+      manufacturingCost: mfg,
+      showroomMarginPct: Number(specific.marginPct),
+      wholesaleCost: wholesale,
+      breakdown: specific,
+      amounts,
+    }
+  }
+
+  const categoryRows = await db.select().from(categoryCosts).where(eq(categoryCosts.categorySlug, categorySlug)).limit(1)
+  const category = categoryRows[0]
+  if (!category) return null
+
+  const mfg = Number(category.manufacturingCost)
+  const wholesale = mfg * (1 + Number(category.showroomMarginPct) / 100)
+  return {
+    source: "category" as const,
+    manufacturingCost: mfg,
+    showroomMarginPct: Number(category.showroomMarginPct),
+    wholesaleCost: wholesale,
+    breakdown: null,
+    amounts: null,
+  }
 }
