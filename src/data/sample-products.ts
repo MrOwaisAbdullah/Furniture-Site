@@ -16,7 +16,7 @@ const IMG = {
   wardrobe2: "https://images.unsplash.com/photo-1567016432779-094069958ea5?auto=format&fit=crop&w=900&q=80",
   dressing1: "https://images.unsplash.com/photo-1618220179428-22790b461013?auto=format&fit=crop&w=900&q=80",
   dressing2: "https://images.unsplash.com/photo-1618220179428-22790b461013?auto=format&fit=crop&w=900&q=80",
-  sideTable1: "https://images.unsplash.com/photo-1555041469-43e06d39c136?auto=format&fit=crop&w=900&q=80",
+  sideTable1: "/pexels-netoo-21352802.jpg",
   sideTable2: "https://images.unsplash.com/photo-1556909114-44c8e86f9b12?auto=format&fit=crop&w=900&q=80",
   set1:    "https://images.unsplash.com/photo-1631049552057-403cdb8f0658?auto=format&fit=crop&w=900&q=80",
   set2:    "https://images.unsplash.com/photo-1600121848594-d8644e57abab?auto=format&fit=crop&w=900&q=80",

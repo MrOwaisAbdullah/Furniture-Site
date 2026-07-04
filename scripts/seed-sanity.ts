@@ -12,6 +12,8 @@ import { resolve } from "path"
 config({ path: resolve(process.cwd(), ".env.local") })
 
 import { createClient } from "@sanity/client"
+import { readFileSync } from "fs"
+import { join } from "path"
 
 const client = createClient({
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID!,
@@ -22,28 +24,37 @@ const client = createClient({
 })
 
 // Same stock photos already used in src/data/sample-products.ts, reused here
-// so Studio previews show something real instead of nothing.
+// so Studio previews show something real instead of nothing. Side table
+// uses a local file in public/ (the Unsplash URl for it was dead — 404).
 const IMG_URLS = {
   bed:       "https://images.unsplash.com/photo-1631049552057-403cdb8f0658?auto=format&fit=crop&w=900&q=80",
   wardrobe:  "https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=900&q=80",
   dressing:  "https://images.unsplash.com/photo-1618220179428-22790b461013?auto=format&fit=crop&w=900&q=80",
-  sideTable: "https://images.unsplash.com/photo-1555041469-43e06d39c136?auto=format&fit=crop&w=900&q=80",
+  sideTable: "/pexels-netoo-21352802.jpg",
   set:       "https://images.unsplash.com/photo-1600121848594-d8644e57abab?auto=format&fit=crop&w=900&q=80",
 }
 
 const uploadedAssetIds = new Map<string, string>()
 
-async function uploadImage(url: string) {
-  const cached = uploadedAssetIds.get(url)
+async function uploadImage(source: string) {
+  const cached = uploadedAssetIds.get(source)
   if (cached) return cached
 
-  const res = await fetch(url)
-  if (!res.ok) throw new Error(`Failed to fetch ${url}: ${res.status}`)
-  const buffer = Buffer.from(await res.arrayBuffer())
-  const filename = url.split("/").pop()!.split("?")[0] + ".jpg"
+  let buffer: Buffer
+  let filename: string
+  if (source.startsWith("/")) {
+    // Local file under public/
+    buffer = readFileSync(join(process.cwd(), "public", source))
+    filename = source.split("/").pop()!
+  } else {
+    const res = await fetch(source)
+    if (!res.ok) throw new Error(`Failed to fetch ${source}: ${res.status}`)
+    buffer = Buffer.from(await res.arrayBuffer())
+    filename = source.split("/").pop()!.split("?")[0] + ".jpg"
+  }
 
   const asset = await client.assets.upload("image", buffer, { filename })
-  uploadedAssetIds.set(url, asset._id)
+  uploadedAssetIds.set(source, asset._id)
   return asset._id
 }
 

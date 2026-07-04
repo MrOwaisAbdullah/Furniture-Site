@@ -9,11 +9,11 @@ export const BUSINESS_NAME = "Yousuf Living"
 // ── Phone / WhatsApp ────────────────────────────────────────────────────────
 // Canonical digits-only form (country code + number, no symbols) — the only
 // format wa.me and tel: links accept reliably.
-export const WHATSAPP_NUMBER = "923001234567"
+export const WHATSAPP_NUMBER = "923130453565"
 export const PHONE_TEL = `+${WHATSAPP_NUMBER}`
-export const PHONE_DISPLAY = "+92 300 1234567"
+export const PHONE_DISPLAY = "+92 313 045 3565"
 // schema.org/JSON-LD convention prefers dash-separated E.164
-export const PHONE_STRUCTURED = "+92-300-1234567"
+export const PHONE_STRUCTURED = "+92-313-045-3565"
 export const EASYPAISA_ACCOUNT_NUMBER = "0300-1234567"
 export const EASYPAISA_ACCOUNT_NAME = BUSINESS_NAME
 export const BANK_NAME = "Meezan Bank"
