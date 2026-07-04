@@ -26,6 +26,8 @@ import { flyToTarget } from "@/lib/fly-animation"
 import { ProductJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld"
 import { trackEvent } from "@/lib/track-event"
 import { usePageEngagementTracking } from "@/lib/use-page-engagement-tracking"
+import { ReviewForm } from "@/components/product/review-form"
+import { ReviewsSection } from "@/components/product/reviews-section"
 
 const categoryTone: Record<string, string> = {
   "bedroom-sets":    "linear-gradient(150deg,#244C3C,#0c231b)",
@@ -48,11 +50,19 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
   const [qty, setQty] = useState(1)
   const [imgErrors, setImgErrors] = useState<Record<number, boolean>>({})
   const [showUpsellPrompt, setShowUpsellPrompt] = useState(false)
+  const [reviews, setReviews] = useState<{ id: number; name: string; rating: number; body: string; createdAt: Date | string }[]>([])
 
   useEffect(() => {
     trackEvent("product_view", { name: product.name, categorySlug: product.category.slug, price: product.salePrice ?? product.basePrice }, { productId: product._id })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product._id])
+
+  useEffect(() => {
+    fetch(`/api/reviews?productSlug=${encodeURIComponent(slug)}`)
+      .then((r) => r.json())
+      .then((data) => { if (data.reviews) setReviews(data.reviews) })
+      .catch(() => {})
+  }, [slug])
 
   usePageEngagementTracking(`/products/${slug}`, product._id)
 
@@ -564,6 +574,16 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
         <div className="mt-14">
           {product.category.slug === "beds" && <UpsellBlock />}
+        </div>
+
+        {/* Reviews */}
+        <div className="mt-14 grid grid-cols-1 gap-5 lg:grid-cols-[1fr_1.2fr]">
+          <ReviewForm productSlug={slug} productName={product.name} />
+          <ReviewsSection
+            reviews={reviews}
+            averageRating={reviews.length > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length : null}
+            totalReviews={reviews.length}
+          />
         </div>
 
         <div className="mt-14">
