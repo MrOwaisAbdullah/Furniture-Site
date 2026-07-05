@@ -5,6 +5,7 @@
 "use client"
 
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { useState, useSyncExternalStore } from "react"
 import { Heart, ShoppingBag, ShoppingCart, Star } from "lucide-react"
@@ -32,6 +33,7 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, className }: ProductCardProps) {
+  const router = useRouter()
   const tone = categoryToneMap[product.category.slug] ?? "linear-gradient(150deg,#3A6B57,#16352A)"
   const price = formatPrice(product.salePrice ?? product.basePrice)
   const oldPrice = product.salePrice ? formatPrice(product.basePrice) : null
@@ -180,28 +182,32 @@ export function ProductCard({ product, className }: ProductCardProps) {
               </button>
 
               {/* WhatsApp */}
-              <a
-                href={waHref}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
+              <button
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  window.open(waHref, "_blank", "noopener,noreferrer")
+                }}
                 aria-label="Enquire on WhatsApp"
                 className="flex flex-1 flex-col items-center gap-1 py-3.5 transition-colors hover:bg-white/8 focus-visible:bg-white/10"
               >
                 <FaWhatsapp className="h-4 w-4 text-bone/80 transition-transform hover:scale-110" aria-hidden="true" />
                 <span className="font-mono text-[8px] uppercase tracking-[1px] text-bone/50">Ask</span>
-              </a>
+              </button>
 
               {/* Buy now */}
-              <Link
-                href={`/checkout?product=${product.slug}`}
-                onClick={(e) => e.stopPropagation()}
+              <button
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  router.push(`/checkout?product=${product.slug}`)
+                }}
                 aria-label="Buy now"
                 className="flex flex-1 flex-col items-center gap-1 bg-gold/15 py-3.5 transition-colors hover:bg-gold/28 focus-visible:bg-gold/30"
               >
                 <ShoppingCart className="h-4 w-4 stroke-gold transition-transform hover:scale-110" strokeWidth={2} aria-hidden="true" />
                 <span className="font-mono text-[8px] uppercase tracking-[1px] text-gold/80">Buy now</span>
-              </Link>
+              </button>
             </div>
           </div>
 
