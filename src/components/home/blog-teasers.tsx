@@ -4,18 +4,17 @@ import Link from "next/link"
 import Image from "next/image"
 import { motion } from "framer-motion"
 import { ArrowRight } from "lucide-react"
-import { sampleBlogPosts } from "@/data/sample-blog"
+import type { BlogPost } from "@/types"
 import { useReducedMotion } from "@/lib/use-reduced-motion"
 
-const CATEGORY_FALLBACK: Record<string, string> = {
-  bedroom: "linear-gradient(150deg,#244C3C,#16352A)",
-  wood: "linear-gradient(150deg,#5D4037,#3E2723)",
-  showroom: "linear-gradient(150deg,#6B9685,#244C3C)",
-}
+const FALLBACK_GRADIENTS = [
+  "linear-gradient(150deg,#244C3C,#16352A)",
+  "linear-gradient(150deg,#5D4037,#3E2723)",
+  "linear-gradient(150deg,#6B9685,#244C3C)",
+]
 
-export function BlogTeasers() {
+export function BlogTeasers({ posts }: { posts: BlogPost[] }) {
   const prefersReduced = useReducedMotion()
-  const posts = sampleBlogPosts.slice(0, 3)
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-14">
@@ -49,8 +48,7 @@ export function BlogTeasers() {
       {/* Grid */}
       <div className="grid gap-4 lg:grid-cols-3 lg:gap-5">
         {posts.map((post, i) => {
-          const tag = post.tags[0] ?? "bedroom"
-          const fallbackBg = CATEGORY_FALLBACK[tag] ?? "linear-gradient(150deg,#244C3C,#16352A)"
+          const fallbackBg = FALLBACK_GRADIENTS[i % FALLBACK_GRADIENTS.length]!
           return (
             <motion.div
               key={post._id}
@@ -66,18 +64,16 @@ export function BlogTeasers() {
               >
                 {/* Image */}
                 <div className="relative h-48 shrink-0 overflow-hidden" style={{ background: fallbackBg }}>
-                  <Image
-                    src={post.featuredImage}
-                    alt={post.title}
-                    fill
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    sizes="(max-width: 1024px) 100vw, 33vw"
-                    unoptimized
-                  />
+                  {post.featuredImage && (
+                    <Image
+                      src={post.featuredImage}
+                      alt={post.title}
+                      fill
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                      sizes="(max-width: 1024px) 100vw, 33vw"
+                    />
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/25" />
-                  <span className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 font-mono text-[8.5px] uppercase tracking-[1.5px] text-ink/70 backdrop-blur-sm">
-                    {tag}
-                  </span>
                 </div>
 
                 {/* Content */}
@@ -92,7 +88,9 @@ export function BlogTeasers() {
                     {post.excerpt}
                   </p>
                   <div className="mt-auto flex items-center justify-between border-t border-border pt-3.5">
-                    <span className="font-mono text-[10px] text-sage">{post.publishedAt}</span>
+                    <span className="font-mono text-[10px] text-sage">
+                      {new Date(post.publishedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                    </span>
                     <span className="flex items-center gap-1 font-heading font-bold text-[12px] text-forest">
                       Read <ArrowRight className="h-3.5 w-3.5" />
                     </span>

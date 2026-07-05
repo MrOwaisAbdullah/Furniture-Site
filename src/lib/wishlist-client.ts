@@ -6,6 +6,7 @@ export interface WishlistItem {
   slug: string
   price: number
   finishName?: string
+  categorySlug?: string
 }
 
 type Listener = () => void

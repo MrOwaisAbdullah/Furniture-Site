@@ -8,6 +8,7 @@ import { Logo } from "@/components/ui/logo"
 import { useCartStore } from "@/lib/store"
 import { CartDrawer } from "./cart-drawer"
 import { SearchInput } from "@/components/product/search-input"
+import type { Product } from "@/types"
 
 const navLinks = [
   { href: "/shop",      label: "Shop" },
@@ -20,7 +21,7 @@ const navLinks = [
   { href: "/wishlist",  label: "Wishlist" },
 ]
 
-export function Header() {
+export function Header({ products }: { products: Product[] }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [cartOpen, setCartOpen]             = useState(false)
   const [searchOpen, setSearchOpen]         = useState(false)
@@ -187,7 +188,7 @@ export function Header() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="mx-auto max-w-2xl">
-                <SearchInput onClose={() => setSearchOpen(false)} />
+                <SearchInput products={products} onClose={() => setSearchOpen(false)} />
               </div>
             </motion.div>
           </>

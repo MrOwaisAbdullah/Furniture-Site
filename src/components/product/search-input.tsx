@@ -3,23 +3,24 @@
 import { useState, useRef, useEffect } from "react"
 import { Search, X } from "lucide-react"
 import { cn, formatPrice } from "@/lib/utils"
-import { sampleProducts } from "@/data/sample-products"
+import type { Product } from "@/types"
 import Link from "next/link"
 
 interface SearchInputProps {
+  products: Product[]
   className?: string
   placeholder?: string
   onClose?: () => void
 }
 
-export function SearchInput({ className, placeholder = "Search sets, beds, wardrobes…", onClose }: SearchInputProps) {
+export function SearchInput({ products, className, placeholder = "Search sets, beds, wardrobes…", onClose }: SearchInputProps) {
   const [query, setQuery] = useState("")
   const [open, setOpen] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
   const results = query.length >= 2
-    ? sampleProducts.filter((p) =>
+    ? products.filter((p) =>
         p.name.toLowerCase().includes(query.toLowerCase()) ||
         p.category.name.toLowerCase().includes(query.toLowerCase()) ||
         p.tags.some((t) => t.toLowerCase().includes(query.toLowerCase()))

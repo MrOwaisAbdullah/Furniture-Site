@@ -2,7 +2,8 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import Image from "next/image"
 import { ProductCard } from "@/components/product/product-card"
-import { sampleProducts } from "@/data/sample-products"
+import { getFeaturedProducts } from "@/lib/sanity/queries"
+import { withReviewRatings } from "@/lib/reviews/apply-summaries"
 import { formatPrice } from "@/lib/utils"
 import { BreadcrumbJsonLd } from "@/components/seo/json-ld"
 
@@ -55,9 +56,9 @@ const sets = [
   },
 ]
 
-const featured = sampleProducts.filter((p) => p.featured)
+export default async function SetsPage() {
+  const featured = await withReviewRatings(await getFeaturedProducts())
 
-export default function SetsPage() {
   return (
     <div className="min-h-screen bg-surface">
       <BreadcrumbJsonLd
@@ -75,7 +76,6 @@ export default function SetsPage() {
           className="object-cover"
           sizes="100vw"
           priority
-          unoptimized
         />
         <div
           className="absolute inset-0"

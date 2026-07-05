@@ -254,10 +254,39 @@ export const reviews = pgTable("reviews", {
   body:         text("body").notNull(),
   photoUrl:     text("photo_url"),
   approved:     boolean("approved").notNull().default(false),
+  spamFlagged:  boolean("spam_flagged").notNull().default(false),
   createdAt:    timestamp("created_at").defaultNow().notNull(),
 }, (t) => [
   index("reviews_product_idx").on(t.productSlug),
   index("reviews_approved_idx").on(t.approved),
+])
+
+// ── Product Q&A (pending moderation, same pattern as reviews) ──────────────────
+
+export const productQuestions = pgTable("product_questions", {
+  id:           serial("id").primaryKey(),
+  productSlug:  text("product_slug").notNull(),
+  name:         text("name").notNull(),
+  question:     text("question").notNull(),
+  answer:       text("answer"),
+  answeredAt:   timestamp("answered_at"),
+  createdAt:    timestamp("created_at").defaultNow().notNull(),
+}, (t) => [
+  index("product_questions_product_idx").on(t.productSlug),
+])
+
+// ── Customer saved addresses (account portal, keyed by phone) ──────────────────
+
+export const customerAddresses = pgTable("customer_addresses", {
+  id:          serial("id").primaryKey(),
+  phone:       text("phone").notNull(),
+  label:       text("label").notNull().default("Home"),
+  area:        text("area"),
+  address:     text("address").notNull(),
+  isDefault:   boolean("is_default").notNull().default(false),
+  createdAt:   timestamp("created_at").defaultNow().notNull(),
+}, (t) => [
+  index("customer_addresses_phone_idx").on(t.phone),
 ])
 
 // ── Gifts / post-delivery thank-you tracker ────────────────────────────────────

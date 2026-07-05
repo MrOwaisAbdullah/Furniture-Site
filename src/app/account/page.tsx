@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { Loader2, LogOut, Mail, Tag, Package } from "lucide-react"
 import { formatPrice } from "@/lib/utils"
+import { AddressBook } from "@/components/account/address-book"
 
 interface Order {
   id: number
@@ -151,6 +152,8 @@ function AccountView({ data, onLogout }: { data: AccountMe; onLogout: () => void
           <LogOut className="h-4 w-4" /> Sign out
         </button>
       </div>
+
+      <AddressBook />
 
       {data.targetedCoupons.length > 0 && (
         <>

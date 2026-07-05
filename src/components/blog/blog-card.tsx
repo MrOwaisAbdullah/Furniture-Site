@@ -6,8 +6,10 @@ interface BlogCardProps {
   index?: number
 }
 
-function readTime(body: string) {
-  return `${Math.max(1, Math.round(body.trim().split(/\s+/).length / 200))} min read`
+// Approximated from the excerpt — the full Portable Text body isn't fetched
+// for card-list views.
+function readTime(excerpt: string) {
+  return `${Math.max(1, Math.round(excerpt.trim().split(/\s+/).length / 40))} min read`
 }
 
 const gradients = [
@@ -36,13 +38,15 @@ export function BlogCard({ post, index = 0 }: BlogCardProps) {
 
       <div className="flex flex-1 flex-col p-5">
         <div className="flex items-center gap-2.5">
-          <span
-            className="rounded-full bg-forest/8 px-2.5 py-1 font-mono uppercase text-forest"
-            style={{ fontSize: "9px", letterSpacing: "1.5px" }}
-          >
-            {post.tags[0]}
-          </span>
-          <span className="font-mono text-[10px] text-sage">{readTime(post.body)}</span>
+          {post.tags[0] && (
+            <span
+              className="rounded-full bg-forest/8 px-2.5 py-1 font-mono uppercase text-forest"
+              style={{ fontSize: "9px", letterSpacing: "1.5px" }}
+            >
+              {post.tags[0]}
+            </span>
+          )}
+          <span className="font-mono text-[10px] text-sage">{readTime(post.excerpt)}</span>
         </div>
 
         <h2

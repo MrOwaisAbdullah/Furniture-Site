@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import Image from "next/image"
 import { ArrowRight } from "lucide-react"
-import { sampleBlogPosts } from "@/data/sample-blog"
+import { getBlogPosts } from "@/lib/sanity/queries"
 import { BreadcrumbJsonLd, ItemListJsonLd } from "@/components/seo/json-ld"
 
 const HERO_IMG = "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=1400&q=80"
@@ -23,12 +23,17 @@ export const metadata: Metadata = {
   },
 }
 
-function readTime(body: string) {
-  const words = body.trim().split(/\s+/).length
-  return `${Math.max(1, Math.round(words / 200))} min read`
+// Read-time approximation from the excerpt — the full Portable Text body
+// isn't fetched for the list view (kept lightweight); the post page itself
+// computes an exact read time from the real body.
+function readTime(excerpt: string) {
+  const words = excerpt.trim().split(/\s+/).length
+  return `${Math.max(1, Math.round(words / 40))} min read`
 }
 
-export default function BlogPage() {
+export default async function BlogPage() {
+  const posts = await getBlogPosts()
+
   return (
     <div className="min-h-screen bg-surface">
       <BreadcrumbJsonLd
@@ -38,7 +43,7 @@ export default function BlogPage() {
         ]}
       />
       <ItemListJsonLd
-        items={sampleBlogPosts.map((post, i) => ({
+        items={posts.map((post, i) => ({
           name: post.title,
           url: `/blog/${post.slug}`,
           position: i + 1,
@@ -53,7 +58,6 @@ export default function BlogPage() {
           className="object-cover"
           sizes="100vw"
           priority
-          unoptimized
         />
         <div
           className="absolute inset-0"
@@ -82,7 +86,7 @@ export default function BlogPage() {
 
       <div className="mx-auto max-w-2xl px-5 py-10 sm:px-8 lg:max-w-5xl">
         <div className="flex flex-col gap-5 lg:grid lg:grid-cols-2 lg:gap-6">
-          {sampleBlogPosts.map((post, i) => (
+          {posts.map((post, i) => (
             <Link
               key={post._id}
               href={`/blog/${post.slug}`}
@@ -99,23 +103,21 @@ export default function BlogPage() {
                     : "linear-gradient(135deg,#2a3d36,#0c231b)",
                 }}
               >
-                <Image
-                  src={post.featuredImage}
-                  alt={post.title}
-                  fill
-                  className="object-cover transition-transform duration-500 group-hover:scale-105"
-                  sizes="(max-width: 1024px) 100vw, 50vw"
-                  unoptimized
-                />
+                {post.featuredImage && (
+                  <Image
+                    src={post.featuredImage}
+                    alt={post.title}
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    sizes="(max-width: 1024px) 100vw, 50vw"
+                  />
+                )}
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/20" />
-                <span className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 font-mono text-[8.5px] uppercase tracking-[1.5px] text-ink/70 backdrop-blur-sm">
-                  {post.tags[0]}
-                </span>
               </div>
 
               <div className="flex flex-1 flex-col p-5">
                 <div className="flex items-center gap-2.5">
-                  <span className="font-mono text-[10px] text-sage">{readTime(post.body)}</span>
+                  <span className="font-mono text-[10px] text-sage">{readTime(post.excerpt)}</span>
                 </div>
 
                 <h2
@@ -129,7 +131,7 @@ export default function BlogPage() {
                 </p>
 
                 <div className="mt-4 flex items-center justify-between border-t border-border pt-3.5">
-                  <span className="font-mono text-[10px] text-sage">{post.publishedAt}</span>
+                  <span className="font-mono text-[10px] text-sage">{new Date(post.publishedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</span>
                   <span className="flex items-center gap-1 font-heading font-bold text-[12px] text-forest">
                     Read more
                     <ArrowRight className="h-3.5 w-3.5" />

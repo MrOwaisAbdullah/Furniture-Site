@@ -10,6 +10,8 @@ import { SocialProof } from "@/components/home/social-proof"
 import { BlogTeasers } from "@/components/home/blog-teasers"
 import { ShowroomBlock } from "@/components/home/showroom-block"
 import { OrganizationJsonLd, LocalBusinessJsonLd } from "@/components/seo/json-ld"
+import { getFeaturedProducts, getCategories, getBlogPosts } from "@/lib/sanity/queries"
+import { withReviewRatings } from "@/lib/reviews/apply-summaries"
 
 export const metadata: Metadata = {
   title: "Yousuf Living — Workshop-built Furniture in Karachi",
@@ -29,20 +31,27 @@ export const metadata: Metadata = {
   },
 }
 
-export default function HomePage() {
+export default async function HomePage() {
+  const [rawFeaturedProducts, categories, blogPosts] = await Promise.all([
+    getFeaturedProducts(),
+    getCategories(),
+    getBlogPosts(),
+  ])
+  const featuredProducts = await withReviewRatings(rawFeaturedProducts)
+
   return (
     <>
       <OrganizationJsonLd />
       <LocalBusinessJsonLd />
       <Hero />
       <TrustBar />
-      <FeaturedSets />
-      <ShopByCategory />
+      <FeaturedSets products={featuredProducts} />
+      <ShopByCategory categories={categories} />
       <ShaadiStrip />
       <HowItWorks />
       <WhyYousuf />
       <SocialProof />
-      <BlogTeasers />
+      <BlogTeasers posts={blogPosts.slice(0, 3)} />
       <ShowroomBlock />
     </>
   )

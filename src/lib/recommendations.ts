@@ -178,7 +178,7 @@ export function buildRoomTiers(
       const rep = representativeFor(slug)
       return { slug, product: rep, price: priceFor(slug, rep) }
     })
-    .filter((r): r is { slug: string; product: Product; price: number } => r.product != null && r.price != null)
+    .filter((r): r is { slug: (typeof ROOM_PRIORITY)[number]; product: Product; price: number } => r.product != null && r.price != null)
     .sort((a, b) => a.price - b.price)
 
   if (remaining.length === 0) return []
@@ -194,7 +194,7 @@ export function buildRoomTiers(
   const tiers: RoomTier[] = []
 
   // Tier 1: anchor + cheapest gap
-  const gap1 = remaining[0]
+  const gap1 = remaining[0]!
   tiers.push({
     key: "tier1",
     name: `${anchor.category.name} + ${gap1.product.name}`,
@@ -209,7 +209,7 @@ export function buildRoomTiers(
 
   // Tier 2: + next gap (only if a second gap exists)
   if (remaining.length >= 2) {
-    const gap2 = remaining[1]
+    const gap2 = remaining[1]!
     tiers.push({
       key: "tier2",
       name: "Bedroom Set",

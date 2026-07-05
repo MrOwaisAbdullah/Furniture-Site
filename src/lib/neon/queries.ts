@@ -2,10 +2,11 @@ import { db } from "@/lib/neon"
 import {
   orders, events, coupons, couponRedemptions, wishlistItems, affiliates, affiliatePayouts,
   emailSubscribers, leads, reviews, gifts, materialRates, pieceCosts, categoryCosts, costMode,
-  productCosts,
+  productCosts, productQuestions, customerAddresses,
 } from "./schema"
 import { eq, desc, and, gte, lte, sql } from "drizzle-orm"
 import { nanoid } from "nanoid"
+import { looksLikeSpam } from "@/lib/spam-filter"
 
 // ── Orders ────────────────────────────────────────────────────────────────────
 
@@ -587,6 +588,10 @@ export async function addEmailSubscriber(email: string, source: string) {
   return db.insert(emailSubscribers).values({ email, source }).onConflictDoNothing()
 }
 
+export async function getEmailSubscribers(limit = 500) {
+  return db.select().from(emailSubscribers).orderBy(desc(emailSubscribers.createdAt)).limit(limit)
+}
+
 // ── Leads (inquiry inbox) ──────────────────────────────────────────────────────
 
 export async function getLeads(limit = 100) {
@@ -617,6 +622,22 @@ export async function getApprovedReviewsByProduct(productSlug: string) {
   return db.select().from(reviews).where(and(eq(reviews.productSlug, productSlug), eq(reviews.approved, true)))
 }
 
+/** Average rating + count of approved reviews, grouped by product — for
+ * showing real star ratings on product cards without an N+1 query per card. */
+export async function getReviewSummaries(): Promise<Record<string, { avg: number; count: number }>> {
+  const rows = await db
+    .select({
+      productSlug: reviews.productSlug,
+      avg: sql<string>`avg(${reviews.rating})`,
+      count: sql<string>`count(*)`,
+    })
+    .from(reviews)
+    .where(eq(reviews.approved, true))
+    .groupBy(reviews.productSlug)
+
+  return Object.fromEntries(rows.map((r) => [r.productSlug, { avg: Number(r.avg), count: Number(r.count) }]))
+}
+
 export async function createReview(data: {
   productSlug: string
   name: string
@@ -624,11 +645,60 @@ export async function createReview(data: {
   body: string
   photoUrl?: string
 }) {
-  return db.insert(reviews).values(data)
+  return db.insert(reviews).values({ ...data, spamFlagged: looksLikeSpam(data.body) || looksLikeSpam(data.name) })
 }
 
 export async function setReviewApproved(id: number, approved: boolean) {
   return db.update(reviews).set({ approved }).where(eq(reviews.id, id))
+}
+
+export async function deleteReview(id: number) {
+  return db.delete(reviews).where(eq(reviews.id, id))
+}
+
+// ── Product Q&A (moderation) ─────────────────────────────────────────────────────
+
+export async function getQuestions(limit = 100) {
+  return db.select().from(productQuestions).orderBy(desc(productQuestions.createdAt)).limit(limit)
+}
+
+export async function getAnsweredQuestionsByProduct(productSlug: string) {
+  return db.select().from(productQuestions)
+    .where(and(eq(productQuestions.productSlug, productSlug), sql`${productQuestions.answer} IS NOT NULL`))
+    .orderBy(desc(productQuestions.answeredAt))
+}
+
+export async function createQuestion(data: { productSlug: string; name: string; question: string }) {
+  return db.insert(productQuestions).values(data)
+}
+
+export async function answerQuestion(id: number, answer: string) {
+  return db.update(productQuestions).set({ answer, answeredAt: new Date() }).where(eq(productQuestions.id, id))
+}
+
+// ── Customer saved addresses (account portal) ───────────────────────────────────
+
+export async function getAddressesByPhone(phone: string) {
+  return db.select().from(customerAddresses)
+    .where(eq(customerAddresses.phone, phone))
+    .orderBy(desc(customerAddresses.isDefault), desc(customerAddresses.createdAt))
+}
+
+export async function createAddress(data: { phone: string; label: string; area?: string; address: string; isDefault?: boolean }) {
+  if (data.isDefault) {
+    await db.update(customerAddresses).set({ isDefault: false }).where(eq(customerAddresses.phone, data.phone))
+  }
+  const [row] = await db.insert(customerAddresses).values(data).returning({ id: customerAddresses.id })
+  return row
+}
+
+export async function deleteAddress(id: number, phone: string) {
+  return db.delete(customerAddresses).where(and(eq(customerAddresses.id, id), eq(customerAddresses.phone, phone)))
+}
+
+export async function setDefaultAddress(id: number, phone: string) {
+  await db.update(customerAddresses).set({ isDefault: false }).where(eq(customerAddresses.phone, phone))
+  return db.update(customerAddresses).set({ isDefault: true }).where(and(eq(customerAddresses.id, id), eq(customerAddresses.phone, phone)))
 }
 
 // ── Gifts / thank-you tracker ───────────────────────────────────────────────────

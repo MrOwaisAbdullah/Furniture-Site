@@ -3,7 +3,9 @@ import { notFound } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import { ArrowRight, ArrowLeft } from "lucide-react"
-import { sampleBlogPosts } from "@/data/sample-blog"
+import { PortableText, type PortableTextComponents, type PortableTextBlock } from "@portabletext/react"
+import { getBlogPostBySlug } from "@/lib/sanity/queries"
+import { urlFor } from "@/lib/sanity"
 import { BlogPostingJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld"
 
 export async function generateMetadata({
@@ -12,7 +14,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>
 }): Promise<Metadata> {
   const { slug } = await params
-  const post = sampleBlogPosts.find((p) => p.slug === slug)
+  const post = await getBlogPostBySlug(slug)
   if (!post) return {}
 
   return {
@@ -25,7 +27,7 @@ export async function generateMetadata({
       type: "article",
       publishedTime: post.publishedAt,
       authors: [post.author],
-      images: [{ url: post.featuredImage, alt: post.title }],
+      images: post.featuredImage ? [{ url: post.featuredImage, alt: post.title }] : [],
     },
     alternates: {
       canonical: `https://yousufliving.pk/blog/${post.slug}`,
@@ -33,38 +35,53 @@ export async function generateMetadata({
   }
 }
 
-function readTime(body: string) {
-  const words = body.trim().split(/\s+/).length
-  return `${Math.max(1, Math.round(words / 200))} min read`
+function readTime(body: unknown): string {
+  const blocks = Array.isArray(body) ? (body as PortableTextBlock[]) : []
+  const wordCount = blocks.reduce((sum, block) => {
+    if (!("children" in block) || !Array.isArray(block.children)) return sum
+    const text = block.children.map((c) => ("text" in c ? c.text : "")).join(" ")
+    return sum + text.trim().split(/\s+/).filter(Boolean).length
+  }, 0)
+  return `${Math.max(1, Math.round(wordCount / 200))} min read`
 }
 
-function renderBody(body: string) {
-  return body.split("\n\n").map((block, i) => {
-    if (block.startsWith("## ")) {
-      return (
-        <h2 key={i} className="mt-8 font-heading font-black text-ink" style={{ fontSize: "19px", letterSpacing: "-0.4px" }}>
-          {block.slice(3)}
-        </h2>
-      )
-    }
-    if (block.startsWith("- ")) {
-      const items = block.split("\n").filter((l) => l.startsWith("- "))
-      return (
-        <ul key={i} className="mt-4 flex flex-col gap-1.5 pl-4">
-          {items.map((item, j) => (
-            <li key={j} className="text-[14px] leading-[1.65] text-slate before:mr-2 before:content-['·']">
-              {item.slice(2)}
-            </li>
-          ))}
-        </ul>
-      )
-    }
-    return (
-      <p key={i} className="mt-4 text-[14px] leading-[1.7] text-slate">
-        {block}
-      </p>
-    )
-  })
+const portableTextComponents: PortableTextComponents = {
+  block: {
+    h2: ({ children }) => (
+      <h2 className="mt-8 font-heading font-black text-ink" style={{ fontSize: "19px", letterSpacing: "-0.4px" }}>
+        {children}
+      </h2>
+    ),
+    h3: ({ children }) => (
+      <h3 className="mt-6 font-heading font-bold text-ink" style={{ fontSize: "16px" }}>
+        {children}
+      </h3>
+    ),
+    normal: ({ children }) => (
+      <p className="mt-4 text-[14px] leading-[1.7] text-slate">{children}</p>
+    ),
+  },
+  list: {
+    bullet: ({ children }) => (
+      <ul className="mt-4 flex flex-col gap-1.5 pl-4">{children}</ul>
+    ),
+  },
+  listItem: {
+    bullet: ({ children }) => (
+      <li className="text-[14px] leading-[1.65] text-slate before:mr-2 before:content-['·']">{children}</li>
+    ),
+  },
+  marks: {
+    strong: ({ children }) => <strong className="font-bold text-ink">{children}</strong>,
+    em: ({ children }) => <em className="italic">{children}</em>,
+  },
+  types: {
+    image: ({ value }) => (
+      <span className="relative mt-6 block h-[220px] overflow-hidden rounded-[12px] sm:h-[300px]">
+        <Image src={urlFor(value).width(900).url()} alt="" fill className="object-cover" sizes="(max-width: 640px) 100vw, 672px" />
+      </span>
+    ),
+  },
 }
 
 export default async function BlogPostPage({
@@ -73,7 +90,7 @@ export default async function BlogPostPage({
   params: Promise<{ slug: string }>
 }) {
   const { slug } = await params
-  const post = sampleBlogPosts.find((p) => p.slug === slug)
+  const post = await getBlogPostBySlug(slug)
 
   if (!post) notFound()
 
@@ -99,14 +116,15 @@ export default async function BlogPostPage({
         className="relative h-[220px] sm:h-[280px] lg:h-[360px]"
         style={{ background: "linear-gradient(145deg,#1c4233,#0a1c15)" }}
       >
-        <Image
-          src={post.featuredImage}
-          alt={post.title}
-          fill
-          className="object-cover opacity-30"
-          sizes="100vw"
-          unoptimized
-        />
+        {post.featuredImage && (
+          <Image
+            src={post.featuredImage}
+            alt={post.title}
+            fill
+            className="object-cover opacity-30"
+            sizes="100vw"
+          />
+        )}
         <div className="absolute inset-0 flex flex-col justify-end px-5 pb-6 sm:px-8">
           <div className="flex items-center gap-2.5">
             <Link
@@ -116,18 +134,8 @@ export default async function BlogPostPage({
               <ArrowLeft className="h-3 w-3" />
               Blog
             </Link>
-            <span className="text-bone/30">/</span>
-            <span className="font-mono text-[10px] uppercase tracking-[1.5px] text-bone/60 truncate max-w-[160px]">
-              {post.tags[0]}
-            </span>
           </div>
           <div className="mt-3 flex items-center gap-2">
-            <span
-              className="rounded-full bg-gold/20 px-2.5 py-1 font-mono uppercase text-gold"
-              style={{ fontSize: "9px", letterSpacing: "1.5px" }}
-            >
-              {post.tags[0]}
-            </span>
             <span className="font-mono text-[10px] text-bone/50">{readTime(post.body)}</span>
           </div>
         </div>
@@ -151,21 +159,13 @@ export default async function BlogPostPage({
         <div className="mt-1 flex items-center gap-3 border-b border-border pb-5">
           <span className="font-mono text-[10.5px] text-sage">{post.author}</span>
           <span className="text-mist">·</span>
-          <span className="font-mono text-[10.5px] text-sage">{post.publishedAt}</span>
+          <span className="font-mono text-[10.5px] text-sage">
+            {new Date(post.publishedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+          </span>
         </div>
 
-        <div className="mt-6">{renderBody(post.body)}</div>
-
-        {/* Tags */}
-        <div className="mt-8 flex flex-wrap gap-2">
-          {post.tags.map((tag) => (
-            <span
-              key={tag}
-              className="rounded-full bg-forest/8 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[1.5px] text-forest"
-            >
-              {tag}
-            </span>
-          ))}
+        <div className="mt-6">
+          <PortableText value={post.body as PortableTextBlock[]} components={portableTextComponents} />
         </div>
 
         {/* CTA */}

@@ -4,7 +4,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { ArrowRight } from "lucide-react"
 import { motion } from "framer-motion"
-import { sampleCategories } from "@/data/sample-categories"
+import type { Category } from "@/types"
 import { useReducedMotion } from "@/lib/use-reduced-motion"
 
 const CAT_IMAGES: Record<string, string> = {
@@ -23,7 +23,7 @@ const categoryTones: Record<string, string> = {
   "side-tables":     "linear-gradient(135deg,#4A5A50,#1A2420)",
 }
 
-export function ShopByCategory() {
+export function ShopByCategory({ categories }: { categories: Category[] }) {
   const prefersReduced = useReducedMotion()
 
   return (
@@ -47,7 +47,7 @@ export function ShopByCategory() {
       </motion.div>
 
       <div className="grid grid-cols-2 gap-3 sm:gap-3.5 lg:grid-cols-5 lg:gap-4">
-        {sampleCategories.map((cat, i) => {
+        {categories.map((cat, i) => {
           const img = CAT_IMAGES[cat.slug]
           const tone = categoryTones[cat.slug] ?? "linear-gradient(135deg,#16352A,#0c231b)"
 
@@ -72,7 +72,6 @@ export function ShopByCategory() {
                     className="object-cover opacity-40 mix-blend-luminosity transition-transform duration-500 group-hover:scale-105 group-hover:opacity-50"
                     sizes="(max-width: 1024px) 50vw, 20vw"
                     style={{ filter: "saturate(0.6)" }}
-                    unoptimized
                   />
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />

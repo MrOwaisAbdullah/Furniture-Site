@@ -1,21 +1,22 @@
 import { getProductCosts, getCategoryCosts, getMaterialRates, getPieceCosts, getCostModes } from "@/lib/neon/queries"
 import { DEFAULT_MATERIAL_RATES, DEFAULT_PIECE_COSTS } from "@/lib/cost-sheet"
-import { sampleProducts } from "@/data/sample-products"
+import { getProducts } from "@/lib/sanity/queries"
 import { ProductCostSheet } from "@/components/admin/product-cost-sheet"
 import { CostSheetEditor } from "@/components/admin/cost-sheet-editor"
 
 export const dynamic = "force-dynamic"
 
 export default async function AdminCostsPage() {
-  const [productCostRows, categoryRows, rateRows, pieceRows, modeRows] = await Promise.all([
+  const [productCostRows, categoryRows, rateRows, pieceRows, modeRows, sanityProducts] = await Promise.all([
     getProductCosts(),
     getCategoryCosts(),
     getMaterialRates(),
     getPieceCosts(),
     getCostModes(),
+    getProducts(),
   ])
 
-  const products = sampleProducts.map((p) => ({
+  const products = sanityProducts.map((p) => ({
     slug: p.slug,
     name: p.name,
     categorySlug: p.category.slug,

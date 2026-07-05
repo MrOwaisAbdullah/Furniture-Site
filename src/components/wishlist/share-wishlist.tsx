@@ -12,9 +12,12 @@ export function ShareWishlist({ items }: ShareWishlistProps) {
   const [copied, setCopied] = useState(false)
 
   const handleShare = async () => {
-    // In Part 2 this will hit /api/wishlist/share to generate a real token
-    const mockToken = btoa(items.map((i) => i.productId).join(",")).slice(0, 12)
-    const shareUrl = `${window.location.origin}/wishlist/share/${mockToken}`
+    // The token is the product IDs themselves, base64url-encoded (URL-safe —
+    // a path segment can't contain a raw "/") — no server storage needed,
+    // the share page just decodes it back.
+    const token = btoa(items.map((i) => i.productId).join(","))
+      .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "")
+    const shareUrl = `${window.location.origin}/wishlist/share/${token}`
 
     if (navigator.share) {
       try {

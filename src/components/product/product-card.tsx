@@ -68,6 +68,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
           name: product.name,
           slug: product.slug,
           price: product.salePrice ?? product.basePrice,
+          categorySlug: product.category.slug,
         })
       })
     } else {
@@ -76,6 +77,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
         name: product.name,
         slug: product.slug,
         price: product.salePrice ?? product.basePrice,
+        categorySlug: product.category.slug,
       })
     }
   }
@@ -120,7 +122,6 @@ export function ProductCard({ product, className }: ProductCardProps) {
               className="object-cover transition-transform duration-500 group-hover:scale-105"
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               onError={() => setImgError(true)}
-              unoptimized
             />
           )}
 
@@ -331,7 +332,6 @@ export function ProductCardCompact({ product, onAdd }: ProductCardProps & { onAd
             className="object-cover transition-transform duration-400 group-hover:scale-105"
             sizes="144px"
             onError={() => setImgError(true)}
-            unoptimized
           />
         )}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/20" />

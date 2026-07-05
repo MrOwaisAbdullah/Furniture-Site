@@ -63,7 +63,6 @@ export default function AboutPage() {
           className="object-cover"
           sizes="100vw"
           priority
-          unoptimized
         />
         <div
           className="absolute inset-0"

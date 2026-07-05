@@ -1,5 +1,8 @@
+"use client"
+
 import Link from "next/link"
-import { MapPin, Phone, Clock } from "lucide-react"
+import { useState } from "react"
+import { MapPin, Phone, Clock, Loader2, CheckCircle } from "lucide-react"
 import { FaWhatsapp, FaInstagram, FaTiktok, FaFacebook } from "react-icons/fa"
 import { Logo } from "@/components/ui/logo"
 import {
@@ -26,10 +29,11 @@ const companyLinks = [
 
 const helpLinks = [
   { label: "How it Works",     href: "/#how-it-works" },
-  { label: "FAQ",              href: "/info/faq" },
-  { label: "Care Instructions",href: "/info/care" },
-  { label: "Warranty",         href: "/info/warranty" },
+  { label: "FAQ",              href: "/faq" },
+  { label: "Shipping",         href: "/shipping" },
+  { label: "Returns & Refunds", href: "/returns" },
   { label: "Privacy Policy",   href: "/privacy" },
+  { label: "Terms",            href: "/terms" },
 ]
 
 const socials = [
@@ -56,12 +60,69 @@ const socials = [
 ]
 
 export function Footer() {
+  const [email, setEmail] = useState("")
+  const [subscribing, setSubscribing] = useState(false)
+  const [subscribed, setSubscribed] = useState(false)
+
+  async function handleSubscribe(e: React.FormEvent) {
+    e.preventDefault()
+    if (!email || subscribing) return
+    setSubscribing(true)
+    try {
+      await fetch("/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      })
+      setSubscribed(true)
+      setEmail("")
+    } catch {
+      // Silently fail
+    } finally {
+      setSubscribing(false)
+    }
+  }
+
   return (
     <footer style={{ background: "#0c1f17" }} className="text-bone pb-36 lg:pb-0">
       <div className="mx-auto max-w-7xl px-5 pt-14 sm:px-8 lg:px-14">
 
+        {/* ── Newsletter — full-width row above the link columns ── */}
+        <div className="flex flex-col items-start justify-between gap-5 border-b border-bone/10 pb-10 lg:flex-row lg:items-center">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[1.5px] text-gold">Stay in the loop</p>
+            <p className="mt-2 text-[13px] text-bone/45">
+              New collections, sales, and workshop stories. No spam.
+            </p>
+          </div>
+          {subscribed ? (
+            <div className="flex items-center gap-2 text-[13px] text-success">
+              <CheckCircle className="h-4 w-4" />
+              You are subscribed!
+            </div>
+          ) : (
+            <form onSubmit={handleSubscribe} className="flex w-full max-w-md gap-2.5">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="your@email.com"
+                required
+                className="min-w-0 flex-1 rounded-[9px] border border-bone/15 bg-white/5 px-4 py-3 text-[13px] text-bone placeholder:text-bone/30 focus:border-gold focus:outline-none"
+              />
+              <button
+                type="submit"
+                disabled={subscribing || !email}
+                className="shrink-0 rounded-[9px] bg-gold px-5 py-3 font-heading font-bold text-[12.5px] text-forest transition-colors hover:bg-gold/90 disabled:opacity-50"
+              >
+                {subscribing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Join"}
+              </button>
+            </form>
+          )}
+        </div>
+
         {/* ── Main grid ── */}
-        <div className="grid grid-cols-1 gap-10 md:grid-cols-[1fr_auto] lg:gap-16">
+        <div className="grid grid-cols-1 gap-10 pt-10 md:grid-cols-[1fr_auto] lg:gap-16">
 
           {/* Brand column */}
           <div className="max-w-[280px]">

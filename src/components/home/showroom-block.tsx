@@ -30,7 +30,6 @@ export function ShowroomBlock() {
               fill
               className="object-cover transition-transform duration-700 hover:scale-105 will-change-transform"
               sizes="(max-width: 1024px) 100vw, 52vw"
-              unoptimized
             />
             {/* Subtle bottom scrim for mobile readability */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent lg:bg-gradient-to-r lg:from-transparent lg:to-black/15" />

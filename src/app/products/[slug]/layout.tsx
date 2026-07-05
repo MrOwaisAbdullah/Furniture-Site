@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { sampleProducts } from "@/data/sample-products"
+import { getProductBySlug } from "@/lib/sanity/queries"
 
 export async function generateMetadata({
   params,
@@ -7,7 +7,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>
 }): Promise<Metadata> {
   const { slug } = await params
-  const product = sampleProducts.find((p) => p.slug === slug)
+  const product = await getProductBySlug(slug)
   if (!product) return {}
 
   const price = product.salePrice ?? product.basePrice

@@ -2,7 +2,8 @@ import { notFound } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import { ProductCard } from "@/components/product/product-card"
-import { sampleProducts } from "@/data/sample-products"
+import { getProducts } from "@/lib/sanity/queries"
+import { withReviewRatings } from "@/lib/reviews/apply-summaries"
 import { formatPrice } from "@/lib/utils"
 import { waLink } from "@/lib/site-config"
 
@@ -43,7 +44,8 @@ export default async function SetPage({ params }: { params: Promise<{ set: strin
   const set = SET_MAP[setSlug as SetSlug]
   if (!set) notFound()
 
-  const products = sampleProducts.filter((p) =>
+  const allProducts = await withReviewRatings(await getProducts())
+  const products = allProducts.filter((p) =>
     set.categorySlugs.includes(p.category.slug)
   )
 

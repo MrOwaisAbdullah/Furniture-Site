@@ -12,17 +12,20 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
-    "seed:sanity": "tsx scripts/seed-sanity.ts",
-    "admin:create-user": "tsx scripts/create-admin-user.ts",
-    "seed:cost-sheet": "tsx scripts/seed-cost-sheet.ts",
-    "seed:preview": "tsx scripts/seed-preview-data.ts"
+    "seed:sanity": "tsx -r dotenv/config scripts/seed-sanity.ts dotenv_config_path=.env.local",
+    "admin:create-user": "tsx -r dotenv/config scripts/create-admin-user.ts dotenv_config_path=.env.local",
+    "seed:cost-sheet": "tsx -r dotenv/config scripts/seed-cost-sheet.ts dotenv_config_path=.env.local",
+    "seed:preview": "tsx -r dotenv/config scripts/seed-preview-data.ts dotenv_config_path=.env.local"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1075.0",
     "@aws-sdk/s3-request-presigner": "^3.1075.0",
     "@neondatabase/serverless": "^1.1.0",
+    "@portabletext/react": "^6.2.0",
     "@sanity/client": "^7.23.0",
     "@sanity/image-url": "^2.1.1",
+    "@serwist/next": "^9.5.11",
+    "@serwist/turbopack": "^9.5.11",
     "@upstash/redis": "^1.38.0",
     "better-auth": "^1.6.22",
     "clsx": "^2.1.1",
@@ -48,7 +51,6 @@
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/qrcode": "^1.5.6",
-    "tsx": "^4.22.4",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^6.0.3",
@@ -56,8 +58,10 @@
     "eslint-config-next": "16.2.9",
     "eslint-config-prettier": "^10.1.8",
     "jsdom": "^29.1.1",
+    "playwright": "^1.61.1",
     "prettier": "^3.9.1",
     "tailwindcss": "^4",
+    "tsx": "^4.22.4",
     "typescript": "^5",
     "vitest": "^4.1.9"
   }

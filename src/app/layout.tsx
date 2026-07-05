@@ -4,7 +4,9 @@ import { Instrument_Serif, Archivo, Hanken_Grotesk, Space_Mono } from "next/font
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { MobileStickyBar } from "@/components/layout/mobile-sticky-bar"
+import { CookieConsent } from "@/components/ui/cookie-consent"
 import { BUSINESS_NAME, ADDRESS_CITY } from "@/lib/site-config"
+import { getProducts } from "@/lib/sanity/queries"
 import "./globals.css"
 
 const instrumentSerif = Instrument_Serif({
@@ -43,6 +45,22 @@ export const metadata: Metadata = {
   description:
     `Workshop-built bedroom sets, fairly priced. Beds, wardrobes, dressing tables and complete sets — made to order in ${ADDRESS_CITY}.`,
   keywords: ["furniture", "Karachi", "Pakistani furniture", "bedroom sets", "workshop furniture", "shaadi furniture"],
+  manifest: "/manifest.json",
+  icons: {
+    icon: [
+      { url: "/assets/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/assets/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: "/assets/icon-192.png",
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: BUSINESS_NAME,
+  },
+  other: {
+    "theme-color": "#16352A",
+  },
   openGraph: {
     type: "website",
     locale: "en_PK",
@@ -57,6 +75,7 @@ export default async function RootLayout({
 }>) {
   const pathname = (await headers()).get("x-pathname") ?? ""
   const isAdmin = pathname.startsWith("/admin")
+  const products = isAdmin ? [] : await getProducts()
 
   return (
     <html
@@ -70,12 +89,13 @@ export default async function RootLayout({
         >
           Skip to content
         </a>
-        {!isAdmin && <Header />}
+        {!isAdmin && <Header products={products} />}
         <main id="main-content" className={isAdmin ? "flex-1" : "flex-1 pb-20 lg:pb-0"} tabIndex={-1}>
           {children}
         </main>
         {!isAdmin && <Footer />}
         {!isAdmin && <MobileStickyBar />}
+        {!isAdmin && <CookieConsent />}
       </body>
     </html>
   )

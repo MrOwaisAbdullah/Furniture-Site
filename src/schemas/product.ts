@@ -1,3 +1,7 @@
+// Sale pricing is NOT a field here — it's managed entirely through the
+// `sale` document type (schemas/sale.ts), which can target specific
+// products or whole categories with a percentage or fixed discount and a
+// date range. See resolveSalePrice() in src/lib/sanity/map-product.ts.
 export const product = {
   name: "product",
   title: "Product",
@@ -7,7 +11,8 @@ export const product = {
     { name: "slug",        type: "slug",     title: "Slug",        options: { source: "name" }, validation: (R: { required: () => unknown }) => R.required() },
     { name: "category",    type: "reference", title: "Category",   to: [{ type: "category" }], validation: (R: { required: () => unknown }) => R.required() },
     { name: "basePrice",   type: "number",   title: "Base Price (PKR)", validation: (R: { required: () => { min: (n: number) => unknown } }) => R.required().min(0) },
-    { name: "salePrice",   type: "number",   title: "Sale Price (PKR — leave blank if not on sale)" },
+    { name: "sku",         type: "string",   title: "SKU" },
+    { name: "stockCount",  type: "number",   title: "Stock Count", initialValue: 0 },
     { name: "inStock",     type: "boolean",  title: "In Stock",    initialValue: true },
     { name: "featured",    type: "boolean",  title: "Featured on Homepage", initialValue: false },
     {

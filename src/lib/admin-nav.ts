@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, ShoppingBag, Package, BarChart3, Tag,
-  MessageSquare, Star, Users2, CreditCard, Gift, DollarSign,
+  MessageSquare, Star, Users2, CreditCard, Gift, DollarSign, HelpCircle,
   type LucideIcon,
 } from "lucide-react"
 
@@ -23,6 +23,7 @@ export const adminNavItems: AdminNavItem[] = [
   { href: "/admin/affiliates", label: "Affiliates", icon: Users2,                    group: "growth" },
   { href: "/admin/payouts",    label: "Payouts",    icon: CreditCard,                group: "growth" },
   { href: "/admin/reviews",    label: "Reviews",    icon: Star,                      group: "growth" },
+  { href: "/admin/questions",  label: "Q&A",        icon: HelpCircle,                group: "growth" },
   { href: "/admin/reports",    label: "Reports",    icon: BarChart3,                 group: "growth" },
 ]
 

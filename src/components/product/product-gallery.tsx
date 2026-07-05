@@ -69,7 +69,6 @@ export function ProductGallery({ images, name, tone, onSale }: ProductGalleryPro
             className="object-cover"
             sizes="(max-width: 1024px) 100vw, 50vw"
             onError={() => setBroken((b) => ({ ...b, [active]: true }))}
-            unoptimized
           />
         )}
 
@@ -139,7 +138,6 @@ export function ProductGallery({ images, name, tone, onSale }: ProductGalleryPro
                   className="object-cover"
                   sizes="62px"
                   onError={() => setBroken((b) => ({ ...b, [i]: true }))}
-                  unoptimized
                 />
               )}
             </button>

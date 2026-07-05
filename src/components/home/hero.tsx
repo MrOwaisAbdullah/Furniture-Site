@@ -126,7 +126,6 @@ export function Hero() {
                   className="object-cover"
                   sizes="(max-width: 1024px) 0px, 48vw"
                   priority
-                  unoptimized
                 />
               </motion.div>
               {/* Only a very subtle bottom gradient for price chip contrast */}

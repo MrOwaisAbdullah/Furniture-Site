@@ -5,10 +5,27 @@
  *
  * Usage:
  *   npm run admin:create-user -- --email owner@example.com --password "..." --name "Owner"
+ *
+ * If that email already has an account, re-run with --reset to delete the
+ * existing user (and its cascaded sessions/credentials) and recreate it
+ * with the new password. Safe for this app specifically: nothing else in
+ * the database references the admin user row, since it's a single-owner
+ * account, not a multi-user system.
  */
 import { config } from "dotenv"
 import { resolve } from "path"
-config({ path: resolve(process.cwd(), ".env.local") })
+const envPath = resolve(process.cwd(), ".env.local")
+config({ path: envPath })
+
+if (!process.env.DATABASE_URL) {
+  console.error(
+    `DATABASE_URL is not set after loading ${envPath}.\n` +
+    `Check that the file exists at that exact path and contains a line like:\n` +
+    `  DATABASE_URL=postgresql://...\n` +
+    `(no quotes, no "export", the key spelled exactly DATABASE_URL).`
+  )
+  process.exit(1)
+}
 
 import { auth } from "../src/lib/auth"
 import { db } from "../src/lib/neon"
@@ -20,13 +37,18 @@ function arg(name: string): string | undefined {
   return idx !== -1 ? process.argv[idx + 1] : undefined
 }
 
+function hasFlag(name: string): boolean {
+  return process.argv.includes(`--${name}`)
+}
+
 async function main() {
   const email = arg("email") ?? process.env.ALLOWED_ADMIN_EMAIL
   const password = arg("password")
   const name = arg("name") ?? "Admin"
+  const reset = hasFlag("reset")
 
   if (!email || !password) {
-    console.error("Usage: npm run admin:create-user -- --email you@example.com --password \"...\" [--name \"Owner\"]")
+    console.error("Usage: npm run admin:create-user -- --email you@example.com --password \"...\" [--name \"Owner\"] [--reset]")
     process.exit(1)
   }
 
@@ -39,8 +61,12 @@ async function main() {
 
   const existing = await db.select().from(adminUsers).where(eq(adminUsers.email, email)).limit(1)
   if (existing.length > 0) {
-    console.error(`An admin user with email ${email} already exists. Use the BetterAuth password-reset flow to change it.`)
-    process.exit(1)
+    if (!reset) {
+      console.error(`An admin user with email ${email} already exists. Re-run with --reset to delete and recreate it with the new password.`)
+      process.exit(1)
+    }
+    await db.delete(adminUsers).where(eq(adminUsers.email, email))
+    console.log(`Existing admin user deleted (cascaded sessions/credentials removed).`)
   }
 
   const result = await auth.api.signUpEmail({ body: { email, password, name } })

@@ -12,7 +12,6 @@ import { StepPayment, type PaymentMethod } from "@/components/checkout/step-paym
 import { CheckoutUpsellModal } from "@/components/checkout/checkout-upsell-modal"
 import { trackEvent } from "@/lib/track-event"
 import { getCheckoutUpsells } from "@/lib/recommendations"
-import { sampleProducts } from "@/data/sample-products"
 import type { Product } from "@/types"
 
 const STEP_LABELS = ["Your details", "Delivery", "Review & advance", "Payment"]
@@ -44,11 +43,19 @@ export default function CheckoutPage() {
     trackEvent("checkout_started", { itemCount: items.length, subtotal: totalPrice })
   }, [items.length, totalPrice])
 
+  const [productPool, setProductPool] = useState<Product[]>([])
+  useEffect(() => {
+    fetch("/api/products/all")
+      .then((r) => r.json())
+      .then((data) => { if (data.products) setProductPool(data.products) })
+      .catch(() => {})
+  }, [])
+
   const cartProductIds = items.map((i) => i.productId).join(",")
   const upsellSuggestions = useMemo(
-    () => getCheckoutUpsells(items, sampleProducts, 3),
+    () => getCheckoutUpsells(items, productPool, 3),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [cartProductIds]
+    [cartProductIds, productPool]
   )
   const [showUpsell, setShowUpsell] = useState(false)
 

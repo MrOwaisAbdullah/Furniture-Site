@@ -3,13 +3,11 @@
 import Link from "next/link"
 import { ArrowRight } from "lucide-react"
 import { motion } from "framer-motion"
-import { sampleProducts } from "@/data/sample-products"
+import type { Product } from "@/types"
 import { ProductCard } from "@/components/product/product-card"
 import { useReducedMotion } from "@/lib/use-reduced-motion"
 
-const featured = sampleProducts.filter((p) => p.featured)
-
-export function FeaturedSets() {
+export function FeaturedSets({ products }: { products: Product[] }) {
   const prefersReduced = useReducedMotion()
 
   return (
@@ -41,7 +39,7 @@ export function FeaturedSets() {
       </motion.div>
 
       <div className="grid grid-cols-2 gap-3.5 sm:gap-4 lg:grid-cols-4 lg:gap-5">
-        {featured.map((product, i) => (
+        {products.map((product, i) => (
           <motion.div
             key={product._id}
             initial={{ opacity: 0, y: 20 }}

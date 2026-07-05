@@ -5,7 +5,6 @@ import Link from "next/link"
 import { Heart, Trash2 } from "lucide-react"
 import { formatPrice } from "@/lib/utils"
 import { wishlistClient, type WishlistItem } from "@/lib/wishlist-client"
-import { sampleProducts } from "@/data/sample-products"
 import { WishlistEmptyState } from "@/components/wishlist/empty-state"
 import { WhatsAppAll } from "@/components/wishlist/whatsapp-all"
 import { ShareWishlist } from "@/components/wishlist/share-wishlist"
@@ -18,28 +17,14 @@ const categoryTone: Record<string, string> = {
   "side-tables":     "linear-gradient(150deg,#8A9A8E,#4A5A50)",
 }
 
-function getSavedItems(): WishlistItem[] {
-  const saved = wishlistClient.getAll()
-  if (saved.length > 0) return saved
-  // Seed with first 3 sample products as demo when localStorage is empty
-  return sampleProducts.slice(0, 3).map((p) => ({
-    productId: p._id,
-    name: p.name,
-    slug: p.slug,
-    price: p.salePrice ?? p.basePrice,
-    finishName: p.finishes[0]?.name,
-  }))
-}
-
-function getProductTone(slug: string): string {
-  const product = sampleProducts.find((p) => p.slug === slug)
-  return categoryTone[product?.category.slug ?? ""] ?? "linear-gradient(150deg,#3A6B57,#16352A)"
+function getProductTone(categorySlug?: string): string {
+  return categoryTone[categorySlug ?? ""] ?? "linear-gradient(150deg,#3A6B57,#16352A)"
 }
 
 export default function WishlistPage() {
   const items = useSyncExternalStore(
     wishlistClient.subscribe,
-    getSavedItems,
+    wishlistClient.getAll,
     () => [] as WishlistItem[],
   )
 
@@ -65,7 +50,7 @@ export default function WishlistPage() {
           <>
             <div className="mt-6 flex flex-col gap-3">
               {items.map((item) => {
-                const tone = getProductTone(item.slug)
+                const tone = getProductTone(item.categorySlug)
                 return (
                   <div
                     key={item.productId}

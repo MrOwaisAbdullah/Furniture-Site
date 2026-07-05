@@ -32,19 +32,13 @@ export interface Product {
 
 export interface Variant {
   _id: string;
-  name: string;
-  sku: string;
   size: string;
   priceModifier: number;
-  inStock: boolean;
-  stockCount: number;
-  variantImages: string[];
 }
 
 export interface Finish {
   _id: string;
   name: string;
-  color: string;
   colorCode: string;
   priceModifier: number;
   images: string[];
@@ -138,7 +132,9 @@ export interface BlogPost {
   title: string;
   slug: string;
   excerpt: string;
-  body: string;
+  /** Sanity Portable Text (array of block/image objects) — rendered with
+   * @portabletext/react, never treated as a plain string. */
+  body: unknown;
   featuredImage: string;
   author: string;
   tags: string[];

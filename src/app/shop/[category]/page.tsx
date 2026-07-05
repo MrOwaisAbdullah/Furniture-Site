@@ -1,10 +1,10 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import Link from "next/link"
-import { sampleProducts } from "@/data/sample-products"
-import { sampleCategories } from "@/data/sample-categories"
-import { formatPrice } from "@/lib/utils"
+import { getProductsByCategory, getCategories } from "@/lib/sanity/queries"
+import { withReviewRatings } from "@/lib/reviews/apply-summaries"
 import { BreadcrumbJsonLd, ItemListJsonLd } from "@/components/seo/json-ld"
+import { PriceFilter } from "@/components/shop/price-filter"
 
 export async function generateMetadata({
   params,
@@ -12,7 +12,8 @@ export async function generateMetadata({
   params: Promise<{ category: string }>
 }): Promise<Metadata> {
   const { category } = await params
-  const cat = sampleCategories.find((c) => c.slug === category)
+  const categories = await getCategories()
+  const cat = categories.find((c) => c.slug === category)
   if (!cat) return {}
 
   return {
@@ -36,10 +37,11 @@ export default async function CategoryPage({
   params: Promise<{ category: string }>
 }) {
   const { category } = await params
-  const cat = sampleCategories.find((c) => c.slug === category)
+  const categories = await getCategories()
+  const cat = categories.find((c) => c.slug === category)
   if (!cat) notFound()
 
-  const products = sampleProducts.filter((p) => p.category.slug === category)
+  const products = await withReviewRatings(await getProductsByCategory(category))
 
   return (
     <div className="min-h-screen bg-surface">
@@ -92,27 +94,7 @@ export default async function CategoryPage({
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            {products.map((product) => (
-              <Link
-                key={product._id}
-                href={`/products/${product.slug}`}
-                className="group overflow-hidden rounded-[16px] border border-border bg-white transition-shadow hover:shadow-md"
-              >
-                <div
-                  className="aspect-[4/3] w-full"
-                  style={{ background: "linear-gradient(150deg,#e8e0d0,#d4caba)" }}
-                />
-                <div className="p-3.5">
-                  <p className="font-mono text-[9px] uppercase tracking-[1.5px] text-sage">{product.category.name}</p>
-                  <p className="mt-1.5 font-heading font-black text-[14px] leading-snug text-ink line-clamp-2 group-hover:text-forest transition-colors">
-                    {product.name}
-                  </p>
-                  <p className="mt-2 font-mono text-[13px] text-gold-700">{formatPrice(product.basePrice)}</p>
-                </div>
-              </Link>
-            ))}
-          </div>
+          <PriceFilter products={products} />
         )}
       </div>
     </div>

@@ -4,6 +4,7 @@ import { createOrder, incrementCouponUsage, createCouponRedemption, createAffili
 import { sendOrderConfirmation } from "@/lib/email"
 import { pushRecentOrder } from "@/lib/redis"
 import { resolveDiscount } from "@/lib/discount"
+import { decrementStock } from "@/lib/sanity/queries"
 
 const checkoutSchema = z.object({
   customerName:    z.string().min(2).max(100),
@@ -75,6 +76,11 @@ export async function POST(req: NextRequest) {
 
     if (!created) {
       return NextResponse.json({ error: "Failed to create order" }, { status: 500 })
+    }
+
+    // Deduct inventory (non-blocking on failure)
+    for (const item of data.items) {
+      decrementStock(item.productId, item.qty).catch(() => {})
     }
 
     // Record the winning discount's bookkeeping (non-blocking on failure).
