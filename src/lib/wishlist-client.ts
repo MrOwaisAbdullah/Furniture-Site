@@ -16,13 +16,20 @@ function emitChange() {
   for (const listener of listeners) listener()
 }
 
+let cached: WishlistItem[] = []
+let lastRaw: string | null = null
+
 function read(): WishlistItem[] {
   if (typeof window === "undefined") return []
+  const raw = localStorage.getItem(STORAGE_KEY)
+  if (raw === lastRaw) return cached
+  lastRaw = raw
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "[]") as WishlistItem[]
+    cached = JSON.parse(raw ?? "[]") as WishlistItem[]
   } catch {
-    return []
+    cached = []
   }
+  return cached
 }
 
 function write(items: WishlistItem[]): void {
