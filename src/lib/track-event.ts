@@ -5,6 +5,8 @@ import { insertEvent } from "@/lib/neon/queries"
 declare global {
   interface Window {
     gtag?: (...args: unknown[]) => void
+    fbq?: (...args: unknown[]) => void
+    ttq?: { track: (event: string, params?: Record<string, unknown>) => void }
   }
 }
 
@@ -25,12 +27,20 @@ export async function trackEvent(
 ) {
   const sessionId = getSessionId()
 
-  // Fire GA4 (non-blocking)
-  if (typeof window !== "undefined" && window.gtag) {
-    window.gtag("event", event, { ...meta, ...opts })
+  const params = { ...meta, ...opts }
+
+  if (typeof window !== "undefined") {
+    if (window.gtag) {
+      window.gtag("event", event, params)
+    }
+    if (window.fbq) {
+      window.fbq("trackCustom", event, meta ?? {})
+    }
+    if (window.ttq) {
+      window.ttq.track(event, meta ?? {})
+    }
   }
 
-  // Fire Neon (server action / fetch — non-blocking, no await in caller)
   try {
     await fetch("/api/track", {
       method:  "POST",

@@ -5,6 +5,7 @@ import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { MobileStickyBar } from "@/components/layout/mobile-sticky-bar"
 import { CookieConsent } from "@/components/ui/cookie-consent"
+import { TrackingScripts } from "@/components/ui/tracking-scripts"
 import { BUSINESS_NAME, ADDRESS_CITY } from "@/lib/site-config"
 import { getProducts } from "@/lib/sanity/queries"
 import "./globals.css"
@@ -96,6 +97,7 @@ export default async function RootLayout({
         {!isAdmin && <Footer />}
         {!isAdmin && <MobileStickyBar />}
         {!isAdmin && <CookieConsent />}
+        {!isAdmin && <TrackingScripts />}
       </body>
     </html>
   )

@@ -18,11 +18,13 @@ export function CookieConsent() {
 
   function handleAccept() {
     localStorage.setItem(COOKIE_CONSENT_KEY, "accepted")
+    window.dispatchEvent(new CustomEvent("cookie-consent", { detail: "accepted" }))
     setVisible(false)
   }
 
   function handleDecline() {
     localStorage.setItem(COOKIE_CONSENT_KEY, "declined")
+    window.dispatchEvent(new CustomEvent("cookie-consent", { detail: "declined" }))
     setVisible(false)
   }
 
