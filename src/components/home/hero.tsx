@@ -8,7 +8,7 @@ import { FaWhatsapp } from "react-icons/fa"
 import { useReducedMotion } from "@/lib/use-reduced-motion"
 import { waLink } from "@/lib/site-config"
 
-const HERO_IMAGE = "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=1200&q=85"
+const HERO_IMAGE = "https://images.unsplash.com/photo-1767800765630-f5603a47df68?auto=format&fit=crop&w=1200&q=85"
 
 export function Hero() {
   const prefersReduced = useReducedMotion()
@@ -23,7 +23,7 @@ export function Hero() {
   })
 
   return (
-    <section style={{ background: "linear-gradient(160deg,#1c4233,#0a1c15)" }}>
+    <section style={{ background: "linear-gradient(160deg,#1c4233,#0a1c15)" }} className="relative pb-10 lg:pb-14">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-14">
         <div className="flex flex-col gap-0 lg:flex-row lg:items-stretch lg:min-h-[580px]">
 
@@ -112,19 +112,19 @@ export function Hero() {
             initial={{ opacity: 0, scale: 0.97 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: prefersReduced ? 0 : 0.7, delay: 0.15, ease: "easeOut" }}
-            className="hidden lg:flex lg:w-[48%] lg:shrink-0 lg:items-center lg:py-8"
+            className="lg:w-[48%] lg:shrink-0 lg:items-center lg:py-8 lg:flex"
           >
-            <div className="relative w-full overflow-hidden rounded-2xl" style={{ height: "500px" }}>
+            <div className="relative w-full overflow-hidden rounded-2xl max-lg:mt-12 max-lg:h-[320px] lg:h-[500px]">
               <motion.div
-                style={{ y: prefersReduced ? 0 : imageY, scale: prefersReduced ? 1 : imageScale }}
-                className="h-full w-full will-change-transform"
+                style={prefersReduced ? {} : { y: imageY, scale: imageScale }}
+                className="h-full w-full will-change-transform max-lg:!transform-none"
               >
                 <Image
                   src={HERO_IMAGE}
                   alt="Yousuf Living bedroom set — workshop-built furniture in Karachi"
                   fill
                   className="object-cover"
-                  sizes="(max-width: 1024px) 0px, 48vw"
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 48vw"
                   priority
                 />
               </motion.div>
@@ -164,9 +164,11 @@ export function Hero() {
         initial={{ scaleX: 0 }}
         animate={{ scaleX: 1 }}
         transition={{ duration: prefersReduced ? 0 : 0.8, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        className="h-[3px] origin-left will-change-transform"
+        className="absolute bottom-0 left-0 right-0 h-[3px] origin-left will-change-transform"
         style={{ background: "linear-gradient(90deg,#C9A24B,#9c7d2f,#C9A24B)" }}
       />
     </section>
   )
 }
+
+
