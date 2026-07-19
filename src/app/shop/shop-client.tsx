@@ -171,6 +171,7 @@ export function ShopClient({ products, categories }: { products: Product[]; cate
           <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-sage" />
           <input
             type="text"
+            aria-label="Search products"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search beds, wardrobes, dressing tables…"

@@ -51,6 +51,7 @@ export default function CartPage() {
                   <div className="mt-2.5 flex items-center justify-between">
                     <div className="flex items-center gap-2.5 rounded-[8px] border border-border-strong px-1 py-0.5">
                       <button
+                        aria-label="Decrease quantity"
                         className="flex h-5 w-5 items-center justify-center text-slate"
                         onClick={() => updateQuantity(item.productId, item.variantId, item.finishId, item.quantity - 1)}
                       >
@@ -58,6 +59,7 @@ export default function CartPage() {
                       </button>
                       <span className="font-mono text-[12px] w-4 text-center">{item.quantity}</span>
                       <button
+                        aria-label="Increase quantity"
                         className="flex h-5 w-5 items-center justify-center text-slate"
                         onClick={() => updateQuantity(item.productId, item.variantId, item.finishId, item.quantity + 1)}
                       >
@@ -88,6 +90,7 @@ export default function CartPage() {
             <div className="flex gap-2">
               <input
                 type="text"
+                aria-label="Promo code"
                 placeholder="Promo code"
                 className="flex-1 rounded-[10px] border border-border-strong bg-white px-4 py-3.5 font-mono text-[13px] text-ink placeholder:text-sage focus:border-forest focus:outline-none"
               />

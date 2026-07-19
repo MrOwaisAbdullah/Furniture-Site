@@ -78,7 +78,7 @@ const portableTextComponents: PortableTextComponents = {
   types: {
     image: ({ value }) => (
       <span className="relative mt-6 block h-[220px] overflow-hidden rounded-[12px] sm:h-[300px]">
-        <Image src={urlFor(value).width(900).url()} alt="" fill className="object-cover" sizes="(max-width: 640px) 100vw, 672px" />
+        <Image src={urlFor(value).width(900).url()} alt={value.alt ?? ""} fill className="object-cover" sizes="(max-width: 640px) 100vw, 672px" />
       </span>
     ),
   },

@@ -220,6 +220,12 @@ html, body {
   animation: shimmer 1.4s ease-in-out infinite;
 }
 
+/* === Focus Visible — safety net for elements missing explicit ring (WCAG 2.4.7) === */
+*:focus-visible {
+  outline: 2px solid var(--color-gold);
+  outline-offset: 2px;
+}
+
 /* === Reduced Motion === */
 @media (prefers-reduced-motion: reduce) {
   *,

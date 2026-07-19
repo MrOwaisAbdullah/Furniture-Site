@@ -62,12 +62,12 @@ export default function AffiliatePage() {
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gold/12">
           <Gift className="h-7 w-7 stroke-gold-700" />
         </div>
-        <h2
+        <h1
           className="mt-5 font-display italic text-forest"
           style={{ fontSize: "28px" }}
         >
           Application sent!
-        </h2>
+        </h1>
         <p className="mt-2 max-w-xs text-[13px] leading-[1.55] text-slate">
           We&apos;ll review your application and email you at <strong>{email}</strong> once approved, with a link to
           your affiliate dashboard.

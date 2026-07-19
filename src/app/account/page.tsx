@@ -70,6 +70,7 @@ function EmailStep({ onSent }: { onSent: (email: string) => void }) {
       <input
         required
         type="email"
+        aria-label="Email address"
         placeholder="e.g. you@example.com"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
@@ -123,6 +124,7 @@ function OtpStep({ email, onVerified }: { email: string; onVerified: () => void 
         required
         inputMode="numeric"
         maxLength={6}
+        aria-label="6-digit verification code"
         placeholder="6-digit code"
         value={otp}
         onChange={(e) => setOtp(e.target.value)}

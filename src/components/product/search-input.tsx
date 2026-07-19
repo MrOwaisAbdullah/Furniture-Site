@@ -48,11 +48,12 @@ export function SearchInput({ products, className, placeholder = "Search sets, b
         <input
           ref={inputRef}
           type="search"
+          aria-label="Search products"
           value={query}
           onChange={(e) => { setQuery(e.target.value); setOpen(true) }}
           onFocus={() => setOpen(true)}
           placeholder={placeholder}
-          className="flex-1 bg-transparent py-3.5 text-[13.5px] text-ink placeholder:text-sage/60 focus:outline-none focus-visible:outline-none"
+          className="flex-1 bg-transparent py-3.5 text-[13.5px] text-ink placeholder:text-sage/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
         />
         {query && (
           <button onClick={() => { setQuery(""); inputRef.current?.focus() }} aria-label="Clear search">
