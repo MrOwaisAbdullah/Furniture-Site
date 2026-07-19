@@ -16,6 +16,7 @@ export async function getOrders(limit = 50) {
     ref:          orders.ref,
     customerName: orders.customerName,
     customerPhone:orders.customerPhone,
+    customerEmail:orders.customerEmail,
     items:        orders.items,
     total:        orders.total,
     advance:      orders.advance,
@@ -59,6 +60,24 @@ export async function getLatestOrderPhoneByEmail(email: string) {
     .orderBy(desc(orders.createdAt))
     .limit(1)
   return rows[0]?.customerPhone ?? null
+}
+
+export async function getAdminOrderByRef(ref: string) {
+  const rows = await db.select({
+    id:              orders.id,
+    ref:             orders.ref,
+    customerName:    orders.customerName,
+    customerPhone:   orders.customerPhone,
+    customerEmail:   orders.customerEmail,
+    items:           orders.items,
+    subtotal:        orders.subtotal,
+    discount:        orders.discount,
+    advance:         orders.advance,
+    total:           orders.total,
+    paymentMethod:   orders.paymentMethod,
+    status:          orders.status,
+  }).from(orders).where(eq(orders.ref, ref)).limit(1)
+  return rows[0] ?? null
 }
 
 export async function getOrderByRef(ref: string, phone: string) {

@@ -60,7 +60,7 @@ export async function sendThankYouEmail(opts: {
   return resend().emails.send({
     from:    FROM,
     to:      opts.to,
-    subject: "Thank you — here's your referral code 🎁",
+    subject: `Thank you — your referral code from ${BUSINESS_NAME}`,
     html: `
       <h2>Thank you, ${opts.customerName}!</h2>
       <p>We hope you're loving your new furniture.</p>

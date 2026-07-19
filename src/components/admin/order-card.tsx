@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { formatPrice } from "@/lib/utils"
 import { cn } from "@/lib/utils"
-import { Loader2 } from "lucide-react"
+import { Loader2, Send } from "lucide-react"
 import type { AdminOrder } from "./kanban-board"
 import { ORDER_PIPELINE } from "@/lib/order-pipeline"
 import { ThemedSelect } from "@/components/ui/themed-select"
@@ -18,6 +18,7 @@ export function OrderCard({
   onStatusChange: (ref: string, status: string) => Promise<void>
 }) {
   const [updating, setUpdating] = useState(false)
+  const [sendingThanks, setSendingThanks] = useState(false)
   const items = Array.isArray(order.items) ? order.items as Array<{ name?: string; qty?: number }> : []
   const itemSummary = items.map((i) => i.name).filter(Boolean).join(", ") || "—"
 
@@ -25,6 +26,26 @@ export function OrderCard({
     setUpdating(true)
     await onStatusChange(order.ref, next)
     setUpdating(false)
+  }
+
+  async function handleSendThankYou() {
+    setSendingThanks(true)
+    try {
+      const res = await fetch("/api/admin/send-thank-you", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderRef: order.ref }),
+      })
+      const body = await res.json()
+      if (res.ok) {
+        alert(`Thank-you sent!\nCode: ${body.referralCode}`)
+      } else {
+        alert(body.error ?? "Failed")
+      }
+    } catch {
+      alert("Network error")
+    }
+    setSendingThanks(false)
   }
 
   return (
@@ -54,6 +75,20 @@ export function OrderCard({
         </div>
         {updating && <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-sage" />}
       </div>
+      {order.customerEmail && (
+        <button
+          onClick={handleSendThankYou}
+          disabled={sendingThanks}
+          className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-[8px] border border-border py-1.5 font-heading text-[11px] font-bold text-slate transition-colors hover:bg-forest/5 hover:text-forest disabled:opacity-40"
+        >
+          {sendingThanks ? (
+            <Loader2 className="h-3 w-3 animate-spin" />
+          ) : (
+            <Send className="h-3 w-3" />
+          )}
+          Send thank-you
+        </button>
+      )}
     </div>
   )
 }

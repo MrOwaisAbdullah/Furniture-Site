@@ -9,6 +9,7 @@ export interface AdminOrder {
   ref: string
   customerName: string
   customerPhone: string
+  customerEmail: string | null
   items: unknown
   total: string
   advance: string
