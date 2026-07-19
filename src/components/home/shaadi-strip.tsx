@@ -84,7 +84,7 @@ export function ShaadiStrip() {
             whileHover={{ y: -2 }}
             whileTap={{ scale: 0.96 }}
             transition={{ type: "spring", stiffness: 480, damping: 22 }}
-            className="ml-auto inline-flex items-center gap-1.5 rounded-[9px] bg-gold px-5 py-2.5 font-heading text-[12.5px] font-bold text-forest shadow-[0_4px_14px_-4px_rgba(201,162,75,.5)] transition-colors hover:bg-gold/88"
+            className="ml-auto inline-flex items-center gap-1.5 rounded-[9px] shimmer-btn px-5 py-2.5 font-heading text-[12.5px] font-bold text-forest shadow-[0_4px_14px_-4px_rgba(201,162,75,.5)] transition-colors"
           >
             <MessageCircle className="h-3.5 w-3.5" />
             Enquire

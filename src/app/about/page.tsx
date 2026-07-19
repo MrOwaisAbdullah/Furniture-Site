@@ -181,7 +181,7 @@ export default function AboutPage() {
             <div className="flex flex-wrap gap-3">
               <Link
                 href="/showroom"
-                className="inline-flex items-center gap-2 rounded-[10px] bg-gold px-6 py-3 font-heading font-bold text-[13.5px] text-forest transition-all hover:bg-gold/88 hover:-translate-y-0.5 active:scale-[.98]"
+                className="inline-flex items-center gap-2 rounded-[10px] shimmer-btn px-6 py-3 font-heading font-bold text-[13.5px] text-forest transition-all hover:-translate-y-0.5 active:scale-[.98]"
               >
                 Plan a visit <ArrowRight className="h-4 w-4" />
               </Link>

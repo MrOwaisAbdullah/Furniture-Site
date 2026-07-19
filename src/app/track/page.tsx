@@ -211,7 +211,7 @@ export default function TrackPage() {
             href={waLink("Hi, I'd like to check on my order.")}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-3 inline-flex items-center gap-2 rounded-[10px] bg-gold px-5 py-2.5 font-heading font-bold text-[12.5px] text-forest transition-all hover:bg-gold/88 active:scale-[.97]"
+            className="mt-3 inline-flex items-center gap-2 rounded-[10px] shimmer-btn px-5 py-2.5 font-heading font-bold text-[12.5px] text-forest transition-all active:scale-[.97]"
           >
             Chat on WhatsApp
           </a>

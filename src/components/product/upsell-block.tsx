@@ -162,7 +162,7 @@ function TierSheetCard({ tier, onSelect }: { tier: RoomTier; onSelect: (t: RoomT
           onClick={() => onSelect(tier)}
           className={`flex w-full items-center justify-between rounded-[10px] px-4 py-3 font-heading font-bold text-[13px] transition-colors ${
             tier.highlight
-              ? "bg-gold text-forest hover:bg-gold/85"
+              ? "shimmer-btn text-forest"
               : "bg-forest/8 text-forest hover:bg-forest/15"
           }`}
         >
@@ -363,7 +363,7 @@ export function UpsellBlock({ tiers, onBookTier }: { tiers: RoomTier[]; onBookTi
                     </div>
                     <button
                       onClick={() => setSelectedTier(tier3)}
-                      className="mt-4 flex items-center justify-center gap-1.5 rounded-[8px] bg-gold py-2.5 font-heading font-bold text-[12px] text-forest transition-colors hover:bg-gold/85"
+                      className="mt-4 flex items-center justify-center gap-1.5 rounded-[8px] shimmer-btn py-2.5 font-heading font-bold text-[12px] text-forest transition-colors"
                     >
                       See what&apos;s inside
                     </button>

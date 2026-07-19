@@ -181,7 +181,7 @@ export default async function BlogPostPage({
           </p>
           <Link
             href="/shop"
-            className="mt-1 inline-flex items-center gap-2 rounded-[10px] bg-gold px-5 py-3 font-heading font-bold text-[13.5px] text-forest transition-all hover:bg-gold/88 active:scale-[.97]"
+            className="mt-1 inline-flex items-center gap-2 rounded-[10px] shimmer-btn px-5 py-3 font-heading font-bold text-[13.5px] text-forest transition-all active:scale-[.97]"
           >
             Browse our sets <ArrowRight className="h-4 w-4" />
           </Link>

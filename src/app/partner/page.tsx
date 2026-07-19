@@ -162,7 +162,7 @@ export default function PartnerPage() {
               href={waLink("Hi, I'm interested in becoming a partner with Yousuf Living.")}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-[10px] bg-gold px-6 py-3 font-heading font-bold text-[14px] text-forest transition-all hover:bg-gold/88 active:scale-[.97]"
+              className="inline-flex items-center gap-2 rounded-[10px] shimmer-btn px-6 py-3 font-heading font-bold text-[14px] text-forest transition-all active:scale-[.97]"
             >
               Chat on WhatsApp <ArrowRight className="h-4 w-4" />
             </a>

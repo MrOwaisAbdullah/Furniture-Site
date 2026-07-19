@@ -114,7 +114,7 @@ export function Footer() {
               <button
                 type="submit"
                 disabled={subscribing || !email}
-                className="shrink-0 rounded-[9px] bg-gold px-5 py-3 font-heading font-bold text-[12.5px] text-forest transition-colors hover:bg-gold/90 disabled:opacity-50"
+                className="shrink-0 rounded-[9px] shimmer-btn px-5 py-3 font-heading font-bold text-[12.5px] text-forest transition-colors disabled:opacity-50"
               >
                 {subscribing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Join"}
               </button>

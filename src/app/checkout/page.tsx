@@ -306,7 +306,7 @@ export default function CheckoutPage() {
             <button
               onClick={submitOrder}
               disabled={submitting}
-              className="flex flex-1 items-center justify-center gap-2 rounded-[11px] bg-gold py-3.5 text-center font-heading font-black text-[15px] text-forest shadow-md disabled:opacity-70"
+              className="shimmer-btn flex flex-1 items-center justify-center gap-2 rounded-[11px] py-3.5 text-center font-heading font-black text-[15px] text-forest shadow-md disabled:opacity-70"
               style={{ boxShadow: "0 8px 22px -10px rgba(201,162,75,.6)" }}
             >
               {submitting && <Loader2 className="h-4 w-4 animate-spin" />}

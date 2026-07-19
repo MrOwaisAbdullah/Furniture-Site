@@ -160,7 +160,7 @@ export default async function SetPage({ params }: { params: Promise<{ set: strin
                 href={waLink(`Hi, I'm interested in the ${set.label} bedroom set (${setSlug}). Price range: ${formatPrice(set.priceFrom)} – ${formatPrice(set.priceTo)}. Please share more details.`)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2.5 rounded-[10px] bg-gold px-7 py-3.5 font-heading font-bold text-[14px] text-forest transition-colors hover:bg-gold/85"
+                className="flex items-center justify-center gap-2.5 rounded-[10px] shimmer-btn px-7 py-3.5 font-heading font-bold text-[14px] text-forest transition-colors"
               >
                 Book on WhatsApp
               </a>

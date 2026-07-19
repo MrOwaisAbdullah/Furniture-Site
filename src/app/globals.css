@@ -226,6 +226,30 @@ html, body {
   outline-offset: 2px;
 }
 
+/* === Gold shimmer button === */
+.shimmer-btn {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #C9A24B 0%, #DDBE7A 40%, #C9A24B 60%, #9C7D2F 100%);
+}
+.shimmer-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgba(255,255,255,.45) 45%,
+    rgba(255,255,255,.45) 55%,
+    transparent 60%
+  );
+  transform: translateX(-100%);
+  transition: transform .5s ease;
+}
+.shimmer-btn:hover::after {
+  transform: translateX(100%);
+}
+
 /* === Reduced Motion === */
 @media (prefers-reduced-motion: reduce) {
   *,
