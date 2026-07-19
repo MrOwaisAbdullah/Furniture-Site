@@ -1,12 +1,14 @@
 "use client"
 
 import Link from "next/link"
-import { Minus, Plus, Trash2 } from "lucide-react"
+import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react"
 import { useCartStore } from "@/lib/store"
 import { formatPrice } from "@/lib/utils"
 import { EmptyCart } from "@/components/cart/empty-cart"
+import { useToast } from "@/components/ui/toast"
 
 export default function CartPage() {
+  const { toast } = useToast()
   const { items, totalPrice, totalQuantity, updateQuantity, removeItem } = useCartStore()
 
   if (items.length === 0) {
@@ -67,7 +69,10 @@ export default function CartPage() {
                         {formatPrice(item.price * item.quantity)}
                       </span>
                       <button
-                        onClick={() => removeItem(item.productId, item.variantId, item.finishId)}
+                        onClick={() => {
+                          removeItem(item.productId, item.variantId, item.finishId)
+                          toast(`${item.name} removed from cart`, "info")
+                        }}
                         className="flex h-8 w-8 items-center justify-center rounded-full text-sage transition-all hover:bg-error/10 hover:text-error"
                         aria-label={`Remove ${item.name}`}
                       >

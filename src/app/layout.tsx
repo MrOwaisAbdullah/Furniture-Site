@@ -6,6 +6,7 @@ import { Footer } from "@/components/layout/footer"
 import { MobileStickyBar } from "@/components/layout/mobile-sticky-bar"
 import { CookieConsent } from "@/components/ui/cookie-consent"
 import { TrackingScripts } from "@/components/ui/tracking-scripts"
+import { ToastProvider } from "@/components/ui/toast"
 import { BUSINESS_NAME, ADDRESS_CITY } from "@/lib/site-config"
 import { getProducts } from "@/lib/sanity/queries"
 import "./globals.css"
@@ -92,7 +93,7 @@ export default async function RootLayout({
         </a>
         {!isAdmin && <Header products={products} />}
         <main id="main-content" className={isAdmin ? "flex-1" : "flex-1 pb-20 lg:pb-0"} tabIndex={-1}>
-          {children}
+          <ToastProvider>{children}</ToastProvider>
         </main>
         {!isAdmin && <Footer />}
         {!isAdmin && <MobileStickyBar />}

@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { Loader2 } from "lucide-react"
+import { Loader2, ShoppingBag } from "lucide-react"
 import { useCartStore } from "@/lib/store"
+import { useToast } from "@/components/ui/toast"
 import { StepDetails, type DetailsForm } from "@/components/checkout/step-details"
 import { StepDelivery, type DeliveryMode } from "@/components/checkout/step-delivery"
 import { StepConfirm } from "@/components/checkout/step-confirm"
@@ -27,12 +28,14 @@ export default function CheckoutPage() {
   const router = useRouter()
   const [step, setStep] = useState(0)
   const [form, setForm] = useState<DetailsForm>({ name: "", phone: "", area: "", address: "" })
+  const [formErrors, setFormErrors] = useState<Partial<Record<keyof DetailsForm, string>>>({})
   const [delivery, setDelivery] = useState<DeliveryMode>("deliver")
   const [payment, setPayment] = useState<PaymentMethod>("bank")
   const [screenshotFile, setScreenshotFile] = useState<File | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const { toast } = useToast()
   const { items, totalPrice, clearCart, addItem } = useCartStore()
   const advance = Math.round(totalPrice / 2)
 
@@ -88,9 +91,31 @@ export default function CheckoutPage() {
     trackEvent("checkout_upsell_added", { productId: product._id, name: product.name, price: product.salePrice ?? product.basePrice })
   }
 
+  function validateStep(): boolean {
+    const errs: Partial<Record<keyof DetailsForm, string>> = {}
+    if (step === 0) {
+      if (!form.name.trim()) errs.name = "Name is required"
+      if (!form.phone.trim()) errs.phone = "Phone number is required"
+      else if (!/^(\+92|0)?3\d{9}$/.test(form.phone.replace(/\s/g, "")))
+        errs.phone = "Enter a valid Pakistan mobile number"
+      if (!form.area) errs.area = "Select your area"
+      if (!form.address.trim()) errs.address = "Address is required"
+    }
+    setFormErrors(errs)
+    return Object.keys(errs).length === 0
+  }
+
   function goToStep(next: number) {
+    if (!validateStep()) return
     trackEvent("checkout_step_completed", { step: STEP_KEYS[step] })
     setStep(next)
+  }
+
+  function handleChange(next: Partial<DetailsForm>) {
+    setForm((prev) => ({ ...prev, ...next }))
+    if (Object.keys(formErrors).length > 0) {
+      setFormErrors({})
+    }
   }
 
   async function uploadScreenshot(orderRef: string): Promise<string | null> {
@@ -184,6 +209,7 @@ export default function CheckoutPage() {
       trackEvent("order_completed", { orderRef: body.ref, total: totalPrice, itemCount: items.length })
       sessionStorage.setItem("yl_last_order", JSON.stringify({ ref: body.ref, advance }))
       clearCart()
+      toast("Booking confirmed! Check your WhatsApp for updates.", "success")
       router.push("/checkout/confirmation")
     } catch {
       setError("Network error — please try again.")
@@ -194,10 +220,16 @@ export default function CheckoutPage() {
   if (items.length === 0) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-4 text-center">
-        <p className="text-[14px] text-slate">Your cart is empty.</p>
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-forest/8">
+          <ShoppingBag className="h-7 w-7 stroke-forest/50" strokeWidth={1.5} />
+        </div>
+        <div>
+          <p className="font-heading font-bold text-[18px] text-ink">Your cart is empty</p>
+          <p className="mt-1.5 text-[13px] text-slate">Add pieces from the shop to get started.</p>
+        </div>
         <Link
           href="/shop"
-          className="rounded-[10px] bg-forest px-6 py-3.5 font-heading font-bold text-[14px] text-bone"
+          className="mt-2 rounded-[10px] bg-forest px-6 py-3 font-heading font-bold text-[14px] text-bone"
         >
           Browse sets
         </Link>
@@ -233,7 +265,8 @@ export default function CheckoutPage() {
           {step === 0 && (
             <StepDetails
               form={form}
-              onChange={(next) => setForm((prev) => ({ ...prev, ...next }))}
+              onChange={handleChange}
+              errors={formErrors}
             />
           )}
           {step === 1 && (
@@ -265,7 +298,7 @@ export default function CheckoutPage() {
           {step < STEP_LABELS.length - 1 ? (
             <button
               onClick={() => goToStep(step + 1)}
-              className="flex-1 rounded-[11px] bg-forest py-3.5 font-heading font-bold text-[15px] text-bone transition-transform active:scale-[.99]"
+              className="flex-1 rounded-[11px] bg-forest py-3.5 font-heading font-bold text-[15px] text-bone transition-transform active:scale-[.99] disabled:opacity-40"
             >
               Continue
             </button>

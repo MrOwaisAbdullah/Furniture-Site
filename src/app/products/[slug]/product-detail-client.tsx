@@ -26,6 +26,7 @@ import { trackEvent } from "@/lib/track-event"
 import { usePageEngagementTracking } from "@/lib/use-page-engagement-tracking"
 import { ReviewForm } from "@/components/product/review-form"
 import { ReviewsSection } from "@/components/product/reviews-section"
+import { useToast } from "@/components/ui/toast"
 import { ANCHOR_CATEGORIES, type RoomTier } from "@/lib/recommendations"
 import { recentlyViewedClient } from "@/lib/recently-viewed-client"
 import { RecentlyViewed } from "@/components/product/recently-viewed"
@@ -56,6 +57,7 @@ export function ProductDetailClient({
   const [qty, setQty] = useState(1)
   const [showUpsellPrompt, setShowUpsellPrompt] = useState(false)
   const [reviews, setReviews] = useState<{ id: number; name: string; rating: number; body: string; photoUrl?: string | null; createdAt: Date | string }[]>([])
+  const { toast } = useToast()
   const router = useRouter()
 
   useEffect(() => {
@@ -128,6 +130,7 @@ export function ProductDetailClient({
     if (qty > 1) updateQuantity(product._id, variantId, finishId, qty)
     if (fromEl) flyToTarget(fromEl, "[data-nav-cart]")
     trackEvent("add_to_cart", { name: product.name, price: product.salePrice ?? product.basePrice, qty }, { productId: product._id })
+    toast(`${product.name} added to cart`, "success")
     setCartAdded(true)
     setTimeout(() => setCartAdded(false), 1800)
   }
@@ -173,7 +176,10 @@ export function ProductDetailClient({
       categorySlug: product.category.slug,
     })
     setWishlisted(isNow)
-    if (isNow) trackEvent("wishlist_add", { name: product.name }, { productId: product._id })
+    if (isNow) {
+      trackEvent("wishlist_add", { name: product.name }, { productId: product._id })
+      toast(`${product.name} added to wishlist`, "success")
+    }
     if (fromEl && isNow) flyToTarget(fromEl, "[data-nav-wishlist]", "#ef4444")
   }
 

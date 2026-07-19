@@ -294,14 +294,19 @@ export function ShopClient({ products, categories }: { products: Product[]; cate
             </div>
 
             {filtered.length === 0 ? (
-              <div className="py-24 text-center">
-                <p className="font-heading font-bold text-[18px] text-ink">
-                  {trimmedQuery ? `No results for "${query.trim()}"` : "No products in this category"}
-                </p>
-                <p className="mt-2 text-[13px] text-slate">Try a different filter or browse all products.</p>
+              <div className="flex flex-col items-center gap-4 py-24 text-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-forest/8">
+                  <Search className="h-7 w-7 stroke-forest/50" strokeWidth={1.5} />
+                </div>
+                <div>
+                  <p className="font-heading font-bold text-[18px] text-ink">
+                    {trimmedQuery ? `No results for "${query.trim()}"` : "No products in this category"}
+                  </p>
+                  <p className="mt-1.5 text-[13px] text-slate">Try a different filter or browse all products.</p>
+                </div>
                 <button
                   onClick={() => { setActiveCat(ALL_CAT); setQuery("") }}
-                  className="mt-5 rounded-[10px] bg-forest px-6 py-3 font-heading font-bold text-[13.5px] text-bone"
+                  className="mt-2 rounded-[10px] bg-forest px-6 py-3 font-heading font-bold text-[13.5px] text-bone"
                 >
                   Show all
                 </button>
