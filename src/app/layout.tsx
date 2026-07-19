@@ -8,7 +8,8 @@ import { CookieConsent } from "@/components/ui/cookie-consent"
 import { TrackingScripts } from "@/components/ui/tracking-scripts"
 import { ToastProvider } from "@/components/ui/toast"
 import { BUSINESS_NAME, ADDRESS_CITY } from "@/lib/site-config"
-import { getProducts } from "@/lib/sanity/queries"
+import { PromoPopup } from "@/components/ui/promo-popup"
+import { getProducts, getActivePopup } from "@/lib/sanity/queries"
 import "./globals.css"
 
 const instrumentSerif = Instrument_Serif({
@@ -77,7 +78,9 @@ export default async function RootLayout({
 }>) {
   const pathname = (await headers()).get("x-pathname") ?? ""
   const isAdmin = pathname.startsWith("/admin")
-  const products = isAdmin ? [] : await getProducts()
+  const [products, popup] = isAdmin
+    ? [[], null]
+    : await Promise.all([getProducts(), getActivePopup()])
 
   return (
     <html
@@ -98,6 +101,7 @@ export default async function RootLayout({
         {!isAdmin && <Footer />}
         {!isAdmin && <MobileStickyBar />}
         {!isAdmin && <CookieConsent />}
+        {!isAdmin && popup && <PromoPopup popup={popup} />}
         {!isAdmin && <TrackingScripts />}
       </body>
     </html>

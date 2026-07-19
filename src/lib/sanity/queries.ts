@@ -27,7 +27,7 @@ async function getActiveSales(): Promise<RawSanitySale[]> {
       "appliesToCategoryIds": appliesToCategories[]->_id
     }`,
     {},
-    { next: { revalidate: 300 } } // short TTL — sales can start/end on a schedule
+    { next: { revalidate: 300, tags: ["sanity", "sale"] } } // short TTL — sales can start/end on a schedule
   )
 }
 
@@ -38,7 +38,7 @@ export async function getProducts() {
     readClient.fetch<RawSanityProduct[]>(
       `*[_type == "product" && !(_id in path("drafts.**"))] | order(_createdAt desc) { ${PRODUCT_PROJECTION} }`,
       {},
-      { next: { revalidate: 3600 } }
+      { next: { revalidate: 3600, tags: ["sanity", "product"] } }
     ),
     getActiveSales(),
   ])
@@ -50,7 +50,7 @@ export async function getFeaturedProducts() {
     readClient.fetch<RawSanityProduct[]>(
       `*[_type == "product" && featured == true && !(_id in path("drafts.**"))] | order(_createdAt desc) [0...6] { ${PRODUCT_PROJECTION} }`,
       {},
-      { next: { revalidate: 1800 } }
+      { next: { revalidate: 1800, tags: ["sanity", "product"] } }
     ),
     getActiveSales(),
   ])
@@ -62,7 +62,7 @@ export async function getProductBySlug(slug: string) {
     readClient.fetch<RawSanityProduct | null>(
       `*[_type == "product" && slug.current == $slug && !(_id in path("drafts.**"))][0] { ${PRODUCT_PROJECTION} }`,
       { slug },
-      { next: { revalidate: 3600 } }
+      { next: { revalidate: 3600, tags: ["sanity", "product", `product:${slug}`] } }
     ),
     getActiveSales(),
   ])
@@ -74,7 +74,7 @@ export async function getProductsByCategory(categorySlug: string) {
     readClient.fetch<RawSanityProduct[]>(
       `*[_type == "product" && category->slug.current == $categorySlug && !(_id in path("drafts.**"))] | order(_createdAt desc) { ${PRODUCT_PROJECTION} }`,
       { categorySlug },
-      { next: { revalidate: 3600 } }
+      { next: { revalidate: 3600, tags: ["sanity", "product", "category", `category:${categorySlug}`] } }
     ),
     getActiveSales(),
   ])
@@ -91,7 +91,7 @@ export async function getCategories() {
       "productCount": count(*[_type == "product" && references(^._id)])
     }`,
     {},
-    { next: { revalidate: 3600 } }
+    { next: { revalidate: 3600, tags: ["sanity", "category"] } }
   )
   return rows.map(mapSanityCategory)
 }
@@ -106,7 +106,7 @@ export async function getBlogPosts() {
       author
     }`,
     {},
-    { next: { revalidate: 86400 } }
+    { next: { revalidate: 86400, tags: ["sanity", "blogPost"] } }
   )
   return rows.map(mapSanityBlogPost)
 }
@@ -119,7 +119,7 @@ export async function getBlogPostBySlug(slug: string) {
       author, body
     }`,
     { slug },
-    { next: { revalidate: 86400 } }
+    { next: { revalidate: 86400, tags: ["sanity", "blogPost", `blogPost:${slug}`] } }
   )
   return row ? mapSanityBlogPost(row) : null
 }
@@ -133,8 +133,70 @@ export async function getSiteSettings() {
       socialLinks, seoDefaults
     }`,
     {},
-    { next: { revalidate: 3600 } }
+    { next: { revalidate: 3600, tags: ["sanity", "siteSettings"] } }
   )
+}
+
+// ── Promo Popup ─────────────────────────────────────────────────────────────
+
+export interface ActivePopup {
+  _id: string
+  imageUrl: string
+  imageWidth: number
+  imageHeight: number
+  alt: string
+  linkUrl: string | null
+  delaySeconds: number
+  maxPerSession: number
+  cooldownDays: number
+}
+
+/**
+ * The single active promo popup to show, if any. Returns the most recently
+ * updated active document whose optional date window currently applies.
+ * The frontend handles all timing/frequency (delay, per-session cap, cooldown).
+ */
+export async function getActivePopup(): Promise<ActivePopup | null> {
+  const row = await readClient.fetch<{
+    _id: string
+    imageUrl: string | null
+    imageWidth: number | null
+    imageHeight: number | null
+    alt: string | null
+    linkUrl: string | null
+    delaySeconds: number | null
+    maxPerSession: number | null
+    cooldownDays: number | null
+  } | null>(
+    `*[_type == "promoPopup" && active == true
+        && (!defined(startsAt) || startsAt <= now())
+        && (!defined(endsAt) || endsAt >= now())
+        && defined(image.asset)
+      ] | order(_updatedAt desc) [0] {
+        _id,
+        "imageUrl": image.asset->url,
+        "imageWidth": image.asset->metadata.dimensions.width,
+        "imageHeight": image.asset->metadata.dimensions.height,
+        "alt": image.alt,
+        linkUrl, delaySeconds, maxPerSession, cooldownDays
+      }`,
+    {},
+    { next: { revalidate: 300, tags: ["sanity", "promoPopup"] } }
+  )
+
+  if (!row?.imageUrl) return null
+
+  return {
+    _id: row._id,
+    imageUrl: row.imageUrl,
+    imageWidth: row.imageWidth ?? 800,
+    imageHeight: row.imageHeight ?? 800,
+    alt: row.alt ?? "Promotion",
+    linkUrl: row.linkUrl || null,
+    delaySeconds: row.delaySeconds ?? 3,
+    maxPerSession: row.maxPerSession ?? 1,
+    cooldownDays: row.cooldownDays ?? 7,
+  }
 }
 
 // ── Stock management ──────────────────────────────────────────────────────────

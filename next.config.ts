@@ -24,6 +24,11 @@ const nextConfig: NextConfig = {
         hostname: "*.r2.cloudflarestorage.com",
       },
       {
+        // R2 custom domain (set R2_PUBLIC_URL to match, e.g. https://cdn.yousufliving.pk)
+        protocol: "https",
+        hostname: "cdn.yousufliving.pk",
+      },
+      {
         protocol: "https",
         hostname: "cdn.sanity.io",
       },

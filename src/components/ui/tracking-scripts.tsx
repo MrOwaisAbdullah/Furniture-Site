@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { GoogleAnalytics } from "@next/third-parties/google"
+import { GoogleAnalytics, GoogleTagManager } from "@next/third-parties/google"
 import Script from "next/script"
 
 const CONSENT_KEY = "yf_cookie_consent"
@@ -27,6 +27,7 @@ function useConsented() {
 export function TrackingScripts() {
   const consented = useConsented()
   const gaId = process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID
+  const gtmId = process.env.NEXT_PUBLIC_GTM_ID
   const fbId = process.env.NEXT_PUBLIC_FB_PIXEL_ID
   const ttId = process.env.NEXT_PUBLIC_TIKTOK_PIXEL_ID
 
@@ -34,6 +35,8 @@ export function TrackingScripts() {
 
   return (
     <>
+      {gtmId && <GoogleTagManager gtmId={gtmId} />}
+
       {gaId && <GoogleAnalytics gaId={gaId} />}
 
       {fbId && (

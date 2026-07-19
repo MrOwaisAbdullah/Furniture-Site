@@ -73,7 +73,7 @@ export function ShowroomBlock() {
               </div>
               <div className="flex items-center gap-3">
                 <Clock className="h-4 w-4 shrink-0 text-gold/50" />
-                <span className="text-[12.5px] text-bone/65">Mon–Sat · 10 am – 9 pm</span>
+                <span className="text-[12.5px] text-bone/65">Mon–Sun · 10 am – 11 pm</span>
               </div>
             </div>
 
