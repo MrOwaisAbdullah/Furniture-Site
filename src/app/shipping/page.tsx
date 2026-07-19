@@ -43,7 +43,7 @@ export default function ShippingPage() {
             <h2 className="mb-2 font-heading font-bold text-[16px] text-ink">Showroom pickup</h2>
             <p>
               Pick up from our showroom in Manzoor Colony, Karachi. We will text you when it is ready. Open
-              Monday through Saturday, 10am to 9pm.
+              Monday through Sunday, 10am to 11pm.
             </p>
           </section>
 

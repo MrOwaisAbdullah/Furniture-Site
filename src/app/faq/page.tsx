@@ -44,7 +44,7 @@ const faqs = [
   },
   {
     q: "Can I visit the showroom before ordering?",
-    a: "Absolutely. Our showroom is in Manzoor Colony, Karachi. Open Monday to Saturday, 10am to 9pm. No appointment needed.",
+    a: "Absolutely. Our showroom is in Manzoor Colony, Karachi. Open Monday to Sunday, 10am to 11pm. No appointment needed.",
   },
   {
     q: "Do you offer installments?",

@@ -9,11 +9,11 @@ const MAPS_EMBED_URL = "https://maps.google.com/maps?q=Yousuf+Living+Manzoor+Col
 export const metadata: Metadata = {
   title: "Showroom — Visit Us",
   description:
-    "Visit the Yousuf Living showroom in Manzoor Colony, Karachi. See bedroom sets, beds, wardrobes, and dressing tables on display. Mon–Sat 10am–9pm.",
+    "Visit the Yousuf Living showroom in Manzoor Colony, Karachi. See bedroom sets, beds, wardrobes, and dressing tables on display. Mon–Sun 10am–11pm.",
   openGraph: {
     title: "Yousuf Living Showroom — Manzoor Colony, Karachi",
     description:
-      "Visit the Yousuf Living showroom in Manzoor Colony, Karachi. See bedroom sets on display. Mon–Sat 10am–9pm.",
+      "Visit the Yousuf Living showroom in Manzoor Colony, Karachi. See bedroom sets on display. Mon–Sun 10am–11pm.",
     url: "https://yousufliving.pk/showroom",
     type: "website",
   },
@@ -31,7 +31,7 @@ const details = [
   {
     icon: Clock,
     label: "Hours",
-    value: "Mon – Sat · 10am – 9pm",
+    value: "Mon – Sun · 10am – 11pm",
   },
   {
     icon: Phone,

@@ -83,7 +83,7 @@ export default function ContactPage() {
                 <Clock className="mt-0.5 h-4 w-4 shrink-0 text-forest" />
                 <div>
                   <p className="font-heading font-bold text-[13px] text-ink">Hours</p>
-                  <p className="mt-0.5 text-[12px] text-slate">Mon–Sat: 10 AM – 9 PM</p>
+                  <p className="mt-0.5 text-[12px] text-slate">Mon–Sun: 10 AM – 11 PM</p>
                 </div>
               </div>
               <div className="flex items-start gap-3 rounded-[12px] border border-border bg-white p-4">

@@ -228,7 +228,7 @@ export function Footer() {
                 </li>
                 <li className="flex items-center gap-2.5">
                   <Clock className="h-3.5 w-3.5 shrink-0 text-gold/60" strokeWidth={1.75} />
-                  <span className="text-[12.5px] text-bone/55">Mon–Sat · 10am–9pm</span>
+                  <span className="text-[12.5px] text-bone/55">Mon–Sun · 10am–11pm</span>
                 </li>
                 <li>
                   <a
