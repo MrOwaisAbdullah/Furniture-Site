@@ -1,7 +1,10 @@
 import type { Metadata } from "next"
-import { MapPin, Clock, Phone } from "lucide-react"
+import { MapPin, Clock, Phone, Star } from "lucide-react"
 import { BreadcrumbJsonLd } from "@/components/seo/json-ld"
 import { ADDRESS_FULL, PHONE_DISPLAY, waLink } from "@/lib/site-config"
+
+const GOOGLE_BUSINESS_URL = "https://share.google/FeCcJzHRq3EEv8ICn"
+const MAPS_EMBED_URL = "https://maps.google.com/maps?q=Yousuf+Living+Manzoor+Colony+Karachi&t=&z=15&ie=UTF8&iwloc=&output=embed"
 
 export const metadata: Metadata = {
   title: "Showroom — Visit Us",
@@ -47,35 +50,19 @@ export default function ShowroomPage() {
           { name: "Showroom", url: "/showroom" },
         ]}
       />
-      {/* Map placeholder */}
-      <div
-        className="relative flex h-44 items-center justify-center sm:h-60 lg:h-72"
-        style={{ background: "linear-gradient(150deg,#6B9685,#244C3C)" }}
-      >
-        <div
+      {/* Google Maps embed */}
+      <div className="relative h-44 sm:h-60 lg:h-72">
+        <iframe
+          src={MAPS_EMBED_URL}
+          width="100%"
+          height="100%"
+          style={{ border: 0 }}
+          allowFullScreen
+          loading="lazy"
+          referrerPolicy="no-referrer-when-downgrade"
+          title="Yousuf Living showroom location on Google Maps"
           className="absolute inset-0"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(255,255,255,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.07) 1px,transparent 1px)",
-            backgroundSize: "26px 26px",
-          }}
         />
-        <div className="relative flex flex-col items-center">
-          <svg
-            width="38"
-            height="38"
-            viewBox="0 0 24 24"
-            fill="#C9A24B"
-            stroke="#16352A"
-            strokeWidth="1.5"
-          >
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-            <circle cx="12" cy="10" r="3" fill="#16352A" />
-          </svg>
-          <p className="mt-1.5 font-mono text-[9px] uppercase tracking-widest text-bone/70">
-            Manzoor Colony, Karachi
-          </p>
-        </div>
       </div>
 
       <div className="mx-auto max-w-2xl px-5 py-8 sm:px-8">
@@ -99,6 +86,17 @@ export default function ShowroomPage() {
             </div>
           ))}
         </div>
+
+        {/* Google Review CTA */}
+        <a
+          href={GOOGLE_BUSINESS_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-8 flex items-center justify-center gap-2 rounded-[11px] border border-gold/40 bg-gold/10 py-3.5 font-heading font-bold text-[14.5px] text-forest transition-all hover:bg-gold/20 active:scale-[.98]"
+        >
+          <Star className="h-4 w-4 fill-gold text-gold" />
+          Leave us a Google review
+        </a>
 
         <a
           href={waLink("Hi, I'd like to book a showroom visit.")}

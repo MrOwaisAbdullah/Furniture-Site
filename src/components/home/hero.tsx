@@ -86,7 +86,7 @@ export function Hero() {
               >
                 <Link
                   href="/shop"
-                  className="inline-flex items-center gap-2 rounded-[10px] bg-gold px-6 py-3.5 font-heading font-black text-[14.5px] text-forest shadow-[0_8px_22px_-8px_rgba(201,162,75,.5)] transition-shadow hover:shadow-[0_12px_28px_-8px_rgba(201,162,75,.6)]"
+                  className="shimmer-btn inline-flex items-center gap-2 rounded-[10px] px-6 py-3.5 font-heading font-black text-[14.5px] text-forest shadow-[0_8px_22px_-8px_rgba(201,162,75,.5)] transition-shadow hover:shadow-[0_12px_28px_-8px_rgba(201,162,75,.6)]"
                 >
                   Browse sets
                   <ArrowRight className="h-4 w-4" />
