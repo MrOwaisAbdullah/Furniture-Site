@@ -5,6 +5,7 @@ import Image from "next/image"
 import { ArrowRight } from "lucide-react"
 import { motion } from "framer-motion"
 import type { Category } from "@/types"
+import { cn } from "@/lib/utils"
 import { useReducedMotion } from "@/lib/use-reduced-motion"
 
 const CAT_IMAGES: Record<string, string> = {
@@ -12,7 +13,7 @@ const CAT_IMAGES: Record<string, string> = {
   beds:              "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=600&q=75",
   "dressing-tables": "https://images.unsplash.com/photo-1618220179428-22790b461013?auto=format&fit=crop&w=600&q=75",
   wardrobes:         "https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=600&q=75",
-  "side-tables":     "https://images.unsplash.com/photo-1556909114-44c8e86f9b12?auto=format&fit=crop&w=600&q=75",
+  "side-tables":     "/pexels-netoo-21352802.jpg",
 }
 
 const categoryTones: Record<string, string> = {
@@ -50,6 +51,10 @@ export function ShopByCategory({ categories }: { categories: Category[] }) {
         {categories.map((cat, i) => {
           const img = CAT_IMAGES[cat.slug]
           const tone = categoryTones[cat.slug] ?? "linear-gradient(135deg,#16352A,#0c231b)"
+          // On the 2-col mobile grid, an odd-numbered last card would be
+          // left alone in its row with an empty cell beside it — span it
+          // full width instead. Desktop's 5-col grid never has this gap.
+          const isLastOfOddRow = i === categories.length - 1 && categories.length % 2 === 1
 
           return (
             <motion.div
@@ -58,6 +63,7 @@ export function ShopByCategory({ categories }: { categories: Category[] }) {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-40px" }}
               transition={{ duration: prefersReduced ? 0 : 0.4, delay: prefersReduced ? 0 : i * 0.07, ease: "easeOut" }}
+              className={cn(isLastOfOddRow && "col-span-2 lg:col-span-1")}
             >
               <Link
                 href={`/shop/${cat.slug}`}
@@ -69,12 +75,11 @@ export function ShopByCategory({ categories }: { categories: Category[] }) {
                     src={img}
                     alt={`${cat.name} — browse ${cat.name.toLowerCase()} collection`}
                     fill
-                    className="object-cover opacity-40 mix-blend-luminosity transition-transform duration-500 group-hover:scale-105 group-hover:opacity-50"
+                    className="object-cover opacity-90 transition-transform duration-500 group-hover:scale-105"
                     sizes="(max-width: 1024px) 50vw, 20vw"
-                    style={{ filter: "saturate(0.6)" }}
                   />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/5 to-transparent" />
 
                 <div className="relative">
                   <p

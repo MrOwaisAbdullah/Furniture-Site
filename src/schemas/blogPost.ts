@@ -18,6 +18,41 @@ export const blogPost = {
         { type: "image", options: { hotspot: true } },
       ],
     },
+    {
+      name: "tags",
+      type: "array",
+      title: "Tags",
+      of: [{ type: "string" }],
+      options: { layout: "tags" },
+    },
+    {
+      name: "faq",
+      type: "array",
+      title: "FAQ",
+      description: "Shown at the end of the post and marked up as FAQ structured data for Google.",
+      of: [
+        {
+          type: "object",
+          fields: [
+            { name: "question", type: "string", title: "Question", validation: (R: { required: () => unknown }) => R.required() },
+            { name: "answer",   type: "text",   title: "Answer", rows: 3, validation: (R: { required: () => unknown }) => R.required() },
+          ],
+          preview: {
+            select: { title: "question" },
+          },
+        },
+      ],
+    },
+    {
+      name: "seo",
+      type: "object",
+      title: "SEO",
+      options: { collapsible: true, collapsed: true },
+      fields: [
+        { name: "metaTitle",       type: "string", title: "Meta title", description: "Leave blank to use the post title." },
+        { name: "metaDescription", type: "text",   title: "Meta description", rows: 2, description: "Leave blank to use the excerpt." },
+      ],
+    },
   ],
   preview: {
     select: { title: "title", subtitle: "publishedAt", media: "featuredImage" },

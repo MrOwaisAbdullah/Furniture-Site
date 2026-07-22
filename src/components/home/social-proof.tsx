@@ -7,9 +7,14 @@ import { useReducedMotion } from "@/lib/use-reduced-motion"
 
 const reviews = [
   {
-    quote: "Booked our shaadi set here. Honest about the Lasani finish, delivered on time, and the deco polish looks premium.",
+    quote: "Booked our shaadi set here. Honest about the finish, delivered on time, and the deco polish looks premium.",
     author: "Ahmed",
     area: "Gulshan-e-Iqbal",
+  },
+    {
+    quote: "Bed set ka order diya tha, exact size mila jo maine manga tha. Kaam mein mehnat saaf nazar aati hai.",
+    author: "Usman",
+    area: "Malir",
   },
   {
     quote: "Got a 3-door wardrobe made to a custom size that no other shop could do. Exactly the dimensions I needed. Quality is excellent.",
@@ -17,7 +22,7 @@ const reviews = [
     area: "DHA Phase 5",
   },
   {
-    quote: "Very professional team. The WhatsApp updates during the build were incredibly helpful — I could see my furniture taking shape.",
+    quote: "Very professional team. The WhatsApp updates during the build were incredibly helpful, I could see my furniture taking shape.",
     author: "Tariq",
     area: "North Nazimabad",
   },
@@ -26,8 +31,13 @@ const reviews = [
     author: "Fatima",
     area: "Gulshan-e-Hadeed",
   },
+    {
+    quote: "Mujhy Pehly lagta tha MDF sasti cheez hai, Furniture ki quality achi nahi hogi, lekin finish dekh ke khayal badal gaya. Achi quality hai.",
+    author: "Hassan",
+    area: "Landhi",
+  },
   {
-    quote: "Workshop-direct pricing means real quality without retail markup. Saved around Rs 40,000 vs. buying from a market shop.",
+    quote: "Workshop-direct pricing means real quality without retail markup. Saved around Rs 40,000 what others are quoting, Highly Recommended.",
     author: "Bilal",
     area: "PECHS Block 2",
   },
@@ -35,6 +45,12 @@ const reviews = [
     quote: "Highly recommend for shaadi furniture. Delivered and installed two days before the nikah — exactly as promised.",
     author: "Nadia",
     area: "Federal B Area",
+  },
+
+  {
+    quote: "We saw the furniture in Showroom, phir order kiya. Jo dikhaya wahi mila, koi farak nahi. Highly Satisfied.",
+    author: "Ayesha",
+    area: "Clifton",
   },
 ]
 
@@ -75,6 +91,8 @@ function ReviewCard({ review }: { review: (typeof reviews)[0] }) {
 
 export function SocialProof() {
   const prefersReduced = useReducedMotion()
+
+  // Mobile: one card at a time, wraps freely.
   const [active, setActive] = useState(0)
   const [dir, setDir] = useState(1)
   const [paused, setPaused] = useState(false)
@@ -92,7 +110,6 @@ export function SocialProof() {
   const goNext = useCallback(() => { setDir(1); setActive((a) => (a + 1) % reviews.length) }, [])
   const goPrev = useCallback(() => { setDir(-1); setActive((a) => (a - 1 + reviews.length) % reviews.length) }, [])
 
-  // Keyboard navigation
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === "ArrowLeft") { e.preventDefault(); goPrev() }
     if (e.key === "ArrowRight") { e.preventDefault(); goNext() }
@@ -103,6 +120,33 @@ export function SocialProof() {
     center: { x: 0, opacity: 1 },
     exit: (d: number) => ({ x: `${-d * 100}%`, opacity: 0 }),
   }
+
+  // Desktop: a real sliding track, 3 cards visible, advances 1 card at a
+  // time (not a full 3-card swap) — no gap because it's one continuous
+  // strip translating, not two separate sets cross-fading.
+  const desktopMaxStart = Math.max(0, reviews.length - 3)
+  const [desktopStart, setDesktopStart] = useState(0)
+  const [desktopPaused, setDesktopPaused] = useState(false)
+
+  useEffect(() => {
+    if (desktopPaused || prefersReduced || desktopMaxStart === 0) return
+    const t = setInterval(() => {
+      setDesktopStart((s) => (s >= desktopMaxStart ? 0 : s + 1))
+    }, 4500)
+    return () => clearInterval(t)
+  }, [desktopPaused, prefersReduced, desktopMaxStart])
+
+  const goNextDesktop = useCallback(() => {
+    setDesktopStart((s) => (s >= desktopMaxStart ? 0 : s + 1))
+  }, [desktopMaxStart])
+  const goPrevDesktop = useCallback(() => {
+    setDesktopStart((s) => (s <= 0 ? desktopMaxStart : s - 1))
+  }, [desktopMaxStart])
+
+  const handleDesktopKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === "ArrowLeft") { e.preventDefault(); goPrevDesktop() }
+    if (e.key === "ArrowRight") { e.preventDefault(); goNextDesktop() }
+  }, [goNextDesktop, goPrevDesktop])
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-14">
@@ -142,20 +186,65 @@ export function SocialProof() {
         </motion.div>
       </div>
 
-      {/* ── Desktop: 3-col static grid ── */}
-      <div className="hidden gap-5 lg:grid lg:grid-cols-3">
-        {reviews.slice(0, 3).map((r, i) => (
+      {/* ── Desktop: real sliding track, 3 visible, 1 card per step (up to 12 testimonials) ── */}
+      <div
+        className="hidden lg:block"
+        onMouseEnter={() => setDesktopPaused(true)}
+        onMouseLeave={() => setDesktopPaused(false)}
+        onKeyDown={handleDesktopKeyDown}
+        role="region"
+        aria-label="Customer reviews carousel"
+        aria-roledescription="carousel"
+        tabIndex={0}
+      >
+        <div className="overflow-hidden -mx-2.5">
           <motion.div
-            key={r.author}
-            initial={{ opacity: 0, y: 22 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-40px" }}
-            transition={{ duration: prefersReduced ? 0 : 0.45, delay: prefersReduced ? 0 : i * 0.12, ease: "easeOut" }}
-            className="h-full"
+            className="flex"
+            style={{ width: `${(reviews.length / 3) * 100}%` }}
+            animate={{ x: `${-desktopStart * (100 / reviews.length)}%` }}
+            transition={{ duration: prefersReduced ? 0 : 0.4, ease: "easeInOut" }}
           >
-            <ReviewCard review={r} />
+            {reviews.map((r) => (
+              <div key={r.author} className="shrink-0 px-2.5" style={{ width: `${100 / reviews.length}%` }}>
+                <ReviewCard review={r} />
+              </div>
+            ))}
           </motion.div>
-        ))}
+        </div>
+
+        {/* Controls */}
+        {reviews.length > 3 && (
+          <div className="mt-6 flex items-center justify-between">
+            <div className="flex flex-wrap gap-1.5" role="tablist" aria-label="Review navigation">
+              {Array.from({ length: desktopMaxStart + 1 }).map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setDesktopStart(i)}
+                  role="tab"
+                  aria-selected={i === desktopStart}
+                  aria-label={`Reviews ${i + 1} to ${i + 3}`}
+                  className={`h-1.5 rounded-full transition-all duration-300 ${i === desktopStart ? "w-6 bg-forest" : "w-1.5 bg-forest/20 hover:bg-forest/40"}`}
+                />
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={goPrevDesktop}
+                aria-label="Previous reviews"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-white text-slate transition-colors hover:bg-surface-sunken"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <button
+                onClick={goNextDesktop}
+                aria-label="Next reviews"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-white text-slate transition-colors hover:bg-surface-sunken"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── Mobile: carousel with keyboard nav ── */}
@@ -191,7 +280,7 @@ export function SocialProof() {
 
         {/* Controls */}
         <div className="mt-4 flex items-center justify-between">
-          <div className="flex gap-1.5" role="tablist" aria-label="Review navigation">
+          <div className="flex flex-wrap gap-1.5" role="tablist" aria-label="Review navigation">
             {reviews.map((_, i) => (
               <button
                 key={i}

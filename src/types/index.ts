@@ -28,6 +28,10 @@ export interface Product {
    * to avoid suggesting "add a bed" on a page/cart that already has one via
    * a bundle SKU, not as a separate line item. */
   bundleCoversCategories?: string[];
+  /** Free-text matching-family label (e.g. "Walnut Classic Bedroom").
+   * Products sharing the exact same setName are shown as "buy together"
+   * siblings — see src/lib/set-bundle.ts. */
+  setName?: string;
 }
 
 export interface Variant {
@@ -140,6 +144,9 @@ export interface BlogPost {
   tags: string[];
   publishedAt: string;
   updatedAt: string;
+  faq: { question: string; answer: string }[];
+  metaTitle?: string;
+  metaDescription?: string;
 }
 
 export interface Event {

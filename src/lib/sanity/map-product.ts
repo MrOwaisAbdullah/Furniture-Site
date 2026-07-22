@@ -1,4 +1,5 @@
 import type { Product, Category, Finish, Variant, BlogPost } from "@/types"
+import { hexForFinishName } from "@/lib/finish-colors"
 
 // ── Raw GROQ result shapes (loose — this is the boundary where untyped CMS
 // JSON meets the app's real types; everything past this file is typed). ──
@@ -15,9 +16,8 @@ export interface RawSanityCategory {
 export interface RawSanityFinish {
   _key: string
   name: string
-  hexColor?: string | null
   priceModifier?: number | null
-  swatch?: string | null
+  images?: string[] | null
 }
 
 export interface RawSanityVariant {
@@ -37,6 +37,7 @@ export interface RawSanityProduct {
   inStock?: boolean | null
   featured?: boolean | null
   bundleCoversCategories?: string[] | null
+  setName?: string | null
   images?: string[] | null
   finishes?: RawSanityFinish[] | null
   variants?: RawSanityVariant[] | null
@@ -67,6 +68,9 @@ export interface RawSanityBlogPost {
   featuredImage?: string | null
   author?: string | null
   publishedAt: string
+  tags?: string[] | null
+  faq?: { question: string; answer: string }[] | null
+  seo?: { metaTitle?: string | null; metaDescription?: string | null } | null
 }
 
 // ── Sale resolution ─────────────────────────────────────────────────────────
@@ -112,9 +116,9 @@ function mapFinish(raw: RawSanityFinish): Finish {
   return {
     _id: raw._key,
     name: raw.name,
-    colorCode: raw.hexColor ?? "#999999",
+    colorCode: hexForFinishName(raw.name),
     priceModifier: raw.priceModifier ?? 0,
-    images: raw.swatch ? [raw.swatch] : [],
+    images: raw.images ?? [],
   }
 }
 
@@ -181,6 +185,7 @@ export function mapSanityProduct(raw: RawSanityProduct, activeSales: RawSanitySa
     createdAt: raw._createdAt,
     updatedAt: raw._updatedAt,
     bundleCoversCategories: raw.bundleCoversCategories ?? undefined,
+    setName: raw.setName || undefined,
   }
 }
 
@@ -193,8 +198,11 @@ export function mapSanityBlogPost(raw: RawSanityBlogPost): BlogPost {
     body: raw.body,
     featuredImage: raw.featuredImage ?? "",
     author: raw.author ?? "",
-    tags: [],
+    tags: raw.tags ?? [],
     publishedAt: raw.publishedAt,
     updatedAt: raw.publishedAt,
+    faq: raw.faq ?? [],
+    metaTitle: raw.seo?.metaTitle || undefined,
+    metaDescription: raw.seo?.metaDescription || undefined,
   }
 }

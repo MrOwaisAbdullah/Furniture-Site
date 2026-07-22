@@ -149,6 +149,51 @@ export async function purgeOldEvents() {
   return db.delete(events).where(lte(events.createdAt, sixMonthsAgo))
 }
 
+const POPUP_EVENTS = ["promo_popup_view", "promo_popup_click", "promo_popup_dismiss"] as const
+
+/** Per-variant impression/click/dismiss counts (and unique-session counts)
+ * for a single popup campaign — the basis for the A/B testing dashboard. */
+export async function getPopupVariantStats(popupId: string, from: Date, to: Date) {
+  const eventsList = sql.join(POPUP_EVENTS.map((e) => sql`${e}`), sql`, `)
+  const rows = await db.execute<{ variant: string; event: string; count: string; sessions: string }>(sql`
+    SELECT
+      COALESCE(${events.meta}->>'variant', 'Unknown') AS variant,
+      ${events.event} AS event,
+      COUNT(*) AS count,
+      COUNT(DISTINCT ${events.sessionId}) AS sessions
+    FROM ${events}
+    WHERE ${events.meta}->>'popupId' = ${popupId}
+      AND ${events.event} IN (${eventsList})
+      AND ${events.createdAt} >= ${from} AND ${events.createdAt} <= ${to}
+    GROUP BY variant, ${events.event}
+  `)
+  return rows.rows.map((r) => ({ variant: r.variant, event: r.event, count: Number(r.count), sessions: Number(r.sessions) }))
+}
+
+/** Popup clicks that were followed by a completed order from the same
+ * browsing session within 7 days — attributes revenue back to the variant
+ * that drove the click, using the shared session id already written by
+ * both `promo_popup_click` and `order_completed` events. */
+export async function getPopupConversions(popupId: string, from: Date, to: Date) {
+  const rows = await db.execute<{ variant: string; conversions: string; revenue: string | null }>(sql`
+    SELECT
+      COALESCE(c.meta->>'variant', 'Unknown') AS variant,
+      COUNT(DISTINCT c.session_id) AS conversions,
+      SUM((o.meta->>'total')::numeric) AS revenue
+    FROM events c
+    JOIN events o
+      ON o.session_id = c.session_id
+      AND o.event = 'order_completed'
+      AND o.created_at > c.created_at
+      AND o.created_at <= c.created_at + interval '7 days'
+    WHERE c.event = 'promo_popup_click'
+      AND c.meta->>'popupId' = ${popupId}
+      AND c.created_at >= ${from} AND c.created_at <= ${to}
+    GROUP BY variant
+  `)
+  return rows.rows.map((r) => ({ variant: r.variant, conversions: Number(r.conversions), revenue: Number(r.revenue ?? 0) }))
+}
+
 const FUNNEL_STAGES = ["product_view", "add_to_cart", "checkout_started", "checkout_step_completed", "order_completed"] as const
 
 /** Distinct-session counts per funnel stage — the basis for drop-off % between

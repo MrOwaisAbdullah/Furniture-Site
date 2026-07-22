@@ -10,9 +10,11 @@ import { StepDetails, type DetailsForm } from "@/components/checkout/step-detail
 import { StepDelivery, type DeliveryMode } from "@/components/checkout/step-delivery"
 import { StepConfirm } from "@/components/checkout/step-confirm"
 import { StepPayment, type PaymentMethod } from "@/components/checkout/step-payment"
+import { OrderSummarySidebar } from "@/components/checkout/order-summary-sidebar"
 import { CheckoutUpsellModal } from "@/components/checkout/checkout-upsell-modal"
 import { trackEvent } from "@/lib/track-event"
 import { getCheckoutUpsells } from "@/lib/recommendations"
+import { computeCartSetDiscount } from "@/lib/set-bundle"
 import type { Product } from "@/types"
 
 const STEP_LABELS = ["Your details", "Delivery", "Review & advance", "Payment"]
@@ -34,10 +36,11 @@ export default function CheckoutPage() {
   const [screenshotFile, setScreenshotFile] = useState<File | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [discount, setDiscount] = useState(0)
+  const [appliedCouponCode, setAppliedCouponCode] = useState<string | null>(null)
 
   const { toast } = useToast()
   const { items, totalPrice, clearCart, addItem } = useCartStore()
-  const advance = Math.round(totalPrice / 2)
 
   const startedTracking = useRef(false)
   useEffect(() => {
@@ -55,11 +58,25 @@ export default function CheckoutPage() {
   }, [])
 
   const cartProductIds = items.map((i) => i.productId).join(",")
+  const cartKey = items.map((i) => `${i.productId}:${i.quantity}`).join(",")
+
   const upsellSuggestions = useMemo(
     () => getCheckoutUpsells(items, productPool, 3),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [cartProductIds, productPool]
   )
+
+  // Recomputed live from whatever is actually in the cart — never a
+  // snapshot taken at add-to-cart time, so removing/adding a matching
+  // piece here adjusts the discount automatically.
+  const autoSetDiscount = useMemo(
+    () => computeCartSetDiscount(items, productPool),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [cartKey, productPool]
+  )
+  const effectiveDiscount = autoSetDiscount && autoSetDiscount.amount > discount ? autoSetDiscount.amount : discount
+  const finalTotal = Math.max(0, totalPrice - effectiveDiscount)
+  const advance = Math.round(finalTotal / 2)
   const [showUpsell, setShowUpsell] = useState(false)
 
   useEffect(() => {
@@ -177,10 +194,10 @@ export default function CheckoutPage() {
         finishName: i.finishName,
       })),
       subtotal: totalPrice,
-      discount: 0,
+      discount: effectiveDiscount,
       advance,
       paymentMethod: payment,
-      couponCode: promoCode,
+      couponCode: appliedCouponCode ?? promoCode,
       affiliateCode: promoCode,
     }
 
@@ -239,80 +256,92 @@ export default function CheckoutPage() {
 
   return (
     <div className="min-h-screen bg-surface">
-      <div className="mx-auto max-w-xl px-4 py-8 sm:px-6">
-        {/* Progress bar */}
-        <div className="mb-5 flex gap-2">
-          {STEP_LABELS.map((_, i) => (
-            <div
-              key={i}
-              className="h-1.5 flex-1 rounded-full transition-colors duration-300"
-              style={{ background: i <= step ? "#C9A24B" : "#D7DCD4" }}
-            />
-          ))}
-        </div>
+      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:grid lg:grid-cols-[1fr_360px] lg:items-start lg:gap-10">
+        {/* Mobile order summary — sticky bar at the very top, above everything */}
+        <OrderSummarySidebar
+          items={items}
+          totalPrice={totalPrice}
+          advance={advance}
+          discount={discount}
+          appliedCode={appliedCouponCode}
+          onApplyCoupon={(amt, code) => { setDiscount(amt); setAppliedCouponCode(code) }}
+          onRemoveCoupon={() => { setDiscount(0); setAppliedCouponCode(null) }}
+          autoSetDiscount={autoSetDiscount}
+        />
 
-        <p className="font-mono uppercase text-gold-700" style={{ fontSize: "10px", letterSpacing: "2px" }}>
-          Step {step + 1} of {STEP_LABELS.length}
-        </p>
-        <h1
-          className="mt-1.5 font-heading font-black text-ink"
-          style={{ fontSize: "24px", letterSpacing: "-0.5px" }}
-        >
-          {STEP_LABELS[step]}
-        </h1>
+        <div className="max-w-xl lg:order-1 lg:max-w-none">
+          {/* Progress bar */}
+          <div className="mb-5 mt-5 flex gap-2 lg:mt-0">
+            {STEP_LABELS.map((_, i) => (
+              <div
+                key={i}
+                className="h-1.5 flex-1 rounded-full transition-colors duration-300"
+                style={{ background: i <= step ? "#C9A24B" : "#D7DCD4" }}
+              />
+            ))}
+          </div>
 
-        <div className="mt-6">
-          {step === 0 && (
-            <StepDetails
-              form={form}
-              onChange={handleChange}
-              errors={formErrors}
-            />
-          )}
-          {step === 1 && (
-            <StepDelivery value={delivery} onChange={setDelivery} />
-          )}
-          {step === 2 && (
-            <StepConfirm items={items} totalPrice={totalPrice} advance={advance} />
-          )}
-          {step === 3 && (
-            <StepPayment advance={advance} method={payment} onMethod={setPayment} onScreenshot={setScreenshotFile} />
-          )}
-        </div>
+          <p className="font-mono uppercase text-gold-700" style={{ fontSize: "10px", letterSpacing: "2px" }}>
+            Step {step + 1} of {STEP_LABELS.length}
+          </p>
+          <h1
+            className="mt-1.5 font-heading font-black text-ink"
+            style={{ fontSize: "24px", letterSpacing: "-0.5px" }}
+          >
+            {STEP_LABELS[step]}
+          </h1>
 
-        {error && (
-          <div className="mt-4 rounded-[10px] bg-error/10 px-3.5 py-2.5 text-[12.5px] text-error">{error}</div>
-        )}
+          <div className="mt-6">
+            {step === 0 && (
+              <StepDetails
+                form={form}
+                onChange={handleChange}
+                errors={formErrors}
+              />
+            )}
+            {step === 1 && (
+              <StepDelivery value={delivery} onChange={setDelivery} />
+            )}
+            {step === 2 && <StepConfirm />}
+            {step === 3 && (
+              <StepPayment advance={advance} method={payment} onMethod={setPayment} onScreenshot={setScreenshotFile} />
+            )}
+          </div>
 
-        {/* Navigation */}
-        <div className="mt-8 flex gap-2.5">
-          {step > 0 && (
-            <button
-              onClick={() => setStep(step - 1)}
-              disabled={submitting}
-              className="rounded-[11px] border border-border-strong px-5 py-3.5 font-heading font-bold text-[14px] text-slate transition-colors hover:bg-surface-sunken disabled:opacity-60"
-            >
-              Back
-            </button>
+          {error && (
+            <div className="mt-4 rounded-[10px] bg-error/10 px-3.5 py-2.5 text-[12.5px] text-error">{error}</div>
           )}
-          {step < STEP_LABELS.length - 1 ? (
-            <button
-              onClick={() => goToStep(step + 1)}
-              className="flex-1 rounded-[11px] bg-forest py-3.5 font-heading font-bold text-[15px] text-bone transition-transform active:scale-[.99] disabled:opacity-40"
-            >
-              Continue
-            </button>
-          ) : (
-            <button
-              onClick={submitOrder}
-              disabled={submitting}
-              className="shimmer-btn flex flex-1 items-center justify-center gap-2 rounded-[11px] py-3.5 text-center font-heading font-black text-[15px] text-forest shadow-md disabled:opacity-70"
-              style={{ boxShadow: "0 8px 22px -10px rgba(201,162,75,.6)" }}
-            >
-              {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-              {submitting ? "Confirming…" : "Confirm booking"}
-            </button>
-          )}
+
+          {/* Navigation */}
+          <div className="mt-8 flex gap-2.5">
+            {step > 0 && (
+              <button
+                onClick={() => setStep(step - 1)}
+                disabled={submitting}
+                className="rounded-[11px] border border-border-strong px-5 py-3.5 font-heading font-bold text-[14px] text-slate transition-colors hover:bg-surface-sunken disabled:opacity-60"
+              >
+                Back
+              </button>
+            )}
+            {step < STEP_LABELS.length - 1 ? (
+              <button
+                onClick={() => goToStep(step + 1)}
+                className="flex-1 rounded-[11px] bg-forest py-3.5 font-heading font-bold text-[15px] text-bone transition-transform active:scale-[.99] disabled:opacity-40"
+              >
+                Continue
+              </button>
+            ) : (
+              <button
+                onClick={submitOrder}
+                disabled={submitting}
+                className="shimmer-btn flex flex-1 items-center justify-center gap-2 rounded-[11px] py-3.5 text-center font-heading font-black text-[15px] text-forest shadow-md disabled:opacity-70"
+                style={{ boxShadow: "0 8px 22px -10px rgba(201,162,75,.6)" }}
+              >
+                {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                {submitting ? "Confirming…" : "Confirm booking"}
+              </button>
+            )}
+          </div>
         </div>
       </div>
 

@@ -9,9 +9,9 @@ import {
 const PRODUCT_PROJECTION = `
   _id, name, "slug": slug.current,
   category->{_id, name, "slug": slug.current, description, "image": image.asset->url},
-  basePrice, sku, stockCount, inStock, featured, bundleCoversCategories,
+  basePrice, sku, stockCount, inStock, featured, bundleCoversCategories, setName,
   "images": images[].asset->url,
-  finishes[]{ _key, name, hexColor, priceModifier, "swatch": swatch.asset->url },
+  finishes[]{ _key, name, priceModifier, "images": images[].asset->url },
   variants[]{ _key, size, priceModifier },
   dimensions, material, description, careInstructions, tags,
   "_createdAt": _createdAt, "_updatedAt": _updatedAt
@@ -103,7 +103,7 @@ export async function getBlogPosts() {
     `*[_type == "blogPost" && !(_id in path("drafts.**"))] | order(publishedAt desc) {
       _id, title, "slug": slug.current, excerpt, publishedAt,
       "featuredImage": featuredImage.asset->url,
-      author
+      author, tags
     }`,
     {},
     { next: { revalidate: 86400, tags: ["sanity", "blogPost"] } }
@@ -116,7 +116,7 @@ export async function getBlogPostBySlug(slug: string) {
     `*[_type == "blogPost" && slug.current == $slug && !(_id in path("drafts.**"))][0] {
       _id, title, "slug": slug.current, excerpt, publishedAt,
       "featuredImage": featuredImage.asset->url,
-      author, body
+      author, body, tags, faq, seo
     }`,
     { slug },
     { next: { revalidate: 86400, tags: ["sanity", "blogPost", `blogPost:${slug}`] } }
@@ -139,12 +139,18 @@ export async function getSiteSettings() {
 
 // ── Promo Popup ─────────────────────────────────────────────────────────────
 
-export interface ActivePopup {
-  _id: string
+export interface PopupVariant {
+  name: string
+  weight: number
   imageUrl: string
   imageWidth: number
   imageHeight: number
   alt: string
+}
+
+export interface ActivePopup {
+  _id: string
+  variants: PopupVariant[]
   linkUrl: string | null
   delaySeconds: number
   maxPerSession: number
@@ -154,15 +160,20 @@ export interface ActivePopup {
 /**
  * The single active promo popup to show, if any. Returns the most recently
  * updated active document whose optional date window currently applies.
- * The frontend handles all timing/frequency (delay, per-session cap, cooldown).
+ * The frontend handles all timing/frequency (delay, per-session cap, cooldown)
+ * and A/B variant assignment (weighted random, sticky per browser).
  */
 export async function getActivePopup(): Promise<ActivePopup | null> {
   const row = await readClient.fetch<{
     _id: string
-    imageUrl: string | null
-    imageWidth: number | null
-    imageHeight: number | null
-    alt: string | null
+    variants: {
+      name: string | null
+      weight: number | null
+      imageUrl: string | null
+      imageWidth: number | null
+      imageHeight: number | null
+      alt: string | null
+    }[] | null
     linkUrl: string | null
     delaySeconds: number | null
     maxPerSession: number | null
@@ -171,32 +182,70 @@ export async function getActivePopup(): Promise<ActivePopup | null> {
     `*[_type == "promoPopup" && active == true
         && (!defined(startsAt) || startsAt <= now())
         && (!defined(endsAt) || endsAt >= now())
-        && defined(image.asset)
+        && count(variants[defined(image.asset)]) > 0
       ] | order(_updatedAt desc) [0] {
         _id,
-        "imageUrl": image.asset->url,
-        "imageWidth": image.asset->metadata.dimensions.width,
-        "imageHeight": image.asset->metadata.dimensions.height,
-        "alt": image.alt,
+        "variants": variants[defined(image.asset)]{
+          name, weight,
+          "imageUrl": image.asset->url,
+          "imageWidth": image.asset->metadata.dimensions.width,
+          "imageHeight": image.asset->metadata.dimensions.height,
+          "alt": image.alt,
+        },
         linkUrl, delaySeconds, maxPerSession, cooldownDays
       }`,
     {},
     { next: { revalidate: 300, tags: ["sanity", "promoPopup"] } }
   )
 
-  if (!row?.imageUrl) return null
+  if (!row?.variants?.length) return null
 
   return {
     _id: row._id,
-    imageUrl: row.imageUrl,
-    imageWidth: row.imageWidth ?? 800,
-    imageHeight: row.imageHeight ?? 800,
-    alt: row.alt ?? "Promotion",
+    variants: row.variants.map((v, i) => ({
+      name: v.name ?? `Variant ${i + 1}`,
+      weight: v.weight ?? 50,
+      imageUrl: v.imageUrl ?? "",
+      imageWidth: v.imageWidth ?? 800,
+      imageHeight: v.imageHeight ?? 800,
+      alt: v.alt ?? "Promotion",
+    })).filter((v) => v.imageUrl),
     linkUrl: row.linkUrl || null,
     delaySeconds: row.delaySeconds ?? 3,
     maxPerSession: row.maxPerSession ?? 1,
     cooldownDays: row.cooldownDays ?? 7,
   }
+}
+
+export interface PopupCampaign {
+  _id: string
+  title: string
+  active: boolean
+  variants: { name: string; weight: number }[]
+}
+
+/** All promo popup campaigns (any status), for the admin analytics dashboard. */
+export async function getAllPopups(): Promise<PopupCampaign[]> {
+  const rows = await readClient.fetch<{
+    _id: string
+    title: string | null
+    active: boolean | null
+    variants: { name: string | null; weight: number | null }[] | null
+  }[]>(
+    `*[_type == "promoPopup"] | order(_updatedAt desc) {
+      _id, title, active,
+      "variants": variants[]{name, weight}
+    }`,
+    {},
+    { next: { revalidate: 300, tags: ["sanity", "promoPopup"] } }
+  )
+
+  return rows.map((r, i) => ({
+    _id: r._id,
+    title: r.title ?? `Popup ${i + 1}`,
+    active: r.active ?? false,
+    variants: (r.variants ?? []).map((v, j) => ({ name: v.name ?? `Variant ${j + 1}`, weight: v.weight ?? 50 })),
+  }))
 }
 
 // ── Stock management ──────────────────────────────────────────────────────────

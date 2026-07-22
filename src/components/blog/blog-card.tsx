@@ -1,8 +1,10 @@
 import Link from "next/link"
+import Image from "next/image"
+import { ArrowRight } from "lucide-react"
 import type { BlogPost } from "@/types"
 
 interface BlogCardProps {
-  post: BlogPost
+  post: Pick<BlogPost, "slug" | "title" | "excerpt" | "featuredImage" | "publishedAt" | "tags">
   index?: number
 }
 
@@ -22,18 +24,22 @@ export function BlogCard({ post, index = 0 }: BlogCardProps) {
   return (
     <Link
       href={`/blog/${post.slug}`}
-      className="group flex flex-col overflow-hidden rounded-[16px] border border-border bg-white transition-shadow hover:shadow-md"
+      className="group flex flex-col overflow-hidden rounded-[16px] border border-border bg-white transition-all hover:-translate-y-0.5 hover:shadow-[0_12px_32px_-8px_rgba(22,53,42,.18)]"
     >
       <div
-        className="h-[160px] sm:h-[200px]"
+        className="relative h-[180px] overflow-hidden sm:h-[220px]"
         style={{ background: gradients[index % gradients.length] }}
       >
-        <div
-          className="h-full w-full opacity-10"
-          style={{
-            backgroundImage: "radial-gradient(circle at 30% 40%, #C9A24B 0%, transparent 55%)",
-          }}
-        />
+        {post.featuredImage && (
+          <Image
+            src={post.featuredImage}
+            alt={post.title}
+            fill
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            sizes="(max-width: 1024px) 100vw, 50vw"
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/20" />
       </div>
 
       <div className="flex flex-1 flex-col p-5">
@@ -49,21 +55,21 @@ export function BlogCard({ post, index = 0 }: BlogCardProps) {
           <span className="font-mono text-[10px] text-sage">{readTime(post.excerpt)}</span>
         </div>
 
-        <h2
-          className="mt-3 font-heading font-black leading-snug text-ink group-hover:text-forest transition-colors"
+        <h3
+          className="mt-2.5 font-heading font-black leading-snug text-ink group-hover:text-forest transition-colors"
           style={{ fontSize: "17px" }}
         >
           {post.title}
-        </h2>
+        </h3>
         <p className="mt-2 text-[12.5px] leading-[1.55] text-slate line-clamp-2">{post.excerpt}</p>
 
         <div className="mt-4 flex items-center justify-between border-t border-border pt-3.5">
-          <span className="font-mono text-[10px] text-sage">{post.publishedAt}</span>
+          <span className="font-mono text-[10px] text-sage">
+            {new Date(post.publishedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+          </span>
           <span className="flex items-center gap-1 font-heading font-bold text-[12px] text-forest">
             Read more
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
+            <ArrowRight className="h-3.5 w-3.5" />
           </span>
         </div>
       </div>

@@ -1,3 +1,5 @@
+import { FINISH_COLOR_NAMES } from "../lib/finish-colors"
+
 // Sale pricing is NOT a field here — it's managed entirely through the
 // `sale` document type (schemas/sale.ts), which can target specific
 // products or whole categories with a percentage or fixed discount and a
@@ -25,14 +27,26 @@ export const product = {
       name: "finishes",
       type: "array",
       title: "Available Finishes",
+      description: "The swatch color is always looked up from the color name — there's no separate hex field to keep in sync.",
       of: [
         {
           type: "object",
           fields: [
-            { name: "name",          type: "string", title: "Finish Name" },
-            { name: "hexColor",      type: "string", title: "Hex Color (e.g. #6B4C2A)" },
+            {
+              name: "name",
+              type: "string",
+              title: "Color",
+              options: { list: FINISH_COLOR_NAMES },
+              validation: (R: { required: () => unknown }) => R.required(),
+            },
             { name: "priceModifier", type: "number", title: "Price Modifier (PKR)", initialValue: 0 },
-            { name: "swatch",        type: "image",  title: "Swatch Image (optional)" },
+            {
+              name: "images",
+              type: "array",
+              title: "Photos in this color",
+              description: "Shown in the product gallery when a customer selects this color. Leave empty to keep showing the default product photos for this color.",
+              of: [{ type: "image", options: { hotspot: true } }],
+            },
           ],
         },
       ],
@@ -79,6 +93,12 @@ export const product = {
       description: "Category slugs this product already includes (e.g. beds, wardrobes) — stops the site suggesting 'add a bed' when this bundle already has one.",
       of: [{ type: "string" }],
       options: { layout: "tags" },
+    },
+    {
+      name: "setName",
+      type: "string",
+      title: "Matching set (optional)",
+      description: "Pieces with the exact same value here are shown as 'buy together' matches on each other's pages — e.g. every piece from the same finish/style family gets the same text, like \"Walnut Classic Bedroom\". Leave blank if this piece doesn't belong to a matching family.",
     },
   ],
   preview: {

@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from "next/server"
 import { getSessionCookie } from "better-auth/cookies"
 
 const ADMIN_PATHS = ["/admin"]
-const PUBLIC_ADMIN_PATHS = ["/admin/login"]
+// Sanity Studio has its own separate login — don't also gate it behind the
+// site's admin session cookie.
+const PUBLIC_ADMIN_PATHS = ["/admin/login", "/admin/content-studio"]
 
 // Cheap, edge-safe gate: confirms a well-formed session cookie exists.
 // This does NOT validate the session against the DB or check the admin

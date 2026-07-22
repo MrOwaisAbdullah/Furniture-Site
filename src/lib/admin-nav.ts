@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, ShoppingBag, Package, BarChart3, Tag,
-  MessageSquare, Star, Users2, CreditCard, Gift, DollarSign, HelpCircle,
+  MessageSquare, Star, Users2, CreditCard, Gift, DollarSign, HelpCircle, Megaphone,
   type LucideIcon,
 } from "lucide-react"
 
@@ -25,6 +25,7 @@ export const adminNavItems: AdminNavItem[] = [
   { href: "/admin/reviews",    label: "Reviews",    icon: Star,                      group: "growth" },
   { href: "/admin/questions",  label: "Q&A",        icon: HelpCircle,                group: "growth" },
   { href: "/admin/reports",    label: "Reports",    icon: BarChart3,                 group: "growth" },
+  { href: "/admin/popups",     label: "Marketing",  icon: Megaphone,                 group: "growth" },
 ]
 
 export const OPERATIONS_LABEL = "Operations"

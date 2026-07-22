@@ -1,9 +1,9 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { getProductBySlug, getProducts } from "@/lib/sanity/queries"
-import { getRoomTierPricing } from "@/lib/pricing/room-tiers"
 import { withReviewRatings } from "@/lib/reviews/apply-summaries"
-import { getRelatedProducts, buildRoomTiers, ANCHOR_CATEGORIES } from "@/lib/recommendations"
+import { getRelatedProducts } from "@/lib/recommendations"
+import { getSetSiblings } from "@/lib/set-bundle"
 import { ProductJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld"
 import { ProductDetailClient } from "./product-detail-client"
 import { BUSINESS_NAME } from "@/lib/site-config"
@@ -38,10 +38,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
   const pool = await withReviewRatings(await getProducts())
   const related = getRelatedProducts(product, pool, 4)
-
-  const isAnchor = ANCHOR_CATEGORIES.includes(product.category.slug)
-  const roomPricing = isAnchor ? await getRoomTierPricing(pool) : {}
-  const tiers = isAnchor ? buildRoomTiers(product, pool, roomPricing) : []
+  const setSiblings = getSetSiblings(product, pool)
 
   return (
     <>
@@ -59,7 +56,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           { name: product.name, url: `/products/${product.slug}` },
         ]}
       />
-      <ProductDetailClient product={product} related={related} tiers={tiers} />
+      <ProductDetailClient product={product} related={related} setSiblings={setSiblings} pool={pool} />
     </>
   )
 }

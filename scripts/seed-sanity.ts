@@ -64,18 +64,21 @@ async function imageField(url: string, key: string) {
 }
 
 const categories = [
-  { _type: "category", name: "Bedroom Sets",    slug: { current: "bedroom-sets"    }, order: 1, description: "Complete bedroom furniture packages" },
-  { _type: "category", name: "Beds",            slug: { current: "beds"            }, order: 2, description: "Bed frames in all sizes" },
-  { _type: "category", name: "Wardrobes",       slug: { current: "wardrobes"       }, order: 3, description: "3-door and 4-door wardrobes" },
-  { _type: "category", name: "Dressing Tables", slug: { current: "dressing-tables" }, order: 4, description: "Dressing tables with mirrors and stools" },
-  { _type: "category", name: "Side Tables",     slug: { current: "side-tables"     }, order: 5, description: "Side tables in pairs" },
+  { _type: "category", name: "Beds",            slug: { current: "beds"            }, order: 1, description: "Bed frames in all sizes" },
+  { _type: "category", name: "Wardrobes",       slug: { current: "wardrobes"       }, order: 2, description: "3-door and 4-door wardrobes" },
+  { _type: "category", name: "Dressing Tables", slug: { current: "dressing-tables" }, order: 3, description: "Dressing tables with mirrors and stools" },
+  { _type: "category", name: "Side Tables",     slug: { current: "side-tables"     }, order: 4, description: "Side tables in pairs" },
+  // Last on purpose — on the mobile 2-col "Shop by category" grid, the
+  // last card spans full width when the total count is odd, and this is
+  // the one card that reads best full-width (it's the "everything" set).
+  { _type: "category", name: "Bedroom Sets",    slug: { current: "bedroom-sets"    }, order: 5, description: "Complete bedroom furniture packages" },
 ]
 
 async function seed() {
   console.log("Seeding categories…")
   const catDocs = await Promise.all(
     categories.map((c) =>
-      client.createIfNotExists({ ...c, _id: `category-${c.slug.current}` })
+      client.createOrReplace({ ...c, _id: `category-${c.slug.current}` })
     )
   )
   console.log(`✓ ${catDocs.length} categories seeded`)
@@ -104,16 +107,17 @@ async function seed() {
       basePrice: 65000,
       sku: "BED-KNG-FOAM-01",
       stockCount: 12,
+      setName: "Brown Classic Bedroom",
       inStock:   true,
       featured:  true,
       material:  "16mm Lasani MDF",
-      description: "Workshop-built king size bed with foam-padded headboard. Available in Walnut and White finishes.",
+      description: "Workshop-built king size bed with foam-padded headboard. Available in Brown and White finishes.",
       careInstructions: "Wipe clean with dry cloth. Avoid moisture.",
       tags: ["king size", "foam headboard", "walnut", "bedroom"],
       dimensions: { width: "183", height: "120", depth: "213", unit: "cm" },
       finishes: [
-        { _key: "f1", name: "Walnut", hexColor: "#6B4C2A", priceModifier: 0 },
-        { _key: "f2", name: "White",  hexColor: "#FFFFFF", priceModifier: 0 },
+        { _key: "f1", name: "Brown", priceModifier: 0 },
+        { _key: "f2", name: "White", priceModifier: 0 },
       ],
       variants: [
         { _key: "v1", size: "King",   priceModifier: 0 },
@@ -131,6 +135,7 @@ async function seed() {
       basePrice: 75000,
       sku: "WRD-3DR-STD-01",
       stockCount: 8,
+      setName: "Brown Classic Bedroom",
       inStock:   true,
       featured:  false,
       material:  "18mm MFC Board",
@@ -139,8 +144,8 @@ async function seed() {
       tags: ["wardrobe", "3 door", "full height", "storage"],
       dimensions: { width: "150", height: "210", depth: "60", unit: "cm" },
       finishes: [
-        { _key: "f1", name: "Walnut", hexColor: "#6B4C2A", priceModifier: 0 },
-        { _key: "f2", name: "Ivory",  hexColor: "#F5F0E8", priceModifier: 0 },
+        { _key: "f1", name: "Brown", priceModifier: 0 },
+        { _key: "f2", name: "Offwhite", priceModifier: 0 },
       ],
       variants: [{ _key: "v1", size: "Standard", priceModifier: 0 }],
     },
@@ -154,6 +159,7 @@ async function seed() {
       basePrice: 45000,
       sku: "DRT-MIR-STD-01",
       stockCount: 10,
+      setName: "Brown Classic Bedroom",
       inStock:   true,
       featured:  false,
       material:  "16mm Lasani MDF",
@@ -162,8 +168,8 @@ async function seed() {
       tags: ["dressing table", "mirror", "4 drawer", "vanity"],
       dimensions: { width: "120", height: "150", depth: "45", unit: "cm" },
       finishes: [
-        { _key: "f1", name: "Walnut", hexColor: "#6B4C2A", priceModifier: 0 },
-        { _key: "f2", name: "White",  hexColor: "#FFFFFF", priceModifier: 0 },
+        { _key: "f1", name: "Brown", priceModifier: 0 },
+        { _key: "f2", name: "White", priceModifier: 0 },
       ],
       variants: [{ _key: "v1", size: "Standard", priceModifier: 0 }],
     },
@@ -177,6 +183,7 @@ async function seed() {
       basePrice: 18000,
       sku: "SDT-PAIR-STD-01",
       stockCount: 20,
+      setName: "Brown Classic Bedroom",
       inStock:   true,
       featured:  false,
       material:  "16mm Lasani MDF",
@@ -185,8 +192,8 @@ async function seed() {
       tags: ["side table", "bedside", "pair", "drawer"],
       dimensions: { width: "45", height: "55", depth: "40", unit: "cm" },
       finishes: [
-        { _key: "f1", name: "Walnut", hexColor: "#6B4C2A", priceModifier: 0 },
-        { _key: "f2", name: "White",  hexColor: "#FFFFFF", priceModifier: 0 },
+        { _key: "f1", name: "Brown", priceModifier: 0 },
+        { _key: "f2", name: "White", priceModifier: 0 },
       ],
       variants: [{ _key: "v1", size: "Standard", priceModifier: 0 }],
     },
@@ -209,8 +216,8 @@ async function seed() {
       tags: ["bedroom set", "complete", "king size", "best value", "wardrobe included"],
       dimensions: { width: "183", height: "120", depth: "213", unit: "cm" },
       finishes: [
-        { _key: "f1", name: "Walnut", hexColor: "#6B4C2A", priceModifier: 0 },
-        { _key: "f2", name: "Ivory",  hexColor: "#F5F0E8", priceModifier: 0 },
+        { _key: "f1", name: "Brown", priceModifier: 0 },
+        { _key: "f2", name: "Offwhite", priceModifier: 0 },
       ],
       variants: [
         { _key: "v1", size: "King",  priceModifier: 0 },

@@ -6,6 +6,7 @@ import { ShopByCategory } from "@/components/home/shop-by-category"
 import { ShaadiStrip } from "@/components/home/shaadi-strip"
 import { HowItWorks } from "@/components/home/how-it-works"
 import { WhyYousuf } from "@/components/home/why-yousuf"
+import { CustomizationShowcase } from "@/components/home/customization-showcase"
 import { SocialProof } from "@/components/home/social-proof"
 import { BlogTeasers } from "@/components/home/blog-teasers"
 import { ShowroomBlock } from "@/components/home/showroom-block"
@@ -50,6 +51,7 @@ export default async function HomePage() {
       <ShaadiStrip />
       <HowItWorks />
       <WhyYousuf />
+      <CustomizationShowcase />
       <SocialProof />
       <BlogTeasers posts={blogPosts.slice(0, 3)} />
       <ShowroomBlock />

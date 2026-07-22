@@ -1,9 +1,12 @@
 // An image-based promotional popup shown site-wide (non-admin pages).
 // Pure marketing surface — the popup renders the uploaded image at its own
-// size, capped to the viewport. All timing/frequency is editable here.
+// size, capped to the viewport. Supports 2+ variants for A/B testing; each
+// visitor is randomly assigned one (weighted) and sticks with it. All
+// timing/frequency is editable here, shared across variants.
 // Fetched by getActivePopup() and revalidated via the /api/revalidate webhook.
 type Rule = { required: () => unknown }
 type MinRule = { min: (n: number) => { max?: (n: number) => unknown } }
+type ArrayRule = { min: (n: number) => unknown }
 
 export const promoPopup = {
   name: "promoPopup",
@@ -18,15 +21,54 @@ export const promoPopup = {
       validation: (R: Rule) => R.required(),
     },
     {
-      name: "image",
-      type: "image",
-      title: "Popup image",
-      description: "The popup takes the size of this image (capped to the screen). Use a clear, web-sized image.",
-      options: { hotspot: true },
-      fields: [
-        { name: "alt", type: "string", title: "Alt text", description: "Describe the image for screen readers and SEO." },
+      name: "variants",
+      type: "array",
+      title: "Variants (A/B test)",
+      description: "Add 2+ images to A/B test creatives. Traffic is split by weight, and each visitor keeps seeing the same variant they were first assigned.",
+      of: [
+        {
+          type: "object",
+          name: "variant",
+          fields: [
+            {
+              name: "name",
+              type: "string",
+              title: "Variant name (e.g. Variant A)",
+              validation: (R: Rule) => R.required(),
+            },
+            {
+              name: "image",
+              type: "image",
+              title: "Image",
+              description: "The popup takes the size of this image (capped to the screen). Use a clear, web-sized image.",
+              options: { hotspot: true },
+              fields: [
+                { name: "alt", type: "string", title: "Alt text", description: "Describe the image for screen readers and SEO." },
+              ],
+              validation: (R: Rule) => R.required(),
+            },
+            {
+              name: "weight",
+              type: "number",
+              title: "Traffic weight",
+              description: "Relative share of visitors who see this variant, e.g. 50/50.",
+              initialValue: 50,
+              validation: (R: MinRule) => R.min(1),
+            },
+          ],
+          preview: {
+            select: { title: "name", subtitle: "weight", media: "image" },
+            prepare(selection: { title?: string; subtitle?: number; media?: unknown }) {
+              return {
+                title: selection.title,
+                subtitle: selection.subtitle ? `Weight: ${selection.subtitle}` : undefined,
+                media: selection.media as never,
+              }
+            },
+          },
+        },
       ],
-      validation: (R: Rule) => R.required(),
+      validation: (R: ArrayRule) => R.min(1),
     },
     {
       name: "linkUrl",
@@ -79,11 +121,12 @@ export const promoPopup = {
     },
   ],
   preview: {
-    select: { title: "title", active: "active", media: "image" },
-    prepare(selection: { title?: string; active?: boolean; media?: unknown }) {
+    select: { title: "title", active: "active", variants: "variants", media: "variants.0.image" },
+    prepare(selection: { title?: string; active?: boolean; variants?: unknown[]; media?: unknown }) {
+      const count = selection.variants?.length ?? 0
       return {
         title: selection.title,
-        subtitle: selection.active ? "Active" : "Inactive",
+        subtitle: `${selection.active ? "Active" : "Inactive"} · ${count} variant${count === 1 ? "" : "s"}`,
         media: selection.media as never,
       }
     },

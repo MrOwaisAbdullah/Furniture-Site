@@ -2,17 +2,17 @@
 
 import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import Image from "next/image"
 import {
   CheckCircle, Clock, MapPin, Heart, ShoppingBag,
-  Minus, Plus, Trash2, ChevronLeft, ChevronRight,
+  Minus, Plus, Trash2, ChevronLeft, ChevronRight, Info,
 } from "lucide-react"
 import { FaWhatsapp } from "react-icons/fa"
 import { ProductCard } from "@/components/product/product-card"
 import { ProductGallery } from "@/components/product/product-gallery"
 import { FinishSwatch } from "@/components/product/finish-swatch"
 import { AuthenticityStrip } from "@/components/product/authenticity-strip"
-import { UpsellBlock, TierUpsellSheet } from "@/components/product/upsell-block"
+import { SetBundlePicker } from "@/components/product/set-bundle-picker"
 import { SocialSignals } from "@/components/product/social-signals"
 import { ShareButton } from "@/components/product/share-button"
 import type { Product } from "@/types"
@@ -27,7 +27,7 @@ import { usePageEngagementTracking } from "@/lib/use-page-engagement-tracking"
 import { ReviewForm } from "@/components/product/review-form"
 import { ReviewsSection } from "@/components/product/reviews-section"
 import { useToast } from "@/components/ui/toast"
-import { ANCHOR_CATEGORIES, type RoomTier } from "@/lib/recommendations"
+import { getColorMatchedAccessories } from "@/lib/set-bundle"
 import { recentlyViewedClient } from "@/lib/recently-viewed-client"
 import { RecentlyViewed } from "@/components/product/recently-viewed"
 import { ProductQA } from "@/components/product/product-qa"
@@ -43,11 +43,13 @@ const categoryTone: Record<string, string> = {
 export function ProductDetailClient({
   product,
   related,
-  tiers,
+  setSiblings,
+  pool,
 }: {
   product: Product
   related: Product[]
-  tiers: RoomTier[]
+  setSiblings: Product[]
+  pool: Product[]
 }) {
   const slug = product.slug
   const [activeFinish, setActiveFinish] = useState(0)
@@ -55,10 +57,8 @@ export function ProductDetailClient({
   const [wishlisted, setWishlisted] = useState(() => wishlistClient.has(product._id))
   const [cartAdded, setCartAdded] = useState(false)
   const [qty, setQty] = useState(1)
-  const [showUpsellPrompt, setShowUpsellPrompt] = useState(false)
   const [reviews, setReviews] = useState<{ id: number; name: string; rating: number; body: string; photoUrl?: string | null; createdAt: Date | string }[]>([])
   const { toast } = useToast()
-  const router = useRouter()
 
   useEffect(() => {
     trackEvent("product_view", { name: product.name, categorySlug: product.category.slug, price: product.salePrice ?? product.basePrice }, { productId: product._id })
@@ -103,6 +103,9 @@ export function ProductDetailClient({
   const tone = categoryTone[product.category.slug] ?? "linear-gradient(150deg,#3A6B57,#16352A)"
   const selectedVariant = product.variants[activeVariant]
   const selectedFinish = product.finishes[activeFinish]
+  // Switch the gallery to this finish's own photos, if any were uploaded
+  // for it — otherwise keep showing the product's default photos.
+  const galleryImages = selectedFinish?.images.length ? selectedFinish.images : product.images
   const price = formatPrice(
     (product.salePrice ?? product.basePrice) +
     (selectedVariant?.priceModifier ?? 0) +
@@ -142,29 +145,24 @@ export function ProductDetailClient({
       removeItem(product._id, variantId, finishId)
       return
     }
-    // On bed/wardrobe/dressing-table pages, intercept: show the "complete
-    // the room" upsell first, add to cart only after the user decides.
-    if (ANCHOR_CATEGORIES.includes(product.category.slug) && tiers.length > 0) {
-      setShowUpsellPrompt(true)
-      return
-    }
     doAddToCart(fromEl)
   }
 
-  const handleBookTier = (tier: RoomTier) => {
-    for (const component of tier.components) {
+  const handleAddBundlePieces = (pieces: Product[]) => {
+    for (const piece of pieces) {
       addItem({
-        productId: component._id,
-        name: component.name,
-        price: component.salePrice ?? component.basePrice,
-        variantId: component.variants[0]?._id,
-        finishId: component.finishes[0]?._id,
-        finishName: component.finishes[0]?.name,
+        productId: piece._id,
+        name: piece.name,
+        price: piece.salePrice ?? piece.basePrice,
+        variantId: piece.variants[0]?._id,
+        finishId: piece.finishes[0]?._id,
+        finishName: piece.finishes[0]?.name,
       })
     }
-    setShowUpsellPrompt(false)
-    router.push("/checkout")
+    toast(`${pieces.length} piece${pieces.length !== 1 ? "s" : ""} added to cart`, "success")
   }
+
+  const colorMatchedAccessories = selectedFinish ? getColorMatchedAccessories(selectedFinish.name, pool) : []
 
   const handleWishlist = (fromEl?: HTMLElement | null) => {
     const isNow = wishlistClient.toggle({
@@ -206,7 +204,8 @@ export function ProductDetailClient({
           {/* ── Gallery ── */}
           <div className="lg:flex-[1.15] lg:sticky lg:top-24">
             <ProductGallery
-              images={product.images}
+              key={selectedFinish?._id ?? "default"}
+              images={galleryImages}
               name={product.name}
               tone={tone}
               onSale={!!product.salePrice}
@@ -288,6 +287,44 @@ export function ProductDetailClient({
                     Finish — <span className="font-bold text-ink normal-case tracking-normal">{selectedFinish?.name}</span>
                   </p>
                   <FinishSwatch finishes={product.finishes} selected={activeFinish} onSelect={setActiveFinish} />
+                  <p className="mt-2.5 flex items-start gap-1.5 text-[11px] leading-[1.5] text-sage">
+                    <Info className="mt-[1px] h-3 w-3 shrink-0" />
+                    <span>
+                      Actual color may vary slightly from photos due to screen settings.{" "}
+                      <Link href="/showroom" className="font-semibold text-forest underline underline-offset-2 hover:text-forest/80">
+                        Visit our showroom
+                      </Link>{" "}
+                      to see the real piece.
+                    </span>
+                  </p>
+
+                  {/* Color-matched accessories — empty until decor products exist */}
+                  {selectedFinish && colorMatchedAccessories.length > 0 && (
+                    <div className="mt-3.5">
+                      <p className="mb-2 font-mono text-[10px] uppercase tracking-[1px] text-sage">
+                        Match the {selectedFinish.name} vibe
+                      </p>
+                      <div className="flex gap-2.5 overflow-x-auto">
+                        {colorMatchedAccessories.slice(0, 3).map((a) => (
+                          <Link
+                            key={a._id}
+                            href={`/products/${a.slug}`}
+                            className="flex w-[110px] shrink-0 flex-col overflow-hidden rounded-[10px] border border-border"
+                          >
+                            <div className="relative h-[80px] w-full bg-surface-sunken">
+                              {a.images[0] && (
+                                <Image src={a.images[0]} alt={a.name} fill className="object-cover" sizes="110px" />
+                              )}
+                            </div>
+                            <div className="px-2 py-1.5">
+                              <p className="truncate font-heading font-bold text-[11px] text-ink">{a.name}</p>
+                              <p className="font-mono text-[10.5px] text-forest">{formatPrice(a.salePrice ?? a.basePrice)}</p>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -450,9 +487,7 @@ export function ProductDetailClient({
         </div>
 
         <div className="mt-14">
-          {ANCHOR_CATEGORIES.includes(product.category.slug) && tiers.length > 0 && (
-            <UpsellBlock tiers={tiers} onBookTier={handleBookTier} />
-          )}
+          <SetBundlePicker mode="anchor" anchorProduct={product} pieces={setSiblings} pool={pool} onAddSelected={handleAddBundlePieces} />
         </div>
 
         {/* Reviews */}
@@ -559,16 +594,6 @@ export function ProductDetailClient({
           </a>
         </div>
       </div>
-
-      {/* Tier upsell intercept — shown on bed/wardrobe/dressing-table pages before cart add */}
-      <TierUpsellSheet
-        open={showUpsellPrompt}
-        onClose={() => setShowUpsellPrompt(false)}
-        onAddAnchorOnly={(fromEl) => doAddToCart(fromEl)}
-        onBookTier={handleBookTier}
-        productName={product.name}
-        tiers={tiers}
-      />
     </div>
   )
 }
