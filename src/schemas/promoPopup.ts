@@ -1,7 +1,9 @@
 // An image-based promotional popup shown site-wide (non-admin pages).
 // Pure marketing surface — the popup renders the uploaded image at its own
-// size, capped to the viewport. Supports 2+ variants for A/B testing; each
-// visitor is randomly assigned one (weighted) and sticks with it. All
+// size, capped to the viewport. Supports 2+ variants for A/B testing; variants
+// rotate between eligible views via a smooth, weight-proportional round-robin
+// (nginx-style weighted round-robin), not a random pick a visitor is stuck
+// with — the same visitor sees different creatives across visits. All
 // timing/frequency is editable here, shared across variants.
 // Fetched by getActivePopup() and revalidated via the /api/revalidate webhook.
 type Rule = { required: () => unknown }
@@ -24,7 +26,7 @@ export const promoPopup = {
       name: "variants",
       type: "array",
       title: "Variants (A/B test)",
-      description: "Add 2+ images to A/B test creatives. Traffic is split by weight, and each visitor keeps seeing the same variant they were first assigned.",
+      description: "Add 2+ images to A/B test creatives. They rotate between eligible views in proportion to weight (e.g. 50/50 alternates) — the same visitor sees different variants across visits, not the same one forever.",
       of: [
         {
           type: "object",
@@ -51,7 +53,7 @@ export const promoPopup = {
               name: "weight",
               type: "number",
               title: "Traffic weight",
-              description: "Relative share of visitors who see this variant, e.g. 50/50.",
+              description: "How often this variant comes up in the rotation relative to the others, e.g. 50/50 for an even alternation, or higher for it to appear more often.",
               initialValue: 50,
               validation: (R: MinRule) => R.min(1),
             },

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback, useMemo } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { X } from "lucide-react"
@@ -9,41 +9,75 @@ import { trackEvent } from "@/lib/track-event"
 
 // Image-based promo popup. Sizes to the uploaded image but is capped to the
 // viewport (max 90vw / 85vh, object-contain) so it never exceeds the screen.
-// Closes via the X, a click on the backdrop, or Escape. Timing and frequency
-// (delay, per-session cap, post-close cooldown) come from Sanity. Supports
-// A/B testing: each visitor is weighted-randomly assigned one variant on
-// first sight and keeps seeing it (persisted in localStorage), so results
-// stay valid across return visits.
+// Closes via the X, a click on the backdrop, or Escape.
+//
+// Timing: the first appearance each session waits `delaySeconds` (from
+// Sanity). Any repeat appearance (up to maxPerSession) waits a random
+// interval within a minute instead — and that target time is persisted in
+// sessionStorage, so a client-side route change (which remounts this
+// component under Next's app router) resumes the same countdown rather than
+// restarting it or re-showing the popup just because the page changed.
+//
+// A/B testing: variants rotate — each new eligible view advances to the next
+// variant via a smooth, weight-proportional round-robin (nginx-style
+// weighted round-robin), not a random pick a visitor gets stuck with.
+//
+// Reveal-flash fix: the dialog is never shown until the variant's image has
+// actually finished loading. We preload with next/image itself (not a raw
+// `new Image()`) because next/image rewrites the src through its own
+// optimizer path — preloading the raw URL doesn't warm the cache for the
+// URL the real <Image> will request, which was the actual cause of a
+// lingering "close button alone" flash even after an earlier preload attempt.
 
-const shownKey = (id: string) => `yl_popup_shown_${id}`     // sessionStorage: times shown this session
-const closedKey = (id: string) => `yl_popup_closed_${id}`   // localStorage: epoch ms when last closed
-const variantKey = (id: string) => `yl_popup_variant_${id}` // localStorage: assigned variant name
+const shownKey = (id: string) => `yl_popup_shown_${id}`             // sessionStorage: times shown this session
+const closedKey = (id: string) => `yl_popup_closed_${id}`           // localStorage: epoch ms when last closed
+const rotationKey = (id: string) => `yl_popup_rotation_${id}`       // localStorage: smooth weighted round-robin state
+const nextAttemptKey = (id: string) => `yl_popup_next_attempt_${id}` // sessionStorage: epoch ms target for the next repeat attempt
 
-function pickWeighted(variants: PopupVariant[]): PopupVariant {
-  const total = variants.reduce((sum, v) => sum + v.weight, 0)
-  let roll = Math.random() * total
-  for (const v of variants) {
-    roll -= v.weight
-    if (roll <= 0) return v
+// Smooth weighted round-robin (the same algorithm nginx uses for weighted
+// upstream balancing): each variant accumulates its weight every turn: the
+// highest accumulator wins that turn and then gets docked the total weight.
+// This guarantees rotation between 2+ variants — a variant can never win
+// twice in a row unless it's the only one with weight > 0 — while still
+// visiting higher-weighted variants proportionally more often.
+function nextRotatingVariant(popup: ActivePopup): PopupVariant {
+  const first = popup.variants[0]
+  if (!first) throw new Error("popup has no variants")
+  if (typeof window === "undefined" || popup.variants.length === 1) return first
+
+  const key = rotationKey(popup._id)
+  let current: Record<string, number> = {}
+  try {
+    current = JSON.parse(localStorage.getItem(key) ?? "{}")
+  } catch {
+    current = {}
   }
-  return variants[variants.length - 1]!
-}
 
-function assignVariant(popup: ActivePopup): PopupVariant {
-  if (typeof window === "undefined") return popup.variants[0]!
-  const key = variantKey(popup._id)
-  const stored = localStorage.getItem(key)
-  const existing = stored ? popup.variants.find((v) => v.name === stored) : undefined
-  if (existing) return existing
+  const totalWeight = popup.variants.reduce((sum, v) => sum + v.weight, 0)
+  let winner = first
+  let winnerScore = -Infinity
+  const updated: Record<string, number> = {}
 
-  const chosen = popup.variants.length > 1 ? pickWeighted(popup.variants) : popup.variants[0]!
-  localStorage.setItem(key, chosen.name)
-  return chosen
+  for (const v of popup.variants) {
+    const score = (current[v.name] ?? 0) + v.weight
+    updated[v.name] = score
+    if (score > winnerScore) {
+      winnerScore = score
+      winner = v
+    }
+  }
+  updated[winner.name] = (updated[winner.name] ?? 0) - totalWeight
+
+  localStorage.setItem(key, JSON.stringify(updated))
+  return winner
 }
 
 export function PromoPopup({ popup }: { popup: ActivePopup }) {
+  const [variant, setVariant] = useState<PopupVariant | null>(null)
+  const [timerFired, setTimerFired] = useState(false)
+  const [imageReady, setImageReady] = useState(false)
   const [visible, setVisible] = useState(false)
-  const variant = useMemo(() => assignVariant(popup), [popup])
+  const revealedRef = useRef(false)
 
   useEffect(() => {
     // Respect the post-close cooldown.
@@ -56,35 +90,50 @@ export function PromoPopup({ popup }: { popup: ActivePopup }) {
     const shownSoFar = Number(sessionStorage.getItem(shownKey(popup._id)) ?? 0)
     if (shownSoFar >= popup.maxPerSession) return
 
-    // Reveal only once BOTH the delay has elapsed AND the image has actually
-    // loaded — otherwise the dialog (backdrop + close button) paints a beat
-    // before the image does, flashing an empty popup with just an X on it.
-    let cancelled = false
-    let timerFired = false
-    let imageReady = false
-
-    const reveal = () => {
-      if (cancelled || !timerFired || !imageReady) return
-      sessionStorage.setItem(shownKey(popup._id), String(shownSoFar + 1))
-      requestAnimationFrame(() => setVisible(true))
-      trackEvent("promo_popup_view", { popupId: popup._id, variant: variant.name })
+    // First appearance uses the CMS-configured delay. Any repeat appearance
+    // waits a random interval within a minute — computed once and persisted
+    // to sessionStorage so remounting on a route change resumes the same
+    // countdown instead of restarting it (which is what made repeats feel
+    // like they were triggered by page navigation rather than real time).
+    let waitMs: number
+    if (shownSoFar === 0) {
+      waitMs = popup.delaySeconds * 1000
+    } else {
+      const key = nextAttemptKey(popup._id)
+      let target = Number(sessionStorage.getItem(key) ?? 0)
+      if (!target) {
+        target = Date.now() + Math.random() * 60_000
+        sessionStorage.setItem(key, String(target))
+      }
+      waitMs = Math.max(0, target - Date.now())
     }
 
-    const preload = new window.Image()
-    preload.onload = () => { imageReady = true; reveal() }
-    preload.onerror = () => { imageReady = true; reveal() } // fail-open: don't hang forever on a broken image
-    preload.src = variant.imageUrl
+    // Advancing the rotation and starting the (invisible) image preload
+    // happen immediately, in parallel with the wait — by the time the timer
+    // fires, the image has almost always already finished loading. This has
+    // to run inside this mount-only effect (never during SSR/hydration, so
+    // server and client render the same null on first paint), and has to
+    // set state right away rather than deferring to the timer callback —
+    // deferring it would mean the image only starts loading once the timer
+    // fires, reintroducing the load-time flash this is meant to prevent.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setVariant(nextRotatingVariant(popup))
 
-    const timer = setTimeout(() => {
-      timerFired = true
-      reveal()
-    }, popup.delaySeconds * 1000)
+    const timer = setTimeout(() => setTimerFired(true), waitMs)
+    return () => clearTimeout(timer)
+  }, [popup])
 
-    return () => {
-      cancelled = true
-      clearTimeout(timer)
-    }
-  }, [popup, variant])
+  // Once both the timer and the image are ready, reveal exactly once.
+  useEffect(() => {
+    if (!timerFired || !imageReady || !variant || revealedRef.current) return
+    revealedRef.current = true
+
+    const shownSoFar = Number(sessionStorage.getItem(shownKey(popup._id)) ?? 0)
+    sessionStorage.setItem(shownKey(popup._id), String(shownSoFar + 1))
+    sessionStorage.removeItem(nextAttemptKey(popup._id)) // consumed; the next repeat gets a fresh roll
+    requestAnimationFrame(() => setVisible(true))
+    trackEvent("promo_popup_view", { popupId: popup._id, variant: variant.name })
+  }, [timerFired, imageReady, variant, popup])
 
   // Pure state + cooldown write, no tracking — shared by both close paths below.
   const hide = useCallback(() => {
@@ -96,7 +145,7 @@ export function PromoPopup({ popup }: { popup: ActivePopup }) {
 
   // Closed without acting (X, backdrop, Escape) — distinct from a click-through.
   const handleDismiss = useCallback(() => {
-    trackEvent("promo_popup_dismiss", { popupId: popup._id, variant: variant.name })
+    if (variant) trackEvent("promo_popup_dismiss", { popupId: popup._id, variant: variant.name })
     hide()
   }, [popup, variant, hide])
 
@@ -113,7 +162,26 @@ export function PromoPopup({ popup }: { popup: ActivePopup }) {
     }
   }, [visible, handleDismiss])
 
-  if (!visible) return null
+  if (!variant) return null
+
+  // Invisible preloader — same next/image component (and therefore the same
+  // optimizer URL) the real dialog below will use, so by the time it's
+  // rendered for real the browser already has it cached.
+  const preloader = !imageReady && (
+    <div style={{ position: "fixed", inset: 0, opacity: 0, pointerEvents: "none", zIndex: -1 }} aria-hidden="true">
+      <Image
+        src={variant.imageUrl}
+        alt=""
+        width={variant.imageWidth}
+        height={variant.imageHeight}
+        priority
+        onLoad={() => setImageReady(true)}
+        onError={() => setImageReady(true)}
+      />
+    </div>
+  )
+
+  if (!visible) return preloader
 
   const img = (
     <Image
