@@ -121,13 +121,19 @@ export const promoPopup = {
     },
   ],
   preview: {
-    select: { title: "title", active: "active", variants: "variants", media: "variants.0.image" },
-    prepare(selection: { title?: string; active?: boolean; variants?: unknown[]; media?: unknown }) {
-      const count = selection.variants?.length ?? 0
+    // Select the whole array and pull the thumbnail out in prepare() rather
+    // than asking Sanity's select-path resolver for a numeric-indexed nested
+    // image (e.g. "variants.0.image") — that path shape isn't reliably
+    // resolved and was silently failing the entire selection, which is why
+    // the list view showed "0 variants" despite the document having 2.
+    select: { title: "title", active: "active", variants: "variants" },
+    prepare(selection: { title?: string; active?: boolean; variants?: { image?: unknown }[] }) {
+      const variants = selection.variants ?? []
+      const count = variants.length
       return {
         title: selection.title,
         subtitle: `${selection.active ? "Active" : "Inactive"} · ${count} variant${count === 1 ? "" : "s"}`,
-        media: selection.media as never,
+        media: variants[0]?.image as never,
       }
     },
   },

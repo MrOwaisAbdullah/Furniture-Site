@@ -200,7 +200,18 @@ export function ProductCard({ product, className }: ProductCardProps) {
                 onClick={(e) => {
                   e.preventDefault()
                   e.stopPropagation()
-                  router.push(`/checkout?product=${product.slug}`)
+                  if (!inCart) {
+                    trackEvent("add_to_cart", { name: product.name, price: product.salePrice ?? product.basePrice, qty: 1, source: "buy_now" }, { productId: product._id })
+                    addItem({
+                      productId: product._id,
+                      name: product.name,
+                      price: product.salePrice ?? product.basePrice,
+                      variantId: product.variants[0]?._id,
+                      finishId: product.finishes[0]?._id,
+                      finishName: product.finishes[0]?.name,
+                    })
+                  }
+                  router.push("/checkout")
                 }}
                 aria-label="Buy now"
                 className="flex flex-1 flex-col items-center gap-1 bg-gold/15 py-3.5 transition-colors hover:bg-gold/28 focus-visible:bg-gold/30"
@@ -286,7 +297,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
                 {product.tags.slice(0, 3).map((tag) => (
                   <span
                     key={tag}
-                    className="rounded-full bg-surface-sunken px-2 py-0.5 font-mono text-[7.5px] text-sage"
+                    className="rounded-full bg-surface-sunken px-2 py-0.5 font-mono text-[10px] font-bold text-forest"
                   >
                     {tag}
                   </span>
@@ -324,7 +335,7 @@ export function ProductCardCompact({ product, onAdd }: ProductCardProps & { onAd
   return (
     <Link
       href={`/products/${product.slug}`}
-      className="group block w-36 shrink-0 overflow-hidden rounded-[13px] border border-border bg-white transition-all hover:-translate-y-0.5 hover:shadow-md active:scale-[.98]"
+      className="group block w-36 shrink-0 overflow-hidden rounded-[13px] border border-border bg-white transition-all hover:-translate-y-0.5 hover:shadow-md active:scale-[.98] sm:w-full"
     >
       <div
         className="relative h-24 overflow-hidden"

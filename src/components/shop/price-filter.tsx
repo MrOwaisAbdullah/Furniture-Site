@@ -4,6 +4,7 @@ import { useState, useMemo } from "react"
 import Link from "next/link"
 import { formatPrice } from "@/lib/utils"
 import { SlidersHorizontal, X } from "lucide-react"
+import { PRICE_RANGES as PRICE_BRACKETS } from "@/lib/price-ranges"
 
 interface Product {
   _id: string
@@ -18,13 +19,9 @@ interface PriceFilterProps {
   products: Product[]
 }
 
-const PRICE_RANGES = [
-  { label: "All Prices", min: 0, max: Infinity },
-  { label: "Under 50,000", min: 0, max: 50000 },
-  { label: "50,000 – 100,000", min: 50000, max: 100000 },
-  { label: "100,000 – 200,000", min: 100000, max: 200000 },
-  { label: "Over 200,000", min: 200000, max: Infinity },
-]
+// "All Prices" is a UI-only bucket (no filter applied) — the real brackets
+// come from the shared module so this filter and /shop/price never drift.
+const PRICE_RANGES = [{ label: "All Prices", min: 0, max: Infinity }, ...PRICE_BRACKETS]
 
 export function PriceFilter({ products }: PriceFilterProps) {
   const [selectedRange, setSelectedRange] = useState(0)

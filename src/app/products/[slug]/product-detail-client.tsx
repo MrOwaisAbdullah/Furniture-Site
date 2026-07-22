@@ -9,6 +9,7 @@ import {
 } from "lucide-react"
 import { FaWhatsapp } from "react-icons/fa"
 import { ProductCard } from "@/components/product/product-card"
+import { SetContextBanner } from "@/components/product/set-context-banner"
 import { ProductGallery } from "@/components/product/product-gallery"
 import { FinishSwatch } from "@/components/product/finish-swatch"
 import { AuthenticityStrip } from "@/components/product/authenticity-strip"
@@ -183,6 +184,8 @@ export function ProductDetailClient({
 
   return (
     <div className="min-h-screen bg-surface pb-40 lg:pb-0">
+      <SetContextBanner setName={product.setName} />
+
       {/* Breadcrumb */}
       <div className="border-b border-border bg-white px-4 py-3 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
@@ -237,7 +240,7 @@ export function ProductDetailClient({
                 {product.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="rounded-full border border-border bg-surface-sunken px-2.5 py-1 font-mono text-[10px] text-sage"
+                    className="rounded-full border border-border bg-surface-sunken px-2.5 py-1 font-mono text-[10px] font-bold text-forest"
                   >
                     {tag}
                   </span>
@@ -287,16 +290,6 @@ export function ProductDetailClient({
                     Finish — <span className="font-bold text-ink normal-case tracking-normal">{selectedFinish?.name}</span>
                   </p>
                   <FinishSwatch finishes={product.finishes} selected={activeFinish} onSelect={setActiveFinish} />
-                  <p className="mt-2.5 flex items-start gap-1.5 text-[11px] leading-[1.5] text-sage">
-                    <Info className="mt-[1px] h-3 w-3 shrink-0" />
-                    <span>
-                      Actual color may vary slightly from photos due to screen settings.{" "}
-                      <Link href="/showroom" className="font-semibold text-forest underline underline-offset-2 hover:text-forest/80">
-                        Visit our showroom
-                      </Link>{" "}
-                      to see the real piece.
-                    </span>
-                  </p>
 
                   {/* Color-matched accessories — empty until decor products exist */}
                   {selectedFinish && colorMatchedAccessories.length > 0 && (
@@ -447,6 +440,19 @@ export function ProductDetailClient({
                 />
 
               </div>
+
+              {/* Color-variance notice — sits below the button sets rather
+                  than interrupting the finish/size selection flow above. */}
+              <p className="flex items-start gap-1.5 text-[11px] leading-[1.5] text-sage">
+                <Info className="mt-[1px] h-3 w-3 shrink-0" />
+                <span>
+                  Actual color may vary slightly from photos due to screen settings.{" "}
+                  <Link href="/showroom" className="font-semibold text-forest underline underline-offset-2 hover:text-forest/80">
+                    Visit our showroom
+                  </Link>{" "}
+                  to see the real piece.
+                </span>
+              </p>
 
               {/* Showroom — text link, no box */}
               <Link

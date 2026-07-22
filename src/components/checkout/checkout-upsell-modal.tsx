@@ -26,7 +26,7 @@ export function CheckoutUpsellModal({ open, products, onAdd, onClose }: Checkout
             onClick={onClose}
           />
           <motion.div
-            className="fixed inset-x-4 bottom-4 z-[121] mx-auto max-w-md overflow-hidden rounded-[18px] bg-white sm:inset-x-0"
+            className="fixed inset-x-4 bottom-4 z-[121] mx-auto max-w-md overflow-hidden rounded-[18px] bg-white sm:inset-x-0 sm:max-w-2xl"
             initial={{ y: "110%", opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: "110%", opacity: 0 }}
@@ -50,7 +50,7 @@ export function CheckoutUpsellModal({ open, products, onAdd, onClose }: Checkout
               </button>
             </div>
 
-            <div className="flex gap-3 overflow-x-auto p-4" style={{ scrollbarWidth: "none" }}>
+            <div className="flex gap-3 overflow-x-auto p-4 sm:grid sm:grid-cols-3 sm:overflow-visible" style={{ scrollbarWidth: "none" }}>
               {products.map((p) => (
                 <ProductCardCompact key={p._id} product={p} onAdd={onAdd} />
               ))}

@@ -30,6 +30,7 @@
     "@serwist/turbopack": "^9.5.11",
     "@upstash/redis": "^1.38.0",
     "better-auth": "^1.6.22",
+    "canvas-confetti": "^1.9.4",
     "clsx": "^2.1.1",
     "drizzle-kit": "^0.31.10",
     "drizzle-orm": "^0.45.2",
@@ -51,6 +52,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^20",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19",

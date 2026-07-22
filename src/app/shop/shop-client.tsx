@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
 import Image from "next/image"
 import { ChevronDown, SlidersHorizontal, X, Check, Search } from "lucide-react"
 import { AnimatePresence, motion } from "framer-motion"
@@ -9,17 +10,14 @@ import type { Product, Category } from "@/types"
 import { cn } from "@/lib/utils"
 import { trackEvent } from "@/lib/track-event"
 import { RecentlyViewed } from "@/components/product/recently-viewed"
+import { PRICE_RANGES as PRICE_BRACKETS } from "@/lib/price-ranges"
 
 const SHOP_HERO = "https://images.unsplash.com/photo-1631049552057-403cdb8f0658?auto=format&fit=crop&w=1400&q=80"
 const ALL_CAT = "__all__"
 
-const PRICE_RANGES = [
-  { label: "All Prices", min: 0, max: Infinity },
-  { label: "Under 50K", min: 0, max: 50000 },
-  { label: "50K – 100K", min: 50000, max: 100000 },
-  { label: "100K – 200K", min: 100000, max: 200000 },
-  { label: "Over 200K", min: 200000, max: Infinity },
-]
+// "All Prices" is a UI-only bucket (no filter applied) — the real brackets
+// come from the shared module so this filter and /shop/price never drift.
+const PRICE_RANGES = [{ label: "All Prices", min: 0, max: Infinity }, ...PRICE_BRACKETS]
 
 const finishColors = [
   { name: "Walnut",   code: "#5b3a22" },
@@ -283,6 +281,13 @@ export function ShopClient({ products, categories }: { products: Product[]; cate
                 </button>
               ))}
             </div>
+
+            <Link
+              href="/shop/price"
+              className="mt-4 inline-block font-mono text-[11.5px] text-forest underline underline-offset-2 hover:text-forest/80"
+            >
+              Shop by budget →
+            </Link>
           </aside>
 
           {/* ── Main grid ── */}
