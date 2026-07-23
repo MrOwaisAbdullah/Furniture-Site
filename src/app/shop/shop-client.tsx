@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { ChevronDown, SlidersHorizontal, X, Check, Search } from "lucide-react"
@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils"
 import { trackEvent } from "@/lib/track-event"
 import { RecentlyViewed } from "@/components/product/recently-viewed"
 import { PRICE_RANGES as PRICE_BRACKETS } from "@/lib/price-ranges"
+import { hexForFinishName } from "@/lib/finish-colors"
 
 const SHOP_HERO = "https://images.unsplash.com/photo-1631049552057-403cdb8f0658?auto=format&fit=crop&w=1400&q=80"
 const ALL_CAT = "__all__"
@@ -19,11 +20,15 @@ const ALL_CAT = "__all__"
 // come from the shared module so this filter and /shop/price never drift.
 const PRICE_RANGES = [{ label: "All Prices", min: 0, max: Infinity }, ...PRICE_BRACKETS]
 
-const finishColors = [
-  { name: "Walnut",   code: "#5b3a22" },
-  { name: "White",    code: "#ece7de" },
-  { name: "Grey Oak", code: "#8a8378" },
-]
+/** Every distinct finish name actually offered by at least one product in
+ * the current catalog — never a hardcoded/stale list, so a color filter
+ * option always has real matching products behind it and new finishes show
+ * up automatically as soon as a product offers them. */
+function getAvailableFinishes(products: Product[]) {
+  const names = new Set<string>()
+  for (const p of products) for (const f of p.finishes) names.add(f.name)
+  return [...names].map((name) => ({ name, code: hexForFinishName(name) }))
+}
 
 type SortKey = "featured" | "price-asc" | "price-desc"
 
@@ -94,6 +99,8 @@ export function ShopClient({ products, categories }: { products: Product[]; cate
   const [mobileFilters, setMobileFilters] = useState(false)
   const [query, setQuery]                 = useState("")
 
+  const finishColors = useMemo(() => getAvailableFinishes(products), [products])
+
   let filtered = activeCat === ALL_CAT
     ? products
     : products.filter((p) => p.category.slug === activeCat)
@@ -163,28 +170,6 @@ export function ShopClient({ products, categories }: { products: Product[]; cate
       </div>
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-14">
-
-        {/* ── Search ── */}
-        <div className="relative mt-5 max-w-md">
-          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-sage" />
-          <input
-            type="text"
-            aria-label="Search products"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search beds, wardrobes, dressing tables…"
-            className="search-input-shell w-full rounded-[11px] border border-border-strong bg-white py-3 pl-10 pr-9 text-[13.5px] text-ink placeholder:text-sage/60 transition-colors focus:border-forest"
-          />
-          {query && (
-            <button
-              onClick={() => setQuery("")}
-              aria-label="Clear search"
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-sage hover:text-ink"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          )}
-        </div>
 
         {/* ── Mobile filter bar ── */}
         <div className="flex items-center gap-2 border-b border-border py-3 lg:hidden">
@@ -292,10 +277,32 @@ export function ShopClient({ products, categories }: { products: Product[]; cate
 
           {/* ── Main grid ── */}
           <div className="min-w-0 flex-1">
-            <div className="mb-5 flex items-center justify-between">
-              <p className="font-mono text-[11px] text-sage">
-                {filtered.length} piece{filtered.length !== 1 ? "s" : ""}
-              </p>
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex min-w-0 flex-1 items-center gap-3">
+                <div className="relative w-full max-w-[260px]">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-sage" />
+                  <input
+                    type="text"
+                    aria-label="Search products"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Search beds, wardrobes…"
+                    className="search-input-shell w-full rounded-[9px] border border-border-strong bg-white py-2 pl-8 pr-8 text-[12.5px] text-ink placeholder:text-sage/60 transition-colors focus:border-forest"
+                  />
+                  {query && (
+                    <button
+                      onClick={() => setQuery("")}
+                      aria-label="Clear search"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-sage hover:text-ink"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
+                <p className="shrink-0 whitespace-nowrap font-mono text-[11px] text-sage">
+                  {filtered.length} piece{filtered.length !== 1 ? "s" : ""}
+                </p>
+              </div>
               <SortDropdown value={sort} onChange={setSort} />
             </div>
 
