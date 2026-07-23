@@ -111,7 +111,7 @@ async function seed() {
         "Channel-tufted bed with a glowing brass filigree inlay strip across the headboard. A statement luxury king size bed for a bold modern bedroom, available in 8 colors.",
       tags: ["led bed", "backlit bed", "luxury bed", "king size bed", "modern bedroom", "brass inlay bed"],
       finishes: [
-        { name: "Light Blue",    images: ["Sovereign LED Bed/Light Blue (1).png", "Sovereign LED Bed/Light Blue (2).png"] },
+        { name: "Light Blue",    images: ["Sovereign LED Bed/Light Blue (1).png", "Sovereign LED Bed/Light Blue (2).png", "Sovereign LED Bed/Light Blue (3).png"] },
         { name: "Gray",          images: ["Sovereign LED Bed/Gray (1).png", "Sovereign LED Bed/Gray (2).png", "Sovereign LED Bed/Gray (3).png"] },
         { name: "Beige",         images: ["Sovereign LED Bed/Beige (1).png", "Sovereign LED Bed/Beige (2).png"] },
         { name: "Olive Green",   images: ["Sovereign LED Bed/Olive Green.png"] },
