@@ -52,7 +52,7 @@ export function CheckoutUpsellModal({ open, products, onAdd, onClose }: Checkout
 
             <div className="flex gap-3 overflow-x-auto p-4 sm:grid sm:grid-cols-3 sm:overflow-visible" style={{ scrollbarWidth: "none" }}>
               {products.map((p) => (
-                <ProductCardCompact key={p._id} product={p} onAdd={onAdd} />
+                <ProductCardCompact key={p._id} product={p} onAdd={onAdd} fill />
               ))}
             </div>
 

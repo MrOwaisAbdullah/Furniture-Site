@@ -4,5 +4,6 @@ import { blogPost }     from "./blogPost"
 import { siteSettings } from "./siteSettings"
 import { sale }         from "./sale"
 import { promoPopup }   from "./promoPopup"
+import { bundle }       from "./bundle"
 
-export const schemaTypes = [product, category, blogPost, siteSettings, sale, promoPopup]
+export const schemaTypes = [product, category, blogPost, siteSettings, sale, promoPopup, bundle]

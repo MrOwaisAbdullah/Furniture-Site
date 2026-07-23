@@ -1,4 +1,4 @@
-import type { Product, Category, Finish, Variant, BlogPost } from "@/types"
+import type { Product, Category, Finish, Variant, BlogPost, Bundle } from "@/types"
 import { hexForFinishName } from "@/lib/finish-colors"
 
 // ── Raw GROQ result shapes (loose — this is the boundary where untyped CMS
@@ -32,12 +32,12 @@ export interface RawSanityProduct {
   slug: string
   category: RawSanityCategory
   basePrice: number
+  compareAtPrice?: number | null
   sku?: string | null
   stockCount?: number | null
   inStock?: boolean | null
   featured?: boolean | null
   bundleCoversCategories?: string[] | null
-  setName?: string | null
   images?: string[] | null
   finishes?: RawSanityFinish[] | null
   variants?: RawSanityVariant[] | null
@@ -57,6 +57,17 @@ export interface RawSanitySale {
   appliesToProductIds: string[]
   appliesToCategoryIds: string[]
   endsAt: string
+}
+
+export interface RawSanityBundle {
+  _id: string
+  name: string
+  slug: string
+  description?: string | null
+  image?: string | null
+  products: RawSanityProduct[]
+  finishNames?: string[] | null
+  bundlePrice: number
 }
 
 export interface RawSanityBlogPost {
@@ -160,6 +171,7 @@ export function mapSanityProduct(raw: RawSanityProduct, activeSales: RawSanitySa
     description,
     shortDescription: truncate(description),
     basePrice: raw.basePrice,
+    compareAtPrice: raw.compareAtPrice ?? undefined,
     salePrice,
     saleEndsAt,
     category: mapSanityCategory(raw.category),
@@ -185,7 +197,19 @@ export function mapSanityProduct(raw: RawSanityProduct, activeSales: RawSanitySa
     createdAt: raw._createdAt,
     updatedAt: raw._updatedAt,
     bundleCoversCategories: raw.bundleCoversCategories ?? undefined,
-    setName: raw.setName || undefined,
+  }
+}
+
+export function mapSanityBundle(raw: RawSanityBundle, activeSales: RawSanitySale[]): Bundle {
+  return {
+    _id: raw._id,
+    name: raw.name,
+    slug: raw.slug,
+    description: raw.description ?? "",
+    image: raw.image ?? "",
+    products: raw.products.map((p) => mapSanityProduct(p, activeSales)),
+    finishNames: raw.finishNames ?? [],
+    bundlePrice: raw.bundlePrice,
   }
 }
 

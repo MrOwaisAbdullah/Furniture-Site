@@ -13,6 +13,12 @@ export const product = {
     { name: "slug",        type: "slug",     title: "Slug",        options: { source: "name" }, validation: (R: { required: () => unknown }) => R.required() },
     { name: "category",    type: "reference", title: "Category",   to: [{ type: "category" }], validation: (R: { required: () => unknown }) => R.required() },
     { name: "basePrice",   type: "number",   title: "Base Price (PKR)", validation: (R: { required: () => { min: (n: number) => unknown } }) => R.required().min(0) },
+    {
+      name: "compareAtPrice",
+      type: "number",
+      title: "Compare-at price (PKR, optional)",
+      description: "A permanent \"if bought separately\" reference price shown struck through next to Base Price — for bundle SKUs where buying the set is structurally cheaper than the individual pieces. Not for time-limited discounts — use a Sale/Promotion for those.",
+    },
     { name: "sku",         type: "string",   title: "SKU" },
     { name: "stockCount",  type: "number",   title: "Stock Count", initialValue: 0 },
     { name: "inStock",     type: "boolean",  title: "In Stock",    initialValue: true },
@@ -54,12 +60,13 @@ export const product = {
     {
       name: "variants",
       type: "array",
-      title: "Size Variants",
+      title: "Variants",
+      description: "Configuration or size options for this piece — e.g. King/Queen/Single, Single/Pair, or Base/With Mirror/With Mirror & Stool. The first variant is the default shown on page load; picking any other one appends its label to the product name in the title and cart.",
       of: [
         {
           type: "object",
           fields: [
-            { name: "size",          type: "string", title: "Size (e.g. King, Queen, Single)" },
+            { name: "size",          type: "string", title: "Variant label (e.g. Single, Pair, With Mirror & Stool)" },
             { name: "priceModifier", type: "number", title: "Price Modifier (PKR)", initialValue: 0 },
           ],
         },
@@ -93,12 +100,6 @@ export const product = {
       description: "Category slugs this product already includes (e.g. beds, wardrobes) — stops the site suggesting 'add a bed' when this bundle already has one.",
       of: [{ type: "string" }],
       options: { layout: "tags" },
-    },
-    {
-      name: "setName",
-      type: "string",
-      title: "Matching set (optional)",
-      description: "Pieces with the exact same value here are shown as 'buy together' matches on each other's pages — e.g. every piece from the same finish/style family gets the same text, like \"Walnut Classic Bedroom\". Leave blank if this piece doesn't belong to a matching family.",
     },
   ],
   preview: {

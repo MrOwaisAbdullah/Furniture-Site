@@ -5,6 +5,9 @@ export interface Product {
   description: string;
   shortDescription: string;
   basePrice: number;
+  /** Permanent "if bought separately" reference price for bundle SKUs —
+   * distinct from salePrice, which is a time-limited promotional discount. */
+  compareAtPrice?: number;
   salePrice?: number;
   saleEndsAt?: string;
   category: Category;
@@ -28,10 +31,6 @@ export interface Product {
    * to avoid suggesting "add a bed" on a page/cart that already has one via
    * a bundle SKU, not as a separate line item. */
   bundleCoversCategories?: string[];
-  /** Free-text matching-family label (e.g. "Walnut Classic Bedroom").
-   * Products sharing the exact same setName are shown as "buy together"
-   * siblings — see src/lib/set-bundle.ts. */
-  setName?: string;
 }
 
 export interface Variant {
@@ -188,4 +187,18 @@ export interface CartItem {
   variant?: Variant;
   finish?: Finish;
   quantity: number;
+}
+
+/** A hand-curated collection of specific products sold together at one flat
+ * price, in a customer-chosen color applied to every included piece — see
+ * src/lib/bundle.ts. */
+export interface Bundle {
+  _id: string;
+  name: string;
+  slug: string;
+  description: string;
+  image: string;
+  products: Product[];
+  finishNames: string[];
+  bundlePrice: number;
 }

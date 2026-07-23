@@ -10,6 +10,11 @@ const withSerwist = withSerwistInit({
 const nextConfig: NextConfig = {
   turbopack: {},
   images: {
+    // Next 16 requires an explicit allowlist; restricting it to just 90
+    // means every <Image> that doesn't set its own `quality` prop (they
+    // default internally to 75) gets coerced up to this one allowed value —
+    // a sitewide sharpness bump without touching every call site.
+    qualities: [90],
     remotePatterns: [
       {
         protocol: "https",

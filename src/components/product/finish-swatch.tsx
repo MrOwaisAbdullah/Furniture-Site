@@ -17,7 +17,6 @@ export function FinishSwatch({ finishes, selected, onSelect, className }: Finish
         <button
           key={finish._id}
           onClick={() => onSelect(i)}
-          title={finish.name}
           aria-label={`Select finish: ${finish.name}`}
           aria-pressed={selected === i}
           className={cn(

@@ -1,9 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { ChevronDown, Loader2, Tag, X, Info, Sparkles } from "lucide-react"
+import { ChevronDown, Loader2, Tag, X, Info } from "lucide-react"
 import { formatPrice, cn } from "@/lib/utils"
-import type { CartSetDiscount } from "@/lib/set-bundle"
 
 interface OrderItem {
   productId: string
@@ -21,22 +20,9 @@ interface OrderSummarySidebarProps {
   appliedCode: string | null
   onApplyCoupon: (discountAmt: number, code: string) => void
   onRemoveCoupon: () => void
-  /** Auto-detected from actual cart contents (matching-set pieces) — not
-   * something the customer typed, so it has no "remove" affordance; it just
-   * tracks whatever is really in the cart right now. */
-  autoSetDiscount: CartSetDiscount | null
 }
 
-/** Whichever discount is bigger wins — same "pick the better one, never
- * stack" philosophy the server's resolveDiscount() already uses. */
-function pickWinningDiscount(discount: number, autoSetDiscount: CartSetDiscount | null) {
-  if (autoSetDiscount && autoSetDiscount.amount > discount) {
-    return { amount: autoSetDiscount.amount, source: "set" as const }
-  }
-  return { amount: discount, source: "coupon" as const }
-}
-
-function SummaryBody({ items, totalPrice, advance, discount, appliedCode, onApplyCoupon, onRemoveCoupon, autoSetDiscount }: OrderSummarySidebarProps) {
+function SummaryBody({ items, totalPrice, advance, discount, appliedCode, onApplyCoupon, onRemoveCoupon }: OrderSummarySidebarProps) {
   const [code, setCode] = useState("")
   const [checking, setChecking] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -66,8 +52,7 @@ function SummaryBody({ items, totalPrice, advance, discount, appliedCode, onAppl
     }
   }
 
-  const winner = pickWinningDiscount(discount, autoSetDiscount)
-  const finalTotal = Math.max(0, totalPrice - winner.amount)
+  const finalTotal = Math.max(0, totalPrice - discount)
 
   return (
     <div className="flex flex-col gap-4">
@@ -88,28 +73,6 @@ function SummaryBody({ items, totalPrice, advance, discount, appliedCode, onAppl
             </div>
           ))}
         </div>
-
-        {/* Auto-detected set discount — informational, no remove button */}
-        {autoSetDiscount && (
-          <div className="border-t border-border px-4 py-3">
-            <div
-              className={cn(
-                "flex items-center justify-between rounded-[9px] px-3 py-2",
-                winner.source === "set" ? "bg-success/8" : "bg-surface-sunken"
-              )}
-            >
-              <div className="flex items-center gap-1.5">
-                <Sparkles className={cn("h-3.5 w-3.5", winner.source === "set" ? "text-success" : "text-sage")} />
-                <span className={cn("text-[11.5px]", winner.source === "set" ? "text-success" : "text-sage")}>
-                  {autoSetDiscount.pieceCount} matching pieces from <span className="font-bold">{autoSetDiscount.setName}</span> — {autoSetDiscount.pct}% off
-                </span>
-              </div>
-              {winner.source !== "set" && (
-                <span className="font-mono text-[10px] text-sage">not applied</span>
-              )}
-            </div>
-          </div>
-        )}
 
         {/* Coupon */}
         <div className="border-t border-border px-4 py-3">
@@ -159,10 +122,10 @@ function SummaryBody({ items, totalPrice, advance, discount, appliedCode, onAppl
             <span className="text-[12.5px] text-slate">Subtotal</span>
             <span className="font-mono text-[13px] text-slate">{formatPrice(totalPrice)}</span>
           </div>
-          {winner.amount > 0 && (
+          {discount > 0 && (
             <div className="flex items-baseline justify-between">
               <span className="text-[12.5px] text-success">Discount</span>
-              <span className="font-mono text-[13px] text-success">−{formatPrice(winner.amount)}</span>
+              <span className="font-mono text-[13px] text-success">−{formatPrice(discount)}</span>
             </div>
           )}
           <div className="flex items-baseline justify-between">
@@ -200,8 +163,7 @@ function SummaryBody({ items, totalPrice, advance, discount, appliedCode, onAppl
 
 export function OrderSummarySidebar(props: OrderSummarySidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
-  const winner = pickWinningDiscount(props.discount, props.autoSetDiscount)
-  const finalTotal = Math.max(0, props.totalPrice - winner.amount)
+  const finalTotal = Math.max(0, props.totalPrice - props.discount)
   const itemCount = props.items.reduce((sum, i) => sum + i.quantity, 0)
 
   return (

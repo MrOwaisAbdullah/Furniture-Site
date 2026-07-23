@@ -36,8 +36,15 @@ export function ProductCard({ product, className }: ProductCardProps) {
   const router = useRouter()
   const tone = categoryToneMap[product.category.slug] ?? "linear-gradient(150deg,#3A6B57,#16352A)"
   const price = formatPrice(product.salePrice ?? product.basePrice)
-  const oldPrice = product.salePrice ? formatPrice(product.basePrice) : null
-  const discountPct = product.salePrice ? Math.round((1 - product.salePrice / product.basePrice) * 100) : 0
+  // A time-limited sale takes priority over the bundle's permanent
+  // compare-at price if a product somehow has both.
+  const strikeThroughValue = product.salePrice
+    ? product.basePrice
+    : (product.compareAtPrice && product.compareAtPrice > product.basePrice ? product.compareAtPrice : null)
+  const oldPrice = strikeThroughValue ? formatPrice(strikeThroughValue) : null
+  const discountPct = strikeThroughValue
+    ? Math.round((1 - (product.salePrice ?? product.basePrice) / strikeThroughValue) * 100)
+    : 0
   const primaryImage = product.images[0] ?? product.finishes[0]?.images[0]
 
   const [imgError, setImgError] = useState(false)
@@ -326,7 +333,11 @@ export function ProductCard({ product, className }: ProductCardProps) {
   )
 }
 
-export function ProductCardCompact({ product, onAdd }: ProductCardProps & { onAdd?: (product: Product) => void }) {
+export function ProductCardCompact({
+  product,
+  onAdd,
+  fill = false,
+}: ProductCardProps & { onAdd?: (product: Product) => void; fill?: boolean }) {
   const tone = categoryToneMap[product.category.slug] ?? "linear-gradient(150deg,#3A6B57,#16352A)"
   const price = formatPrice(product.salePrice ?? product.basePrice)
   const primaryImage = product.images[0]
@@ -335,7 +346,10 @@ export function ProductCardCompact({ product, onAdd }: ProductCardProps & { onAd
   return (
     <Link
       href={`/products/${product.slug}`}
-      className="group block w-36 shrink-0 overflow-hidden rounded-[13px] border border-border bg-white transition-all hover:-translate-y-0.5 hover:shadow-md active:scale-[.98] sm:w-full"
+      className={cn(
+        "group block w-36 shrink-0 overflow-hidden rounded-[13px] border border-border bg-white transition-all hover:-translate-y-0.5 hover:shadow-md active:scale-[.98]",
+        fill && "sm:w-full"
+      )}
     >
       <div
         className="relative h-24 overflow-hidden"

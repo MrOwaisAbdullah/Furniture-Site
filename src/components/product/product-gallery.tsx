@@ -16,6 +16,7 @@ interface ProductGalleryProps {
 export function ProductGallery({ images, name, tone, onSale }: ProductGalleryProps) {
   const [active, setActive] = useState(0)
   const [broken, setBroken] = useState<Record<number, boolean>>({})
+  const [loaded, setLoaded] = useState<Record<number, boolean>>({})
 
   const count = images.length
   const prev = () => setActive((i) => (i - 1 + count) % count)
@@ -55,11 +56,15 @@ export function ProductGallery({ images, name, tone, onSale }: ProductGalleryPro
       {/* Main image — exactly one <Image> in the DOM at a time */}
       <div
         className="relative overflow-hidden rounded-2xl"
-        style={{ background: tone, aspectRatio: "4/3", touchAction: "pan-y" }}
+        style={{ background: activeSrc ? undefined : tone, aspectRatio: "4/3", touchAction: "pan-y" }}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
+        {activeSrc && !broken[active] && !loaded[active] && (
+          <div className="absolute inset-0 animate-pulse bg-slate-200" />
+        )}
+
         {activeSrc && !broken[active] && (
           <Image
             key={active}
@@ -68,6 +73,7 @@ export function ProductGallery({ images, name, tone, onSale }: ProductGalleryPro
             fill
             className="object-cover"
             sizes="(max-width: 1024px) 100vw, 50vw"
+            onLoad={() => setLoaded((l) => ({ ...l, [active]: true }))}
             onError={() => setBroken((b) => ({ ...b, [active]: true }))}
           />
         )}

@@ -15,7 +15,8 @@
     "seed:sanity": "tsx -r dotenv/config scripts/seed-sanity.ts dotenv_config_path=.env.local",
     "admin:create-user": "tsx -r dotenv/config scripts/create-admin-user.ts dotenv_config_path=.env.local",
     "seed:cost-sheet": "tsx -r dotenv/config scripts/seed-cost-sheet.ts dotenv_config_path=.env.local",
-    "seed:preview": "tsx -r dotenv/config scripts/seed-preview-data.ts dotenv_config_path=.env.local"
+    "seed:preview": "tsx -r dotenv/config scripts/seed-preview-data.ts dotenv_config_path=.env.local",
+    "seed:beds": "tsx -r dotenv/config scripts/seed-beds.ts dotenv_config_path=.env.local"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1075.0",

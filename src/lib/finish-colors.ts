@@ -8,6 +8,7 @@ export const FINISH_COLOR_PALETTE: { name: string; hex: string }[] = [
   { name: "Blue",          hex: "#2E5C8A" },
   { name: "Gray",          hex: "#8A8A8A" },
   { name: "Light Pink",    hex: "#F3C4D3" },
+  { name: "Pink",          hex: "#D9718F" },
   { name: "Purple",        hex: "#6B4E8E" },
   { name: "White",         hex: "#FFFFFF" },
   { name: "Beige",         hex: "#E3D5B8" },
@@ -21,6 +22,7 @@ export const FINISH_COLOR_PALETTE: { name: string; hex: string }[] = [
   { name: "Offwhite",      hex: "#F2EEE3" },
   { name: "Olive Green",   hex: "#6B7A3D" },
   { name: "Teal Green",    hex: "#1F7A6C" },
+  { name: "Rust",          hex: "#A6532E" },
 ]
 
 export const FINISH_COLOR_NAMES = FINISH_COLOR_PALETTE.map((c) => c.name)

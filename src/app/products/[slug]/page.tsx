@@ -3,7 +3,6 @@ import { notFound } from "next/navigation"
 import { getProductBySlug, getProducts } from "@/lib/sanity/queries"
 import { withReviewRatings } from "@/lib/reviews/apply-summaries"
 import { getRelatedProducts } from "@/lib/recommendations"
-import { getSetSiblings } from "@/lib/set-bundle"
 import { ProductJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld"
 import { ProductDetailClient } from "./product-detail-client"
 import { BUSINESS_NAME } from "@/lib/site-config"
@@ -38,7 +37,6 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
   const pool = await withReviewRatings(await getProducts())
   const related = getRelatedProducts(product, pool, 4)
-  const setSiblings = getSetSiblings(product, pool)
 
   return (
     <>
@@ -56,7 +54,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           { name: product.name, url: `/products/${product.slug}` },
         ]}
       />
-      <ProductDetailClient product={product} related={related} setSiblings={setSiblings} pool={pool} />
+      <ProductDetailClient product={product} related={related} pool={pool} />
     </>
   )
 }

@@ -14,7 +14,6 @@ import { OrderSummarySidebar } from "@/components/checkout/order-summary-sidebar
 import { CheckoutUpsellModal } from "@/components/checkout/checkout-upsell-modal"
 import { trackEvent } from "@/lib/track-event"
 import { getCheckoutUpsells } from "@/lib/recommendations"
-import { computeCartSetDiscount } from "@/lib/set-bundle"
 import type { Product } from "@/types"
 
 const STEP_LABELS = ["Your details", "Delivery", "Review & advance", "Payment"]
@@ -58,7 +57,6 @@ export default function CheckoutPage() {
   }, [])
 
   const cartProductIds = items.map((i) => i.productId).join(",")
-  const cartKey = items.map((i) => `${i.productId}:${i.quantity}`).join(",")
 
   const upsellSuggestions = useMemo(
     () => getCheckoutUpsells(items, productPool, 3),
@@ -66,16 +64,7 @@ export default function CheckoutPage() {
     [cartProductIds, productPool]
   )
 
-  // Recomputed live from whatever is actually in the cart — never a
-  // snapshot taken at add-to-cart time, so removing/adding a matching
-  // piece here adjusts the discount automatically.
-  const autoSetDiscount = useMemo(
-    () => computeCartSetDiscount(items, productPool),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [cartKey, productPool]
-  )
-  const effectiveDiscount = autoSetDiscount && autoSetDiscount.amount > discount ? autoSetDiscount.amount : discount
-  const finalTotal = Math.max(0, totalPrice - effectiveDiscount)
+  const finalTotal = Math.max(0, totalPrice - discount)
   const advance = Math.round(finalTotal / 2)
   const [showUpsell, setShowUpsell] = useState(false)
 
@@ -194,7 +183,7 @@ export default function CheckoutPage() {
         finishName: i.finishName,
       })),
       subtotal: totalPrice,
-      discount: effectiveDiscount,
+      discount,
       advance,
       paymentMethod: payment,
       couponCode: appliedCouponCode ?? promoCode,
@@ -266,7 +255,6 @@ export default function CheckoutPage() {
           appliedCode={appliedCouponCode}
           onApplyCoupon={(amt, code) => { setDiscount(amt); setAppliedCouponCode(code) }}
           onRemoveCoupon={() => { setDiscount(0); setAppliedCouponCode(null) }}
-          autoSetDiscount={autoSetDiscount}
         />
 
         <div className="max-w-xl lg:order-1 lg:max-w-none">

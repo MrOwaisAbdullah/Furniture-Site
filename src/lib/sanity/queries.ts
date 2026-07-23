@@ -1,7 +1,7 @@
 import { readClient, writeClient } from "@/lib/sanity"
 import {
-  mapSanityProduct, mapSanityCategory, mapSanityBlogPost,
-  type RawSanityProduct, type RawSanityCategory, type RawSanitySale, type RawSanityBlogPost,
+  mapSanityProduct, mapSanityCategory, mapSanityBlogPost, mapSanityBundle,
+  type RawSanityProduct, type RawSanityCategory, type RawSanitySale, type RawSanityBlogPost, type RawSanityBundle,
 } from "@/lib/sanity/map-product"
 
 // Every raw product/finish/variant field the mapper needs — shared across
@@ -9,7 +9,7 @@ import {
 const PRODUCT_PROJECTION = `
   _id, name, "slug": slug.current,
   category->{_id, name, "slug": slug.current, description, "image": image.asset->url},
-  basePrice, sku, stockCount, inStock, featured, bundleCoversCategories, setName,
+  basePrice, compareAtPrice, sku, stockCount, inStock, featured, bundleCoversCategories,
   "images": images[].asset->url,
   finishes[]{ _key, name, priceModifier, "images": images[].asset->url },
   variants[]{ _key, size, priceModifier },
@@ -122,6 +122,38 @@ export async function getBlogPostBySlug(slug: string) {
     { next: { revalidate: 86400, tags: ["sanity", "blogPost", `blogPost:${slug}`] } }
   )
   return row ? mapSanityBlogPost(row) : null
+}
+
+// ── Bundles ───────────────────────────────────────────────────────────────────
+
+const BUNDLE_PROJECTION = `
+  _id, name, "slug": slug.current, description, "image": image.asset->url,
+  finishNames, bundlePrice,
+  "products": products[]->{ ${PRODUCT_PROJECTION} }
+`
+
+export async function getBundles() {
+  const [rows, sales] = await Promise.all([
+    readClient.fetch<RawSanityBundle[]>(
+      `*[_type == "bundle" && active == true && count(products) > 0] | order(_createdAt desc) { ${BUNDLE_PROJECTION} }`,
+      {},
+      { next: { revalidate: 3600, tags: ["sanity", "bundle"] } }
+    ),
+    getActiveSales(),
+  ])
+  return rows.map((r) => mapSanityBundle(r, sales))
+}
+
+export async function getBundleBySlug(slug: string) {
+  const [row, sales] = await Promise.all([
+    readClient.fetch<RawSanityBundle | null>(
+      `*[_type == "bundle" && slug.current == $slug && active == true][0] { ${BUNDLE_PROJECTION} }`,
+      { slug },
+      { next: { revalidate: 3600, tags: ["sanity", "bundle", `bundle:${slug}`] } }
+    ),
+    getActiveSales(),
+  ])
+  return row ? mapSanityBundle(row, sales) : null
 }
 
 // ── Site Settings ─────────────────────────────────────────────────────────────

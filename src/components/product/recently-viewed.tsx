@@ -37,6 +37,9 @@ export function RecentlyViewed({ excludeProductId, title = "Recently viewed" }: 
   const [items, setItems] = useState<RecentlyViewedItem[]>([])
 
   useEffect(() => {
+    // localStorage access must not happen during render (SSR/hydration
+    // safety), so this has to run eagerly in an effect.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true)
     setItems(recentlyViewedClient.getAll(excludeProductId))
   }, [excludeProductId])

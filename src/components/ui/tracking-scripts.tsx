@@ -11,6 +11,9 @@ function useConsented() {
 
   useEffect(() => {
     if (localStorage.getItem(CONSENT_KEY) === "accepted") {
+      // localStorage access must not happen during render (SSR/hydration
+      // safety), so this has to run eagerly in an effect.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setConsented(true)
       return
     }

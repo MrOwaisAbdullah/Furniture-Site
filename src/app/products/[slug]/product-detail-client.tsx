@@ -9,11 +9,9 @@ import {
 } from "lucide-react"
 import { FaWhatsapp } from "react-icons/fa"
 import { ProductCard } from "@/components/product/product-card"
-import { SetContextBanner } from "@/components/product/set-context-banner"
 import { ProductGallery } from "@/components/product/product-gallery"
 import { FinishSwatch } from "@/components/product/finish-swatch"
 import { AuthenticityStrip } from "@/components/product/authenticity-strip"
-import { SetBundlePicker } from "@/components/product/set-bundle-picker"
 import { SocialSignals } from "@/components/product/social-signals"
 import { ShareButton } from "@/components/product/share-button"
 import type { Product } from "@/types"
@@ -28,7 +26,7 @@ import { usePageEngagementTracking } from "@/lib/use-page-engagement-tracking"
 import { ReviewForm } from "@/components/product/review-form"
 import { ReviewsSection } from "@/components/product/reviews-section"
 import { useToast } from "@/components/ui/toast"
-import { getColorMatchedAccessories } from "@/lib/set-bundle"
+import { getColorMatchedAccessories } from "@/lib/color-match"
 import { recentlyViewedClient } from "@/lib/recently-viewed-client"
 import { RecentlyViewed } from "@/components/product/recently-viewed"
 import { ProductQA } from "@/components/product/product-qa"
@@ -44,12 +42,10 @@ const categoryTone: Record<string, string> = {
 export function ProductDetailClient({
   product,
   related,
-  setSiblings,
   pool,
 }: {
   product: Product
   related: Product[]
-  setSiblings: Product[]
   pool: Product[]
 }) {
   const slug = product.slug
@@ -107,17 +103,27 @@ export function ProductDetailClient({
   // Switch the gallery to this finish's own photos, if any were uploaded
   // for it — otherwise keep showing the product's default photos.
   const galleryImages = selectedFinish?.images.length ? selectedFinish.images : product.images
-  const price = formatPrice(
+  // The base (first) variant is the product's default configuration — only
+  // a non-base pick (e.g. "With Mirror & Stool") needs calling out in the
+  // title/cart name; the base name/price shows as-is otherwise.
+  const variantSuffix = activeVariant > 0 && selectedVariant ? ` — ${selectedVariant.size}` : ""
+  const displayName = `${product.name}${variantSuffix}`
+  const unitPrice =
     (product.salePrice ?? product.basePrice) +
     (selectedVariant?.priceModifier ?? 0) +
     (selectedFinish?.priceModifier ?? 0)
-  )
-  const oldPrice = product.salePrice
-    ? formatPrice(product.basePrice + (selectedVariant?.priceModifier ?? 0))
+  const price = formatPrice(unitPrice)
+  // A time-limited sale takes priority over the bundle's permanent
+  // compare-at price if a product somehow has both.
+  const strikeThroughValue = product.salePrice
+    ? product.basePrice
+    : (product.compareAtPrice && product.compareAtPrice > product.basePrice ? product.compareAtPrice : null)
+  const oldPrice = strikeThroughValue
+    ? formatPrice(strikeThroughValue + (selectedVariant?.priceModifier ?? 0))
     : null
 
   const waMessage = encodeURIComponent(
-    `Hi, I'm interested in the *${product.name}* (${selectedFinish?.name ?? ""})\nQty: ${qty}\nPrice: ${price}\nCan you share more details?`
+    `Hi, I'm interested in the *${displayName}* (${selectedFinish?.name ?? ""})\nQty: ${qty}\nPrice: ${price}\nCan you share more details?`
   )
 
   const doAddToCart = (fromEl?: HTMLElement | null) => {
@@ -125,16 +131,16 @@ export function ProductDetailClient({
     const finishId = selectedFinish?._id
     addItem({
       productId: product._id,
-      name: product.name,
-      price: product.salePrice ?? product.basePrice,
+      name: displayName,
+      price: unitPrice,
       variantId,
       finishId,
       finishName: selectedFinish?.name,
     })
     if (qty > 1) updateQuantity(product._id, variantId, finishId, qty)
     if (fromEl) flyToTarget(fromEl, "[data-nav-cart]")
-    trackEvent("add_to_cart", { name: product.name, price: product.salePrice ?? product.basePrice, qty }, { productId: product._id })
-    toast(`${product.name} added to cart`, "success")
+    trackEvent("add_to_cart", { name: displayName, price: unitPrice, qty }, { productId: product._id })
+    toast(`${displayName} added to cart`, "success")
     setCartAdded(true)
     setTimeout(() => setCartAdded(false), 1800)
   }
@@ -149,43 +155,29 @@ export function ProductDetailClient({
     doAddToCart(fromEl)
   }
 
-  const handleAddBundlePieces = (pieces: Product[]) => {
-    for (const piece of pieces) {
-      addItem({
-        productId: piece._id,
-        name: piece.name,
-        price: piece.salePrice ?? piece.basePrice,
-        variantId: piece.variants[0]?._id,
-        finishId: piece.finishes[0]?._id,
-        finishName: piece.finishes[0]?.name,
-      })
-    }
-    toast(`${pieces.length} piece${pieces.length !== 1 ? "s" : ""} added to cart`, "success")
-  }
-
-  const colorMatchedAccessories = selectedFinish ? getColorMatchedAccessories(selectedFinish.name, pool) : []
+  const colorMatchedAccessories = selectedFinish
+    ? getColorMatchedAccessories(selectedFinish.name, pool, product.category.slug)
+    : []
 
   const handleWishlist = (fromEl?: HTMLElement | null) => {
     const isNow = wishlistClient.toggle({
       productId: product._id,
-      name: product.name,
+      name: displayName,
       slug: product.slug,
-      price: product.salePrice ?? product.basePrice,
+      price: unitPrice,
       finishName: selectedFinish?.name,
       categorySlug: product.category.slug,
     })
     setWishlisted(isNow)
     if (isNow) {
-      trackEvent("wishlist_add", { name: product.name }, { productId: product._id })
-      toast(`${product.name} added to wishlist`, "success")
+      trackEvent("wishlist_add", { name: displayName }, { productId: product._id })
+      toast(`${displayName} added to wishlist`, "success")
     }
     if (fromEl && isNow) flyToTarget(fromEl, "[data-nav-wishlist]", "#ef4444")
   }
 
   return (
     <div className="min-h-screen bg-surface pb-40 lg:pb-0">
-      <SetContextBanner setName={product.setName} />
-
       {/* Breadcrumb */}
       <div className="border-b border-border bg-white px-4 py-3 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
@@ -226,7 +218,7 @@ export function ProductDetailClient({
               className="mt-2 font-heading font-black leading-[1.05] text-ink"
               style={{ fontSize: "clamp(24px,3.5vw,34px)", letterSpacing: "-0.8px" }}
             >
-              {product.name}
+              {displayName}
             </h1>
             {selectedFinish && (
               <p className="mt-1.5 font-display italic text-forest/60" style={{ fontSize: "15px" }}>
@@ -321,10 +313,10 @@ export function ProductDetailClient({
                 </div>
               )}
 
-              {/* Size / variant */}
+              {/* Size / configuration variant */}
               {product.variants.length > 1 && (
                 <div>
-                  <p className="mb-2.5 font-mono text-[10.5px] uppercase tracking-[1px] text-sage">Size</p>
+                  <p className="mb-2.5 font-mono text-[10.5px] uppercase tracking-[1px] text-sage">Options</p>
                   <div className="flex flex-wrap gap-2">
                     {product.variants.map((v, i) => (
                       <button
@@ -490,10 +482,6 @@ export function ProductDetailClient({
               A 30–50% advance confirms your build slot. Karachi delivery or showroom collection. We WhatsApp you at every stage.
             </p>
           </div>
-        </div>
-
-        <div className="mt-14">
-          <SetBundlePicker mode="anchor" anchorProduct={product} pieces={setSiblings} pool={pool} onAddSelected={handleAddBundlePieces} />
         </div>
 
         {/* Reviews */}
