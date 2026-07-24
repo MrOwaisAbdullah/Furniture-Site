@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { headers } from "next/headers"
 import { Instrument_Serif, Archivo, Hanken_Grotesk, Space_Mono } from "next/font/google"
+import Script from "next/script"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { MobileStickyBar } from "@/components/layout/mobile-sticky-bar"
@@ -103,6 +104,11 @@ export default async function RootLayout({
         {!isAdmin && <CookieConsent />}
         {!isAdmin && popup && <PromoPopup popup={popup} />}
         {!isAdmin && <TrackingScripts />}
+        <Script
+          src="https://admin.octively.com/api/embed"
+          data-key="pk_de94f22dd1954e40b82292ad1c739"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   )
