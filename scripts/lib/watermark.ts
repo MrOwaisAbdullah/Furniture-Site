@@ -10,8 +10,8 @@
 import sharp from "sharp"
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs"
 import { dirname, join } from "path"
+import { LOGO_PATH } from "./paths"
 
-const LOGO_SRC = "/mnt/d/Furniture/Yousuf Living - Logo.png"
 const BG_COLOR = { r: 22, g: 53, b: 42 } // the logo file's flat forest-green background
 const BG_TOLERANCE = 40 // euclidean RGB distance under which a pixel counts as background
 const WATERMARK_OPACITY = 0.45
@@ -22,7 +22,7 @@ const CACHED_CUTOUT = join(process.cwd(), "scripts", ".cache", "watermark-cutout
 async function getTransparentLogo(): Promise<Buffer> {
   if (existsSync(CACHED_CUTOUT)) return readFileSync(CACHED_CUTOUT)
 
-  const { data, info } = await sharp(LOGO_SRC).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
+  const { data, info } = await sharp(LOGO_PATH).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
   const { width, height, channels } = info
 
   for (let i = 0; i < data.length; i += channels) {

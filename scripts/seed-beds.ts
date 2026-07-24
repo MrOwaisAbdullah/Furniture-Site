@@ -13,6 +13,7 @@ config({ path: resolve(process.cwd(), ".env.local") })
 import { createClient } from "@sanity/client"
 import { readFileSync } from "fs"
 import { watermarkImage } from "./lib/watermark"
+import { GENERATED_ROOT } from "./lib/paths"
 
 const client = createClient({
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID!,
@@ -22,7 +23,7 @@ const client = createClient({
   token:     process.env.SANITY_API_WRITE_TOKEN!,
 })
 
-const IMG_ROOT = "/mnt/d/Furniture/Generated"
+const IMG_ROOT = GENERATED_ROOT
 
 function slugify(s: string) {
   return s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")

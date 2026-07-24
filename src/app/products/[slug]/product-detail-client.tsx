@@ -5,7 +5,7 @@ import Link from "next/link"
 import Image from "next/image"
 import {
   CheckCircle, Clock, MapPin, Heart, ShoppingBag,
-  Minus, Plus, Trash2, ChevronLeft, ChevronRight, Info,
+  Minus, Plus, Trash2, ChevronLeft, ChevronRight, Info, Eye,
 } from "lucide-react"
 import { FaWhatsapp } from "react-icons/fa"
 import { ProductCard } from "@/components/product/product-card"
@@ -291,21 +291,49 @@ export function ProductDetailClient({
                       </p>
                       <div className="flex gap-2.5 overflow-x-auto">
                         {colorMatchedAccessories.slice(0, 3).map((a) => (
-                          <Link
+                          <div
                             key={a._id}
-                            href={`/products/${a.slug}`}
                             className="flex w-[110px] shrink-0 flex-col overflow-hidden rounded-[10px] border border-border"
                           >
-                            <div className="relative h-[80px] w-full bg-surface-sunken">
+                            <Link
+                              href={`/products/${a.slug}`}
+                              className="relative h-[80px] w-full bg-surface-sunken group"
+                            >
                               {a.images[0] && (
                                 <Image src={a.images[0]} alt={a.name} fill className="object-cover" sizes="110px" />
                               )}
-                            </div>
+                              {/* View icon overlay */}
+                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-start justify-end p-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div className="rounded bg-white/90 p-1">
+                                  <Eye className="h-3 w-3 text-forest" />
+                                </div>
+                              </div>
+                            </Link>
                             <div className="px-2 py-1.5">
                               <p className="truncate font-heading font-bold text-[11px] text-ink">{a.name}</p>
                               <p className="font-mono text-[10.5px] text-forest">{formatPrice(a.salePrice ?? a.basePrice)}</p>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  const fromEl = e.currentTarget as HTMLElement
+                                  useCartStore.getState().addItem({
+                                    productId: a._id,
+                                    name: a.name,
+                                    price: a.salePrice ?? a.basePrice,
+                                    finishId: selectedFinish?._id,
+                                    finishName: selectedFinish.name,
+                                  })
+                                  toast(`${a.name} added to cart`, "success")
+                                  trackEvent("add_to_cart", { name: a.name }, { productId: a._id })
+                                  if (fromEl) flyToTarget(fromEl, "[data-nav-cart]", "#158032")
+                                }}
+                                className="mt-1.5 flex w-full items-center justify-center gap-1 rounded-[6px] bg-forest py-1 font-heading font-bold text-[10px] text-bone transition-colors hover:bg-forest/90 active:scale-95"
+                              >
+                                <ShoppingBag className="h-2.5 w-2.5" />
+                                Add
+                              </button>
                             </div>
-                          </Link>
+                          </div>
                         ))}
                       </div>
                     </div>
