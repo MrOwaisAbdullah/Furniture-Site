@@ -8,12 +8,17 @@ import type { Category } from "@/types"
 import { cn } from "@/lib/utils"
 import { useReducedMotion } from "@/lib/use-reduced-motion"
 
+// Real photos only — no stock/external images. Wardrobes has no local
+// asset yet, so it falls back to the Glass Niche Wardrobe's own Sanity
+// photo (still our real product, just not in public/assets) until a
+// dedicated category shot is added there too.
 const CAT_IMAGES: Record<string, string> = {
-  "bedroom-sets":    "https://images.unsplash.com/photo-1631049552057-403cdb8f0658?auto=format&fit=crop&w=600&q=75",
-  beds:              "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=600&q=75",
-  "dressing-tables": "https://images.unsplash.com/photo-1618220179428-22790b461013?auto=format&fit=crop&w=600&q=75",
-  wardrobes:         "https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=600&q=75",
-  "side-tables":     "/pexels-netoo-21352802.jpg",
+  "bedroom-sets":    "/assets/ashcombe-bedroom-set.png",
+  beds:              "/assets/Cloude-boucle-bed-Offwhite.png",
+  "dressing-tables": "/assets/cloud-mirror-vanity-white-dressing-table-mirror-2.png",
+  wardrobes:         "https://cdn.sanity.io/images/nelnbkzg/production/5bf8a7ca14d9ade0148691ee5930d213fc939f5e-1402x1122.png",
+  "side-tables":     "/assets/marble-top-ribbed-nightstand-round-beige-nightstand-2.png",
+  decor:             "/assets/channel-storage-bench-light-blue-storage-bench-decor-accent.png",
 }
 
 const categoryTones: Record<string, string> = {
@@ -22,6 +27,15 @@ const categoryTones: Record<string, string> = {
   "dressing-tables": "linear-gradient(135deg,#3A6B57,#244C3C)",
   wardrobes:         "linear-gradient(135deg,#1c3d2e,#0c231b)",
   "side-tables":     "linear-gradient(135deg,#4A5A50,#1A2420)",
+  decor:             "linear-gradient(135deg,#4A5A50,#1c3d2e)",
+}
+
+// Desktop bento spans — keyed by slug (not position) so reordering
+// categories in Sanity doesn't silently break the layout. "beds" is the
+// anchor tile (big square); "decor" closes the grid as a wide banner.
+const BENTO_SPAN: Record<string, string> = {
+  beds:  "lg:col-span-2 lg:row-span-2",
+  decor: "lg:col-span-2",
 }
 
 export function ShopByCategory({ categories }: { categories: Category[] }) {
@@ -47,14 +61,15 @@ export function ShopByCategory({ categories }: { categories: Category[] }) {
         </Link>
       </motion.div>
 
-      <div className="grid grid-cols-2 gap-3 sm:gap-3.5 lg:grid-cols-5 lg:gap-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-3.5 lg:grid-cols-4 lg:auto-rows-[150px] lg:grid-flow-dense lg:gap-4">
         {categories.map((cat, i) => {
           const img = CAT_IMAGES[cat.slug]
           const tone = categoryTones[cat.slug] ?? "linear-gradient(135deg,#16352A,#0c231b)"
           // On the 2-col mobile grid, an odd-numbered last card would be
           // left alone in its row with an empty cell beside it — span it
-          // full width instead. Desktop's 5-col grid never has this gap.
+          // full width instead. Desktop's bento spans (below) take over there.
           const isLastOfOddRow = i === categories.length - 1 && categories.length % 2 === 1
+          const bentoSpan = BENTO_SPAN[cat.slug]
 
           return (
             <motion.div
@@ -63,11 +78,11 @@ export function ShopByCategory({ categories }: { categories: Category[] }) {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-40px" }}
               transition={{ duration: prefersReduced ? 0 : 0.4, delay: prefersReduced ? 0 : i * 0.07, ease: "easeOut" }}
-              className={cn(isLastOfOddRow && "col-span-2 lg:col-span-1")}
+              className={cn(isLastOfOddRow && "col-span-2 lg:col-span-1", bentoSpan)}
             >
               <Link
                 href={`/shop/${cat.slug}`}
-                className="group relative flex h-[120px] flex-col justify-end overflow-hidden rounded-[14px] p-3.5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_32px_-8px_rgba(22,53,42,.3)] lg:h-[150px]"
+                className="group relative flex h-[120px] flex-col justify-end overflow-hidden rounded-[14px] p-3.5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_32px_-8px_rgba(22,53,42,.3)] lg:h-full"
                 style={{ background: tone }}
               >
                 {img && (
@@ -83,8 +98,10 @@ export function ShopByCategory({ categories }: { categories: Category[] }) {
 
                 <div className="relative">
                   <p
-                    className="font-heading font-black leading-none text-bone"
-                    style={{ fontSize: "14.5px", letterSpacing: "-0.2px" }}
+                    className={cn(
+                      "font-heading font-black leading-none text-bone text-[14.5px] tracking-[-0.2px]",
+                      bentoSpan && "lg:text-[22px]"
+                    )}
                   >
                     {cat.name}
                   </p>

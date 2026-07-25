@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react"
 import Image from "next/image"
+import { motion, AnimatePresence } from "framer-motion"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -13,14 +14,26 @@ interface ProductGalleryProps {
   onSale?: boolean
 }
 
+// 1 = sliding to the next image (new one enters from the right), -1 = prev.
+const slideVariants = {
+  enter: (dir: number) => ({ x: dir > 0 ? "100%" : "-100%", opacity: 0 }),
+  center: { x: 0, opacity: 1 },
+  exit: (dir: number) => ({ x: dir > 0 ? "-100%" : "100%", opacity: 0 }),
+}
+
 export function ProductGallery({ images, name, tone, onSale }: ProductGalleryProps) {
   const [active, setActive] = useState(0)
+  const [direction, setDirection] = useState(1)
   const [broken, setBroken] = useState<Record<number, boolean>>({})
   const [loaded, setLoaded] = useState<Record<number, boolean>>({})
 
   const count = images.length
-  const prev = () => setActive((i) => (i - 1 + count) % count)
-  const next = () => setActive((i) => (i + 1) % count)
+  const goTo = (i: number) => {
+    setDirection(i > active || (active === count - 1 && i === 0) ? 1 : -1)
+    setActive(i)
+  }
+  const prev = () => { setDirection(-1); setActive((i) => (i - 1 + count) % count) }
+  const next = () => { setDirection(1); setActive((i) => (i + 1) % count) }
 
   const touchStartX = useRef(0)
   const touchStartY = useRef(0)
@@ -50,9 +63,36 @@ export function ProductGallery({ images, name, tone, onSale }: ProductGalleryPro
   }
 
   const activeSrc = images[active]
+  const nextIndex = count > 1 ? (active + 1) % count : -1
+  const prevIndex = count > 1 ? (active - 1 + count) % count : -1
+  // Same fill+sizes combo as the visible slot below — matching it exactly is
+  // what makes next/image request the identical optimizer URL, so the
+  // browser already has it cached by the time the user actually swipes
+  // there. A mismatched `sizes` (e.g. the thumbnail strip's "62px") silently
+  // warms a completely different URL and does nothing for perceived speed.
+  const GALLERY_SIZES = "(max-width: 1024px) 100vw, 50vw"
 
   return (
     <div>
+      {/* Invisible neighbor preload — fixed off-screen, not display:none, so
+          the browser still fetches it eagerly instead of treating it as
+          out-of-viewport and lazy-deferring forever. */}
+      <div style={{ position: "fixed", inset: 0, opacity: 0, pointerEvents: "none", zIndex: -1 }} aria-hidden="true">
+        {[nextIndex, prevIndex].map((i) =>
+          i >= 0 && i !== active && images[i] && !broken[i] && !loaded[i] ? (
+            <Image
+              key={images[i]}
+              src={images[i]}
+              alt=""
+              fill
+              sizes={GALLERY_SIZES}
+              onLoad={() => setLoaded((l) => ({ ...l, [i]: true }))}
+              onError={() => setBroken((b) => ({ ...b, [i]: true }))}
+            />
+          ) : null
+        )}
+      </div>
+
       {/* Main image — exactly one <Image> in the DOM at a time */}
       <div
         className="relative overflow-hidden rounded-2xl"
@@ -61,22 +101,34 @@ export function ProductGallery({ images, name, tone, onSale }: ProductGalleryPro
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-        {activeSrc && !broken[active] && !loaded[active] && (
-          <div className="absolute inset-0 animate-pulse bg-slate-200" />
-        )}
-
-        {activeSrc && !broken[active] && (
-          <Image
+        <AnimatePresence initial={false} custom={direction}>
+          <motion.div
             key={active}
-            src={activeSrc}
-            alt={name}
-            fill
-            className="object-cover"
-            sizes="(max-width: 1024px) 100vw, 50vw"
-            onLoad={() => setLoaded((l) => ({ ...l, [active]: true }))}
-            onError={() => setBroken((b) => ({ ...b, [active]: true }))}
-          />
-        )}
+            custom={direction}
+            variants={slideVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+            className="absolute inset-0"
+          >
+            {activeSrc && !broken[active] && !loaded[active] && (
+              <div className="absolute inset-0 animate-pulse bg-slate-200" />
+            )}
+
+            {activeSrc && !broken[active] && (
+              <Image
+                src={activeSrc}
+                alt={name}
+                fill
+                className="object-cover"
+                sizes={GALLERY_SIZES}
+                onLoad={() => setLoaded((l) => ({ ...l, [active]: true }))}
+                onError={() => setBroken((b) => ({ ...b, [active]: true }))}
+              />
+            )}
+          </motion.div>
+        </AnimatePresence>
 
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/5 via-transparent to-black/20" />
 
@@ -107,7 +159,7 @@ export function ProductGallery({ images, name, tone, onSale }: ProductGalleryPro
               {images.map((_, i) => (
                 <button
                   key={i}
-                  onClick={() => setActive(i)}
+                  onClick={() => goTo(i)}
                   aria-label={`Image ${i + 1}`}
                   className={cn(
                     "h-[6px] rounded-full transition-all",
@@ -128,7 +180,7 @@ export function ProductGallery({ images, name, tone, onSale }: ProductGalleryPro
           {images.slice(0, 5).map((img, i) => (
             <button
               key={i}
-              onClick={() => setActive(i)}
+              onClick={() => goTo(i)}
               aria-label={`View image ${i + 1}`}
               className={cn(
                 "relative h-[62px] w-[62px] shrink-0 overflow-hidden rounded-[10px] border-2 transition-all",

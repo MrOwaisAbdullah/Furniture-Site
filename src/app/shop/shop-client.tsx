@@ -325,7 +325,7 @@ export function ShopClient({ products, categories }: { products: Product[]; cate
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-3.5 sm:gap-4 lg:grid-cols-3 lg:gap-5">
+              <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 lg:gap-5">
                 {filtered.map((product) => (
                   <ProductCard key={product._id} product={product} />
                 ))}

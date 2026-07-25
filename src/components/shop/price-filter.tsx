@@ -132,7 +132,7 @@ export function PriceFilter({ products }: PriceFilterProps) {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 auto-rows-fr">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-4 auto-rows-fr">
           {filteredProducts.map((product, index) => {
             // Featured products span 2 columns, 2 rows for prominence
             const isFeatured = product.featured
@@ -152,7 +152,7 @@ export function PriceFilter({ products }: PriceFilterProps) {
                       alt={product.name}
                       fill
                       className="object-cover transition-transform duration-500 group-hover:scale-105"
-                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 33vw, 25vw"
                     />
                   ) : (
                     <div
