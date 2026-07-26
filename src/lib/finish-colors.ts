@@ -10,7 +10,6 @@
 // swatch without needing a data migration.
 export const FINISH_COLOR_PALETTE: { name: string; hex: string }[] = [
   { name: "Black",         hex: "#1A1A1A" },
-  { name: "Blue",          hex: "#2E5C8A" },
   { name: "Gray",          hex: "#8A8A8A" },
   { name: "Pink",          hex: "#F3C4D3" },
   { name: "Purple",        hex: "#6B4E8E" },
@@ -26,7 +25,6 @@ export const FINISH_COLOR_PALETTE: { name: string; hex: string }[] = [
   { name: "Olive Green",   hex: "#6B7A3D" },
   { name: "Teal Green",    hex: "#1F7A6C" },
   { name: "Rust",          hex: "#A6532E" },
-  { name: "Terracotta",    hex: "#B5623E" },
   { name: "Taupe",         hex: "#A69783" },
   { name: "Taupe Brown",   hex: "#6E5C4D" },
   { name: "Blush",         hex: "#E8B4B8" },

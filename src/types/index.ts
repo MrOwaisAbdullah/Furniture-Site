@@ -201,4 +201,8 @@ export interface Bundle {
   products: Product[];
   finishNames: string[];
   bundlePrice: number;
+  /** Per-product variant this bundle sells, when it differs from that
+   * product's own default (first) variant — e.g. a piece normally sold
+   * "Single" but included as a "Pair" in this bundle. */
+  variantOverrides: { productId: string; variantSize: string }[];
 }

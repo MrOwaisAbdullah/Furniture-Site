@@ -177,7 +177,7 @@ async function seed() {
       care: CARE_MIRROR_STOOL,
       description: "Ivory dressing table with a round mirror, ribbed 5-drawer pedestal, tapered gold legs, and a matching ribbed pouf stool. A soft, elegant vanity set for a modern bedroom — dressing table, mirror, and stool all included.",
       tags: ["dressing table with mirror and stool", "oval vanity", "ivory vanity", "vanity set", "ribbed vanity"],
-      finishes: [{ name: "Offwhite", images: [1, 2, 3, 4].map((i) => `Oval Vanity/oval-vanity-offwhite-vanity-set-${i}.png`) }],
+      finishes: [{ name: "White", images: [1, 2, 3, 4].map((i) => `Oval Vanity/oval-vanity-offwhite-vanity-set-${i}.png`) }],
     },
     {
       _id: "product-velvet-arch-vanity",

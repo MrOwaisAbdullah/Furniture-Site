@@ -4,7 +4,7 @@ import { useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import confetti from "canvas-confetti"
-import { ChevronLeft, ChevronRight, ShoppingBag } from "lucide-react"
+import { ChevronLeft, ChevronRight, ShoppingBag, Tag } from "lucide-react"
 import type { Bundle, Finish, Product } from "@/types"
 import { useCartStore } from "@/lib/store"
 import { useToast } from "@/components/ui/toast"
@@ -13,7 +13,7 @@ import { formatPrice } from "@/lib/utils"
 import { hexForFinishName } from "@/lib/finish-colors"
 import { FinishSwatch } from "@/components/product/finish-swatch"
 import { ProductCard } from "@/components/product/product-card"
-import { allocateBundlePrice, resolveBundleImages } from "@/lib/bundle"
+import { allocateBundlePrice, resolveBundleImages, resolveBundleFinish, resolveBundleVariant } from "@/lib/bundle"
 
 export function BundlePageClient({ bundle, decorProducts }: { bundle: Bundle; decorProducts: Product[] }) {
   const [activeFinish, setActiveFinish] = useState(0)
@@ -37,9 +37,22 @@ export function BundlePageClient({ bundle, decorProducts }: { bundle: Bundle; de
   )
 
   const allocated = useMemo(
-    () => allocateBundlePrice(bundle.products, finishName, bundle.bundlePrice),
-    [bundle.products, bundle.bundlePrice, finishName]
+    () => allocateBundlePrice(bundle.products, finishName, bundle.bundlePrice, bundle.variantOverrides),
+    [bundle.products, bundle.bundlePrice, bundle.variantOverrides, finishName]
   )
+
+  // What buying every piece would cost separately at its own price, so the
+  // savings badge stays accurate if a finish/variant carries a modifier.
+  const sumIfSeparate = useMemo(
+    () =>
+      bundle.products.reduce((sum, product) => {
+        const finish = resolveBundleFinish(product, finishName)
+        const variant = resolveBundleVariant(product, bundle.variantOverrides)
+        return sum + (product.salePrice ?? product.basePrice) + (finish?.priceModifier ?? 0) + (variant?.priceModifier ?? 0)
+      }, 0),
+    [bundle.products, bundle.variantOverrides, finishName]
+  )
+  const savings = Math.max(0, sumIfSeparate - bundle.bundlePrice)
 
   // The bundle is photographed as one styled room, not per-piece — every
   // product in it shares the same photo for a given color, so the first
@@ -47,12 +60,12 @@ export function BundlePageClient({ bundle, decorProducts }: { bundle: Bundle; de
   const heroImage = bundle.products[0] ? resolveBundleImages(bundle.products[0], finishName)[0] : undefined
 
   function handleAddToCart() {
-    for (const { product, finish, price } of allocated) {
+    for (const { product, finish, variant, price } of allocated) {
       addItem({
         productId: product._id,
         name: product.name,
         price,
-        variantId: product.variants[0]?._id,
+        variantId: variant?._id,
         finishId: finish?._id,
         finishName: finish?.name,
         image: resolveBundleImages(product, finishName)[0],
@@ -97,9 +110,9 @@ export function BundlePageClient({ bundle, decorProducts }: { bundle: Bundle; de
 
             <p className="mb-2 font-mono text-[10.5px] uppercase tracking-[1px] text-sage">Pieces in this set</p>
             <ul className="flex flex-col gap-1">
-              {bundle.products.map((p) => (
-                <li key={p._id} className="font-body text-[13.5px] text-slate">
-                  · {p.name}
+              {allocated.map(({ product, variant }) => (
+                <li key={product._id} className="font-body text-[13.5px] text-slate">
+                  · {product.name}{variant && product.variants[0] !== variant ? ` (${variant.size})` : ""}
                 </li>
               ))}
             </ul>
@@ -109,7 +122,21 @@ export function BundlePageClient({ bundle, decorProducts }: { bundle: Bundle; de
         {/* Sticky price/CTA summary */}
         <aside className="overflow-hidden rounded-[16px] border border-border bg-white lg:sticky lg:top-24">
           <div className="p-4">
+            {savings > 0 && (
+              <div className="mb-3 flex items-center gap-1.5 rounded-[10px] bg-gold/12 px-3 py-2">
+                <Tag className="h-3.5 w-3.5 shrink-0 text-gold-700" strokeWidth={2.25} />
+                <p className="font-mono text-[11px] font-bold text-gold-700">
+                  Bundle discount — save {formatPrice(savings)} vs buying separately
+                </p>
+              </div>
+            )}
             <div className="flex flex-col gap-1.5 rounded-[10px] bg-surface-sunken px-3.5 py-3">
+              {savings > 0 && (
+                <div className="flex items-baseline justify-between">
+                  <span className="font-body text-[11.5px] text-sage">If bought separately</span>
+                  <span className="font-mono text-[12.5px] text-sage line-through">{formatPrice(sumIfSeparate)}</span>
+                </div>
+              )}
               <div className="flex items-baseline justify-between">
                 <span className="font-heading font-bold text-[13.5px] text-ink">Total</span>
                 <span className="font-mono font-bold text-[17px] text-forest">{formatPrice(bundle.bundlePrice)}</span>

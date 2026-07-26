@@ -105,15 +105,19 @@ async function main() {
     name: "Cloud Bubble Bedroom Set",
     slug: { _type: "slug", current: "cloud-bubble-bedroom-set" },
     description:
-      "The Cloud Bubble bed, Cloud Mirror dressing table, and Glass Niche wardrobe together as one styled room, in 10 matching colors. Buy the set and we include 2 pedestal side tables and a matching bubble stool free — not sold separately.",
+      "The Cloud Bubble bed, Cloud Mirror dressing table, Glass Niche wardrobe, and a pair of Cloud Flare-Leg nightstands — together as one styled room, in 10 matching colors. Buy the set and we include a matching bubble stool free, not sold separately.",
     image: { _type: "image", asset: { _type: "reference", _ref: coverAssetId } },
     products: [
       { _type: "reference", _key: "p1", _ref: "product-cloud-boucle-bed" },
       { _type: "reference", _key: "p2", _ref: "product-cloud-mirror-vanity" },
       { _type: "reference", _key: "p3", _ref: "product-glass-niche-wardrobe" },
+      { _type: "reference", _key: "p4", _ref: "product-cloud-flare-leg-nightstand" },
     ],
     finishNames: COLORS.map((c) => c.name),
     bundlePrice: 220000,
+    variantOverrides: [
+      { _type: "object", _key: "v1", product: { _type: "reference", _ref: "product-cloud-flare-leg-nightstand" }, variantSize: "Pair" },
+    ],
     active: true,
   })
   console.log(`✓ Created ${bundle._id}`)

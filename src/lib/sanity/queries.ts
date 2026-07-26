@@ -129,7 +129,8 @@ export async function getBlogPostBySlug(slug: string) {
 const BUNDLE_PROJECTION = `
   _id, name, "slug": slug.current, description, "image": image.asset->url,
   finishNames, bundlePrice,
-  "products": products[]->{ ${PRODUCT_PROJECTION} }
+  "products": products[]->{ ${PRODUCT_PROJECTION} },
+  "variantOverrides": variantOverrides[]{ "productId": product._ref, variantSize }
 `
 
 export async function getBundles() {

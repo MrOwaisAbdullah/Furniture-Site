@@ -68,6 +68,7 @@ export interface RawSanityBundle {
   products: RawSanityProduct[]
   finishNames?: string[] | null
   bundlePrice: number
+  variantOverrides?: { productId: string; variantSize: string }[] | null
 }
 
 export interface RawSanityBlogPost {
@@ -210,6 +211,7 @@ export function mapSanityBundle(raw: RawSanityBundle, activeSales: RawSanitySale
     products: raw.products.map((p) => mapSanityProduct(p, activeSales)),
     finishNames: raw.finishNames ?? [],
     bundlePrice: raw.bundlePrice,
+    variantOverrides: raw.variantOverrides ?? [],
   }
 }
 

@@ -42,6 +42,22 @@ export const bundle = {
       description: "The flat total price for buying every piece in this bundle together, in any of the color options above.",
       validation: (R: { required: () => { min: (n: number) => unknown } }) => R.required().min(0),
     },
+    {
+      name: "variantOverrides",
+      type: "array",
+      title: "Variant overrides (advanced)",
+      description: "For a piece normally sold as \"Single\", pick a different variant this bundle uses instead (e.g. \"Pair\") — match the exact variant name on that product. Leave empty to use each product's default (first) variant.",
+      of: [{
+        type: "object",
+        fields: [
+          { name: "product", type: "reference", to: [{ type: "product" }], validation: (R: { required: () => unknown }) => R.required() },
+          { name: "variantSize", type: "string", title: "Variant name", validation: (R: { required: () => unknown }) => R.required() },
+        ],
+        preview: {
+          select: { title: "product.name", subtitle: "variantSize" },
+        },
+      }],
+    },
     { name: "active", type: "boolean", title: "Active", initialValue: true },
   ],
   preview: {
