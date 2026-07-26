@@ -93,6 +93,7 @@ export default function CheckoutPage() {
       variantId: product.variants[0]?._id,
       finishId: product.finishes[0]?._id,
       finishName: product.finishes[0]?.name,
+      image: product.images[0] ?? product.finishes[0]?.images[0],
     })
     trackEvent("checkout_upsell_added", { productId: product._id, name: product.name, price: product.salePrice ?? product.basePrice })
   }

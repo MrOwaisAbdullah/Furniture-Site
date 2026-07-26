@@ -1,11 +1,13 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react"
 import { useCartStore } from "@/lib/store"
 import { formatPrice } from "@/lib/utils"
 import { EmptyCart } from "@/components/cart/empty-cart"
 import { useToast } from "@/components/ui/toast"
+import { ADVANCE_PERCENT } from "@/lib/site-config"
 
 export default function CartPage() {
   const { toast } = useToast()
@@ -22,7 +24,7 @@ export default function CartPage() {
     )
   }
 
-  const advance = Math.round(totalPrice / 2)
+  const advance = Math.round(totalPrice * (ADVANCE_PERCENT / 100))
 
   return (
     <div className="min-h-screen bg-surface">
@@ -40,9 +42,21 @@ export default function CartPage() {
                 key={`${item.productId}-${item.variantId}-${item.finishId}`}
                 className="flex gap-3 rounded-[13px] border border-border bg-white p-3"
               >
-                <div
-                  className="h-[74px] w-[74px] shrink-0 rounded-[10px] bg-forest-500"
-                />
+                <div className="relative h-[74px] w-[74px] shrink-0 overflow-hidden rounded-[10px] bg-surface-sunken">
+                  {item.image ? (
+                    <Image
+                      src={item.image}
+                      alt={item.name}
+                      fill
+                      className="object-cover"
+                      sizes="74px"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center">
+                      <ShoppingBag className="h-6 w-6 text-sage/30" strokeWidth={1.5} />
+                    </div>
+                  )}
+                </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-heading font-bold text-[14px] text-ink leading-[1.1]">{item.name}</p>
                   {item.finishName && (
@@ -108,7 +122,7 @@ export default function CartPage() {
                 <span className="font-mono text-ink">{formatPrice(totalPrice)}</span>
               </div>
               <div className="flex justify-between text-[13.5px] text-slate mb-3">
-                <span>Advance to confirm (50%)</span>
+                <span>Advance to confirm ({ADVANCE_PERCENT}%)</span>
                 <span className="font-mono text-ink">{formatPrice(advance)}</span>
               </div>
               <div className="my-3 h-px bg-border" />

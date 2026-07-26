@@ -7,7 +7,7 @@ import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react"
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion"
 import { FaWhatsapp } from "react-icons/fa"
 import { useReducedMotion } from "@/lib/use-reduced-motion"
-import { waLink } from "@/lib/site-config"
+import { waLink, ADVANCE_LABEL } from "@/lib/site-config"
 import { cn } from "@/lib/utils"
 
 interface HeroSlide {
@@ -193,7 +193,7 @@ export function Hero() {
               {...fadeUp(0.24)}
               className="mt-5 flex flex-wrap gap-x-5 gap-y-2"
             >
-              {["30–50% advance · balance on delivery", "Karachi delivery", "Custom sizing free"].map((t, i) => (
+              {[`${ADVANCE_LABEL} · balance on delivery`, "Karachi delivery", "Custom sizing free"].map((t, i) => (
                 <motion.span
                   key={t}
                   initial={{ opacity: 0 }}

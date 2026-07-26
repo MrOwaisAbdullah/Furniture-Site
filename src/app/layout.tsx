@@ -5,6 +5,7 @@ import Script from "next/script"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { MobileStickyBar } from "@/components/layout/mobile-sticky-bar"
+import { ScrollToTop } from "@/components/layout/scroll-to-top"
 import { CookieConsent } from "@/components/ui/cookie-consent"
 import { TrackingScripts } from "@/components/ui/tracking-scripts"
 import { ToastProvider } from "@/components/ui/toast"
@@ -89,6 +90,7 @@ export default async function RootLayout({
       className={`${instrumentSerif.variable} ${archivo.variable} ${hankenGrotesk.variable} ${spaceMono.variable} h-full`}
     >
       <body className="flex min-h-full flex-col font-body antialiased">
+        <ScrollToTop />
         <a
           href="#main-content"
           className="fixed left-4 top-4 z-[100] rounded-lg bg-forest px-4 py-2 font-heading text-sm font-bold text-bone shadow-lg -translate-y-full opacity-0 focus:translate-y-0 focus:opacity-100 transition-all duration-200"

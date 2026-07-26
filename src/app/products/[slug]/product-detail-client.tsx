@@ -17,7 +17,7 @@ import { ShareButton } from "@/components/product/share-button"
 import type { Product } from "@/types"
 import { formatPrice } from "@/lib/utils"
 import { SIZE_VARIANT_WIDTH } from "@/lib/size-variants"
-import { WHATSAPP_NUMBER } from "@/lib/site-config"
+import { WHATSAPP_NUMBER, ADVANCE_LABEL } from "@/lib/site-config"
 import { cn } from "@/lib/utils"
 import { useCartStore } from "@/lib/store"
 import { wishlistClient } from "@/lib/wishlist-client"
@@ -28,6 +28,7 @@ import { ReviewForm } from "@/components/product/review-form"
 import { ReviewsSection } from "@/components/product/reviews-section"
 import { useToast } from "@/components/ui/toast"
 import { getColorMatchedAccessories } from "@/lib/color-match"
+import { resolveBundleImages, resolveBundleFinish } from "@/lib/bundle"
 import { recentlyViewedClient } from "@/lib/recently-viewed-client"
 import { RecentlyViewed } from "@/components/product/recently-viewed"
 import { ProductQA } from "@/components/product/product-qa"
@@ -141,6 +142,7 @@ export function ProductDetailClient({
       variantId,
       finishId,
       finishName: selectedFinish?.name,
+      image: galleryImages[0],
     })
     if (qty > 1) updateQuantity(product._id, variantId, finishId, qty)
     if (fromEl) flyToTarget(fromEl, "[data-nav-cart]")
@@ -295,7 +297,9 @@ export function ProductDetailClient({
                         Match the {selectedFinish.name} vibe
                       </p>
                       <div className="flex gap-2.5 overflow-x-auto">
-                        {colorMatchedAccessories.slice(0, 3).map((a) => (
+                        {colorMatchedAccessories.slice(0, 3).map((a) => {
+                          const accessoryImage = resolveBundleImages(a, selectedFinish.name)[0]
+                          return (
                           <div
                             key={a._id}
                             className="flex w-[110px] shrink-0 flex-col overflow-hidden rounded-[10px] border border-border"
@@ -304,8 +308,8 @@ export function ProductDetailClient({
                               href={`/products/${a.slug}`}
                               className="relative h-[80px] w-full bg-surface-sunken group"
                             >
-                              {a.images[0] && (
-                                <Image src={a.images[0]} alt={a.name} fill className="object-cover" sizes="110px" />
+                              {accessoryImage && (
+                                <Image src={accessoryImage} alt={a.name} fill className="object-cover" sizes="110px" />
                               )}
                               {/* View icon overlay */}
                               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-start justify-end p-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -321,12 +325,14 @@ export function ProductDetailClient({
                                 onClick={(e) => {
                                   e.stopPropagation()
                                   const fromEl = e.currentTarget as HTMLElement
+                                  const accessoryFinish = resolveBundleFinish(a, selectedFinish.name)
                                   useCartStore.getState().addItem({
                                     productId: a._id,
                                     name: a.name,
                                     price: a.salePrice ?? a.basePrice,
-                                    finishId: selectedFinish?._id,
-                                    finishName: selectedFinish.name,
+                                    finishId: accessoryFinish?._id,
+                                    finishName: accessoryFinish?.name,
+                                    image: accessoryImage,
                                   })
                                   toast(`${a.name} added to cart`, "success")
                                   trackEvent("add_to_cart", { name: a.name }, { productId: a._id })
@@ -339,7 +345,8 @@ export function ProductDetailClient({
                               </button>
                             </div>
                           </div>
-                        ))}
+                          )
+                        })}
                       </div>
                     </div>
                   )}
@@ -512,7 +519,7 @@ export function ProductDetailClient({
           <div className="rounded-[14px] border border-border bg-white p-5">
             <h3 className="mb-2 font-heading font-bold text-[15px] text-ink">Delivery &amp; advance</h3>
             <p className="text-[13.5px] leading-[1.65] text-slate">
-              A 30–50% advance confirms your build slot. Karachi delivery or showroom collection. We WhatsApp you at every stage.
+              A {ADVANCE_LABEL} confirms your build slot. Karachi delivery or showroom collection. We WhatsApp you at every stage.
             </p>
           </div>
         </div>

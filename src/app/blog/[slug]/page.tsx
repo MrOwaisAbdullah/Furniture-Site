@@ -10,7 +10,7 @@ import { BlogPostingJsonLd, BreadcrumbJsonLd, FAQJsonLd } from "@/components/seo
 import { Breadcrumbs } from "@/components/ui/breadcrumbs"
 import { BlogCard } from "@/components/blog/blog-card"
 import { TableOfContents, type TocHeading } from "@/components/blog/table-of-contents"
-import { waLink } from "@/lib/site-config"
+import { waLink, ADVANCE_LABEL } from "@/lib/site-config"
 
 // Same stock image used as the blog archive's hero background — reused here
 // so a post with no featuredImage still gets a real hero image, not a bare
@@ -126,7 +126,7 @@ function OfferBanner() {
       <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:gap-5">
         <span className="flex items-center gap-1.5 font-mono text-[11px] text-ink">
           <Percent className="h-3.5 w-3.5 text-forest" />
-          30–50% advance · balance on delivery
+          {ADVANCE_LABEL} · balance on delivery
         </span>
         <span className="flex items-center gap-1.5 font-mono text-[11px] text-ink">
           <Truck className="h-3.5 w-3.5 text-forest" />

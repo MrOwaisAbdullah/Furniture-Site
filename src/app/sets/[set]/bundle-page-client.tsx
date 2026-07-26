@@ -48,6 +48,7 @@ export function BundlePageClient({ bundle }: { bundle: Bundle }) {
         variantId: product.variants[0]?._id,
         finishId: finish?._id,
         finishName: finish?.name,
+        image: resolveBundleImages(product, finishName)[0],
       })
     }
     trackEvent("bundle_added", { bundleId: bundle._id, finishName, pieceCount: bundle.products.length })

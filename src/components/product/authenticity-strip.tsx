@@ -1,8 +1,9 @@
 import { Hammer, ShieldCheck, Star } from "lucide-react"
+import { WARRANTY_LABEL } from "@/lib/site-config"
 
 const items = [
   { icon: Hammer,      label: "Karachi-made" },
-  { icon: ShieldCheck, label: "5-Year Guarantee" },
+  { icon: ShieldCheck, label: `${WARRANTY_LABEL} Guarantee` },
   { icon: Star,        label: "4.9 on Google" },
 ]
 

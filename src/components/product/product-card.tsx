@@ -120,6 +120,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
           variantId: product.variants[0]?._id,
           finishId: product.finishes[0]?._id,
           finishName: product.finishes[0]?.name,
+          image: primaryImage,
         })
       })
     }
@@ -230,6 +231,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
                       variantId: product.variants[0]?._id,
                       finishId: product.finishes[0]?._id,
                       finishName: product.finishes[0]?.name,
+                      image: primaryImage,
                     })
                   }
                   router.push("/checkout")

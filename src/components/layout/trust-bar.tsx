@@ -5,13 +5,14 @@ import { Factory, Truck, CreditCard, Award } from "lucide-react"
 import { FaWhatsapp } from "react-icons/fa"
 import { motion } from "framer-motion"
 import { useReducedMotion } from "@/lib/use-reduced-motion"
+import { WARRANTY_LABEL, ADVANCE_LABEL } from "@/lib/site-config"
 
 const trustItems = [
   { icon: Factory,      label: "Karachi Workshop" },
   { icon: Truck,        label: "City-wide Delivery" },
-  { icon: Award,        label: "5-Year Build Quality" },
+  { icon: Award,        label: `${WARRANTY_LABEL} Build Quality` },
   { icon: FaWhatsapp,   label: "WhatsApp Support" },
-  { icon: CreditCard,   label: "30–50% Advance" },
+  { icon: CreditCard,   label: ADVANCE_LABEL },
 ]
 
 export function TrustBar() {

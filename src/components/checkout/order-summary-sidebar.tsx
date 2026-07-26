@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { ChevronDown, Loader2, Tag, X, Info } from "lucide-react"
 import { formatPrice, cn } from "@/lib/utils"
+import { ADVANCE_LABEL } from "@/lib/site-config"
 
 interface OrderItem {
   productId: string
@@ -142,7 +143,7 @@ function SummaryBody({ items, totalPrice, advance, discount, appliedCode, onAppl
       >
         <div>
           <p className="font-mono text-[10px] uppercase tracking-[1.5px] text-bone/60">
-            30–50% advance to confirm
+            {ADVANCE_LABEL} to confirm
           </p>
           <p className="mt-0.5 text-[11.5px] text-bone/55">Balance paid on delivery</p>
         </div>

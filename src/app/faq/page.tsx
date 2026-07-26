@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { WARRANTY_SUMMARY } from "@/lib/site-config"
+import { WARRANTY_SUMMARY, ADVANCE_PERCENT } from "@/lib/site-config"
 
 export const metadata: Metadata = {
   title: "FAQ — Yousuf Living",
@@ -13,7 +13,7 @@ const faqs = [
   },
   {
     q: "Do I have to pay the full amount upfront?",
-    a: "No. You pay a 30 to 50 percent advance to confirm your order. The rest is due before we deliver.",
+    a: `No. You pay a ${ADVANCE_PERCENT} percent advance to confirm your order. The rest is due before we deliver.`,
   },
   {
     q: "What payment methods do you accept?",

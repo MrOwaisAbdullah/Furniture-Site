@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion"
 import { useReducedMotion } from "@/lib/use-reduced-motion"
+import { ADVANCE_LABEL } from "@/lib/site-config"
 
 const steps = [
   {
@@ -17,7 +18,7 @@ const steps = [
   {
     n: "03",
     title: "Pay advance to confirm",
-    body: "A 30–50% advance secures your build slot. Balance on delivery, no surprises.",
+    body: `A ${ADVANCE_LABEL} secures your build slot. Balance on delivery, no surprises.`,
   },
   {
     n: "04",

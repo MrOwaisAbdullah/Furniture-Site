@@ -105,7 +105,7 @@ export default async function PriceRangePage({
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 lg:gap-5">
+          <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4 lg:gap-5">
             {inRange.map((product) => (
               <ProductCard key={product._id} product={product} />
             ))}

@@ -1,6 +1,6 @@
 /**
- * Seeds 21 products from D:\Furniture\Generated: 8 dressing tables/consoles,
- * 7 nightstands, 2 coffee tables, 1 storage bench, 1 wardrobe (5 colors),
+ * Seeds 20 products from D:\Furniture\Generated: 8 dressing tables/consoles,
+ * 6 nightstands, 2 coffee tables, 1 storage bench, 1 wardrobe (5 colors),
  * 2 standing floor mirrors. Run:
  *   node_modules/.bin/tsx scripts/seed-vanities-nightstands-decor.ts
  * Requires: NEXT_PUBLIC_SANITY_PROJECT_ID, NEXT_PUBLIC_SANITY_DATASET, SANITY_API_WRITE_TOKEN in .env.local
@@ -236,19 +236,6 @@ async function seed() {
       variants: NIGHTSTAND_VARIANTS,
     },
     {
-      _id: "product-marble-top-ribbed-nightstand-paired",
-      name: "Marble-Top Ribbed Nightstand (Paired)",
-      slug: "marble-top-ribbed-nightstand-paired",
-      sku: "NST-MTR-PR-01",
-      category: "side-tables",
-      basePrice: 30000,
-      material: "16mm Lasani MDF frame with a marble-look top and ribbed drawer front",
-      care: CARE_WIPE,
-      description: "Matched pair of ribbed nightstands with marble-look tops, gold trim, brass bar pulls, and tapered gold legs — one mirrored left, one mirrored right, designed to flank a bed. Sold as a pair.",
-      tags: ["nightstand pair", "side table pair", "marble top nightstand", "ribbed nightstand", "bedside table pair", "bedroom furniture"],
-      finishes: [{ name: "Beige", images: [1, 2].map((i) => `Marble-Top Ribbed Nightstand (Paired)/marble-top-ribbed-nightstand-paired-beige-nightstand-pair-${i}.png`) }],
-    },
-    {
       _id: "product-marble-top-ribbed-nightstand-round",
       name: "Marble-Top Ribbed Nightstand (Round)",
       slug: "marble-top-ribbed-nightstand-round",
@@ -257,9 +244,16 @@ async function seed() {
       basePrice: 18000,
       material: "16mm Lasani MDF frame with a marble-look top and ribbed drawer front",
       care: CARE_WIPE,
-      description: "Ribbed nightstand with a marble-look top, gold trim, brass bar pull, and tapered gold legs — symmetric on both sides, so it works on either side of the bed. Sold individually.",
-      tags: ["nightstand", "side table", "marble top nightstand", "ribbed nightstand", "bedside table", "bedroom furniture"],
-      finishes: [{ name: "Beige", images: [1, 2].map((i) => `Marble-Top Ribbed Nightstand (Round)/marble-top-ribbed-nightstand-round-beige-nightstand-${i}.png`) }],
+      description: "Ribbed nightstand with a marble-look top, gold trim, brass bar pull, and tapered gold legs — symmetric on both sides, so it works on either side of the bed. Available single or as a matching pair.",
+      tags: ["nightstand", "nightstand pair", "side table", "side table pair", "marble top nightstand", "ribbed nightstand", "bedside table", "bedroom furniture"],
+      finishes: [{
+        name: "Beige",
+        images: [
+          ...[1, 2].map((i) => `Marble-Top Ribbed Nightstand (Round)/marble-top-ribbed-nightstand-round-beige-nightstand-${i}.png`),
+          ...[1, 2].map((i) => `Marble-Top Ribbed Nightstand (Paired)/marble-top-ribbed-nightstand-paired-beige-nightstand-pair-${i}.png`),
+        ],
+      }],
+      variants: NIGHTSTAND_VARIANTS,
     },
     {
       _id: "product-glow-shelf-nightstand",

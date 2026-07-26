@@ -224,3 +224,21 @@ bandwidth. Instead, write a small one-off script that seeds just the
 affected product(s) (`client.createOrReplace` on that one `_id` only), run
 it, and it's fine to leave it in `scripts/` afterward or delete it — either
 way, only touch what actually changed.
+
+## Product image display convention
+
+A product can have color-variant-specific images (each `finish` in Sanity
+carries its own `images` array) in addition to the product's own default
+`images` array. Rendering rule, everywhere a product's photo is shown:
+
+- **No variant/finish selected yet**: show all of the product's own images
+  (`product.images`), not any one finish's images.
+- **A variant/finish is selected**: show that finish's own images
+  (`finish.images`) if it has any uploaded; otherwise fall back to the
+  product's default images.
+
+This is already implemented as the shared pattern via `resolveBundleImages()`
+/ `resolveBundleFinish()` in `src/lib/bundle.ts`, and inline in
+`product-detail-client.tsx`'s `galleryImages` (`selectedFinish?.images.length
+? selectedFinish.images : product.images`). Reuse these rather than
+re-deriving the fallback logic in new components.

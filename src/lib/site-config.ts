@@ -13,6 +13,12 @@ export const WARRANTY_YEARS = 1
 export const WARRANTY_LABEL = `${WARRANTY_YEARS} year${WARRANTY_YEARS === 1 ? "" : "s"}`
 export const WARRANTY_SUMMARY = `${WARRANTY_LABEL} on structural defects. This covers joints, drawers, and similar issues under normal use. It does not cover scratches, stains, or water damage.`
 
+// ── Advance payment ──────────────────────────────────────────────────────────
+// Single source of truth — change this one value to update the advance
+// percentage everywhere it's quoted (cart, checkout, FAQ, terms, etc.).
+export const ADVANCE_PERCENT = 50
+export const ADVANCE_LABEL = `${ADVANCE_PERCENT}% advance`
+
 // ── Phone / WhatsApp ────────────────────────────────────────────────────────
 // Canonical digits-only form (country code + number, no symbols) — the only
 // format wa.me and tel: links accept reliably.

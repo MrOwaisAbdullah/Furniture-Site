@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { WARRANTY_LABEL } from "@/lib/site-config"
+import { WARRANTY_LABEL, ADVANCE_PERCENT } from "@/lib/site-config"
 
 export const metadata: Metadata = {
   title: "Terms & Conditions — Yousuf Living",
@@ -19,7 +19,7 @@ export default function TermsPage() {
           <section>
             <h2 className="mb-2 font-heading font-bold text-[16px] text-ink">Orders and payments</h2>
             <p>
-              To confirm your order, you pay a 30 to 50 percent advance. The remaining balance is due before delivery.
+              To confirm your order, you pay a {ADVANCE_PERCENT} percent advance. The remaining balance is due before delivery.
               We accept bank transfers, EasyPaisa, JazzCash, and cash at our showroom in Karachi. Until we verify your
               payment, your order stays on hold.
             </p>

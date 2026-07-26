@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "framer-motion"
 import { X, Plus, Minus, Trash2, ShoppingBag, ArrowRight } from "lucide-react"
 import { formatPrice } from "@/lib/utils"
 import { useCartStore, type CartItem } from "@/lib/store"
+import { ADVANCE_PERCENT } from "@/lib/site-config"
 import Image from "next/image"
 
 interface CartDrawerProps {
@@ -125,8 +126,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
     return () => document.removeEventListener("keydown", handler)
   }, [open, onClose])
 
-  const advanceLow  = Math.round(totalPrice * 0.3)
-  const advanceHigh = Math.round(totalPrice * 0.5)
+  const advance = Math.round(totalPrice * (ADVANCE_PERCENT / 100))
 
   return (
     <AnimatePresence>
@@ -244,7 +244,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
                   <p className="font-mono text-[10px] text-gold-900">
                     Advance to confirm:{" "}
                     <span className="font-bold text-forest">
-                      {formatPrice(advanceLow)} – {formatPrice(advanceHigh)}
+                      {formatPrice(advance)}
                     </span>
                     <span className="text-sage"> · balance on delivery</span>
                   </p>

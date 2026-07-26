@@ -4,7 +4,7 @@ import Link from "next/link"
 import { getProductsByCategory, getCategories } from "@/lib/sanity/queries"
 import { withReviewRatings } from "@/lib/reviews/apply-summaries"
 import { BreadcrumbJsonLd, ItemListJsonLd } from "@/components/seo/json-ld"
-import { PriceFilter } from "@/components/shop/price-filter"
+import { ShopClient } from "@/app/shop/shop-client"
 
 export async function generateMetadata({
   params,
@@ -84,8 +84,8 @@ export default async function CategoryPage({
         </p>
       </div>
 
-      <div className="px-5 py-6 sm:px-8 lg:px-10">
-        {products.length === 0 ? (
+      {products.length === 0 ? (
+        <div className="px-5 py-6 sm:px-8 lg:px-10">
           <div className="flex flex-col items-center gap-3 py-16 text-center">
             <p className="font-heading font-bold text-[17px] text-ink">No products yet</p>
             <p className="text-[13px] text-slate">Check back soon — new pieces are added regularly.</p>
@@ -93,10 +93,10 @@ export default async function CategoryPage({
               Browse all
             </Link>
           </div>
-        ) : (
-          <PriceFilter products={products} />
-        )}
-      </div>
+        </div>
+      ) : (
+        <ShopClient products={products} categories={categories} lockedCategory={{ slug: cat.slug, name: cat.name }} />
+      )}
     </div>
   )
 }

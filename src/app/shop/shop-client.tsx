@@ -91,8 +91,20 @@ function SortDropdown({ value, onChange }: { value: SortKey; onChange: (v: SortK
   )
 }
 
-export function ShopClient({ products, categories }: { products: Product[]; categories: Category[] }) {
-  const [activeCat, setActiveCat]         = useState<string>(ALL_CAT)
+export function ShopClient({
+  products,
+  categories,
+  lockedCategory,
+}: {
+  products: Product[]
+  categories: Category[]
+  /** When set, this page is a single-category view (e.g. /shop/[category]) —
+   * the category selector and generic "collection" hero are hidden since the
+   * route/page header already convey it, but finish/price/sort/search still
+   * work exactly like the main /shop page. */
+  lockedCategory?: { slug: string; name: string }
+}) {
+  const [activeCat, setActiveCat]         = useState<string>(lockedCategory?.slug ?? ALL_CAT)
   const [activeFinish, setActiveFinish]   = useState<string | null>(null)
   const [activePriceRange, setActivePriceRange] = useState(0)
   const [sort, setSort]                   = useState<SortKey>("featured")
@@ -138,65 +150,69 @@ export function ShopClient({ products, categories }: { products: Product[]; cate
   return (
     <div className="min-h-screen bg-surface">
       {/* ── Hero ── */}
-      <div className="relative overflow-hidden" style={{ minHeight: 180 }}>
-        <Image
-          src={SHOP_HERO}
-          alt="The collection"
-          fill
-          className="object-cover"
-          sizes="100vw"
-          priority
-        />
-        <div
-          className="absolute inset-0"
-          style={{ background: "linear-gradient(160deg,rgba(10,28,21,.9) 0%,rgba(22,53,42,.75) 55%,rgba(22,53,42,.45) 100%)" }}
-        />
-        <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-14">
-          <div className="flex items-end justify-between">
-            <div>
-              <p className="font-mono uppercase text-gold" style={{ fontSize: "10px", letterSpacing: "2.5px" }}>All products</p>
-              <h1
-                className="mt-1 font-heading font-black text-bone"
-                style={{ fontSize: "clamp(26px,4vw,38px)", letterSpacing: "-0.8px" }}
-              >
-                The collection
-              </h1>
+      {!lockedCategory && (
+        <div className="relative overflow-hidden" style={{ minHeight: 180 }}>
+          <Image
+            src={SHOP_HERO}
+            alt="The collection"
+            fill
+            className="object-cover"
+            sizes="100vw"
+            priority
+          />
+          <div
+            className="absolute inset-0"
+            style={{ background: "linear-gradient(160deg,rgba(10,28,21,.9) 0%,rgba(22,53,42,.75) 55%,rgba(22,53,42,.45) 100%)" }}
+          />
+          <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-14">
+            <div className="flex items-end justify-between">
+              <div>
+                <p className="font-mono uppercase text-gold" style={{ fontSize: "10px", letterSpacing: "2.5px" }}>All products</p>
+                <h1
+                  className="mt-1 font-heading font-black text-bone"
+                  style={{ fontSize: "clamp(26px,4vw,38px)", letterSpacing: "-0.8px" }}
+                >
+                  The collection
+                </h1>
+              </div>
+              <p className="hidden font-mono text-[11px] text-bone/50 lg:block">
+                {filtered.length} piece{filtered.length !== 1 ? "s" : ""}
+              </p>
             </div>
-            <p className="hidden font-mono text-[11px] text-bone/50 lg:block">
-              {filtered.length} piece{filtered.length !== 1 ? "s" : ""}
-            </p>
           </div>
         </div>
-      </div>
+      )}
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-14">
+      <div className={cn("mx-auto max-w-7xl px-4 sm:px-6 lg:px-14", lockedCategory && "pt-6")}>
 
         {/* ── Mobile filter bar ── */}
-        <div className="flex items-center gap-2 border-b border-border py-3 lg:hidden">
-          <div className="relative flex min-w-0 flex-1">
-            <div
-              className="flex gap-2 overflow-x-auto"
-              style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
-            >
-              {[{ slug: ALL_CAT, name: "All" }, ...categories].map((cat) => (
-                <button
-                  key={cat.slug}
-                  onClick={() => setActiveCat(cat.slug)}
-                  style={{ touchAction: "manipulation" }}
-                  className={cn(
-                    "shrink-0 rounded-full border px-3.5 py-1.5 font-body font-semibold text-[12px] transition-colors",
-                    cat.slug === activeCat
-                      ? "border-forest bg-forest text-bone"
-                      : "border-border-strong bg-white text-slate"
-                  )}
-                >
-                  {cat.name}
-                </button>
-              ))}
-              <div className="w-4 shrink-0" />
+        <div className={cn("flex items-center gap-2 border-b border-border py-3 lg:hidden", lockedCategory && "justify-end")}>
+          {!lockedCategory && (
+            <div className="relative flex min-w-0 flex-1">
+              <div
+                className="flex gap-2 overflow-x-auto"
+                style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
+              >
+                {[{ slug: ALL_CAT, name: "All" }, ...categories].map((cat) => (
+                  <button
+                    key={cat.slug}
+                    onClick={() => setActiveCat(cat.slug)}
+                    style={{ touchAction: "manipulation" }}
+                    className={cn(
+                      "shrink-0 rounded-full border px-3.5 py-1.5 font-body font-semibold text-[12px] transition-colors",
+                      cat.slug === activeCat
+                        ? "border-forest bg-forest text-bone"
+                        : "border-border-strong bg-white text-slate"
+                    )}
+                  >
+                    {cat.name}
+                  </button>
+                ))}
+                <div className="w-4 shrink-0" />
+              </div>
+              <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-surface to-transparent" />
             </div>
-            <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-surface to-transparent" />
-          </div>
+          )}
 
           {/* Filter icon — opens drawer */}
           <button
@@ -218,30 +234,34 @@ export function ShopClient({ products, categories }: { products: Product[]; cate
 
           {/* ── Desktop sidebar ── */}
           <aside className="hidden w-52 shrink-0 lg:block">
-            <p className="mb-2 font-heading text-[10.5px] font-bold uppercase tracking-[2px] text-sage">Category</p>
-            <div className="flex flex-col gap-0.5">
-              {[{ slug: ALL_CAT, name: "All" }, ...categories].map((cat) => (
-                <button
-                  key={cat.slug}
-                  onClick={() => setActiveCat(cat.slug)}
-                  className={cn(
-                    "rounded-[9px] px-3 py-2 text-left font-body font-semibold text-[13.5px] transition-colors",
-                    cat.slug === activeCat ? "bg-forest text-bone" : "text-slate hover:bg-surface-sunken"
-                  )}
-                >
-                  {cat.name}
-                </button>
-              ))}
-            </div>
+            {!lockedCategory && (
+              <>
+                <p className="mb-2 font-heading text-[10.5px] font-bold uppercase tracking-[2px] text-sage">Category</p>
+                <div className="flex flex-col gap-0.5">
+                  {[{ slug: ALL_CAT, name: "All" }, ...categories].map((cat) => (
+                    <button
+                      key={cat.slug}
+                      onClick={() => setActiveCat(cat.slug)}
+                      className={cn(
+                        "rounded-[9px] px-3 py-2 text-left font-body font-semibold text-[13.5px] transition-colors",
+                        cat.slug === activeCat ? "bg-forest text-bone" : "text-slate hover:bg-surface-sunken"
+                      )}
+                    >
+                      {cat.name}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
 
-            <p className="mb-2.5 mt-7 font-heading text-[10.5px] font-bold uppercase tracking-[2px] text-sage">Finish</p>
-            <div className="flex gap-2.5">
+            <p className={cn("mb-2.5 font-heading text-[10.5px] font-bold uppercase tracking-[2px] text-sage", lockedCategory ? "mt-0" : "mt-7")}>Finish</p>
+            <div className="flex flex-wrap gap-2.5">
               {finishColors.map((f) => (
                 <button
                   key={f.name}
                   onClick={() => setActiveFinish(activeFinish === f.name ? null : f.name)}
                   className={cn(
-                    "relative h-7 w-7 rounded-full border transition-all hover:scale-110 focus-visible:ring-2 focus-visible:ring-gold",
+                    "relative h-7 w-7 shrink-0 rounded-full border transition-all hover:scale-110 focus-visible:ring-2 focus-visible:ring-gold",
                     activeFinish === f.name ? "border-forest ring-2 ring-forest/40 scale-110" : "border-black/12"
                   )}
                   style={{ background: f.code }}
@@ -318,14 +338,19 @@ export function ShopClient({ products, categories }: { products: Product[]; cate
                   <p className="mt-1.5 text-[13px] text-slate">Try a different filter or browse all products.</p>
                 </div>
                 <button
-                  onClick={() => { setActiveCat(ALL_CAT); setQuery("") }}
+                  onClick={() => {
+                    if (!lockedCategory) setActiveCat(ALL_CAT)
+                    setQuery("")
+                    setActiveFinish(null)
+                    setActivePriceRange(0)
+                  }}
                   className="mt-2 rounded-[10px] bg-forest px-6 py-3 font-heading font-bold text-[13.5px] text-bone"
                 >
-                  Show all
+                  {lockedCategory ? "Clear filters" : "Show all"}
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 lg:gap-5">
+              <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4 lg:gap-5">
                 {filtered.map((product) => (
                   <ProductCard key={product._id} product={product} />
                 ))}
@@ -386,38 +411,39 @@ export function ShopClient({ products, categories }: { products: Product[]; cate
               </div>
 
               <div className="overflow-y-auto" style={{ maxHeight: "calc(88dvh - 140px)" }}>
-                {/* Category */}
-                <div className="px-5 pb-5">
-                  <p className="mb-3 font-mono text-[9.5px] uppercase tracking-[2px] text-sage">Category</p>
-                  <div className="flex flex-wrap gap-2">
-                    {[{ slug: ALL_CAT, name: "All" }, ...categories].map((cat) => (
-                      <button
-                        key={cat.slug}
-                        onClick={() => setActiveCat(cat.slug)}
-                        style={{ touchAction: "manipulation" }}
-                        className={cn(
-                          "rounded-full border px-4 py-2 font-body font-semibold text-[13px] transition-colors",
-                          cat.slug === activeCat
-                            ? "border-forest bg-forest text-bone"
-                            : "border-border-strong bg-white text-slate"
-                        )}
-                      >
-                        {cat.name}
-                      </button>
-                    ))}
+                {!lockedCategory && (
+                  <div className="px-5 pb-5">
+                    <p className="mb-3 font-mono text-[9.5px] uppercase tracking-[2px] text-sage">Category</p>
+                    <div className="flex flex-wrap gap-2">
+                      {[{ slug: ALL_CAT, name: "All" }, ...categories].map((cat) => (
+                        <button
+                          key={cat.slug}
+                          onClick={() => setActiveCat(cat.slug)}
+                          style={{ touchAction: "manipulation" }}
+                          className={cn(
+                            "rounded-full border px-4 py-2 font-body font-semibold text-[13px] transition-colors",
+                            cat.slug === activeCat
+                              ? "border-forest bg-forest text-bone"
+                              : "border-border-strong bg-white text-slate"
+                          )}
+                        >
+                          {cat.name}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Finish */}
                 <div className="border-t border-border px-5 py-5">
                   <p className="mb-3 font-mono text-[9.5px] uppercase tracking-[2px] text-sage">Finish</p>
-                  <div className="flex gap-4">
+                  <div className="flex flex-wrap gap-4">
                     {finishColors.map((f) => (
                       <button
                         key={f.name}
                         onClick={() => setActiveFinish(activeFinish === f.name ? null : f.name)}
                         style={{ touchAction: "manipulation" }}
-                        className="flex flex-col items-center gap-1.5"
+                        className="flex shrink-0 flex-col items-center gap-1.5"
                         aria-label={f.name}
                       >
                         <div
