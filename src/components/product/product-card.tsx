@@ -26,6 +26,19 @@ const categoryToneMap: Record<string, string> = {
   "side-tables":     "linear-gradient(150deg,#8A9A8E,#4A5A50)",
 }
 
+/** Beds show their standard King-size price even though Single is
+ * cheaper — King is the flagship/default configuration. Everything else
+ * shows its lowest available variant price ("From Rs X") so a product
+ * with a cheaper size/pair option doesn't look pricier than it can be. */
+function cardDisplayPrice(product: Product): { price: number; isFrom: boolean } {
+  const basePrice = product.salePrice ?? product.basePrice
+  if (product.category.slug === "beds" || product.variants.length === 0) {
+    return { price: basePrice, isFrom: false }
+  }
+  const cheapestModifier = Math.min(0, ...product.variants.map((v) => v.priceModifier))
+  return { price: basePrice + cheapestModifier, isFrom: cheapestModifier < 0 }
+}
+
 
 interface ProductCardProps {
   product: Product
@@ -35,7 +48,8 @@ interface ProductCardProps {
 export function ProductCard({ product, className }: ProductCardProps) {
   const router = useRouter()
   const tone = categoryToneMap[product.category.slug] ?? "linear-gradient(150deg,#3A6B57,#16352A)"
-  const price = formatPrice(product.salePrice ?? product.basePrice)
+  const { price: cardPrice, isFrom } = cardDisplayPrice(product)
+  const price = formatPrice(cardPrice)
   // A time-limited sale takes priority over the bundle's permanent
   // compare-at price if a product somehow has both.
   const strikeThroughValue = product.salePrice
@@ -272,6 +286,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
             {/* Price row */}
             <div className="flex items-center gap-1 flex-wrap">
               <span className="font-mono font-bold text-forest text-[13px] sm:text-[15px]">
+                {isFrom && <span className="font-normal text-sage">From </span>}
                 {price}
               </span>
               {oldPrice && (
@@ -317,13 +332,13 @@ export function ProductCard({ product, className }: ProductCardProps) {
               onClick={handleAddToCart}
               aria-label={inCart ? "In cart" : "Add to cart"}
               className={cn(
-                "mt-2 flex w-full items-center justify-center gap-1.5 rounded-[8px] py-1.5 font-heading font-bold text-[11px] transition-colors sm:hidden",
+                "mt-2 flex w-full items-center justify-center gap-1.5 rounded-[8px] py-3 font-heading font-bold text-[12px] transition-colors sm:hidden",
                 inCart
                   ? "bg-forest/10 text-forest"
                   : "bg-forest text-bone hover:bg-forest/90"
               )}
             >
-              <ShoppingBag className="h-3 w-3" strokeWidth={2.5} />
+              <ShoppingBag className="h-3.5 w-3.5" strokeWidth={2.5} />
               {inCart ? "In cart" : "Add to cart"}
             </button>
           </div>
@@ -339,7 +354,8 @@ export function ProductCardCompact({
   fill = false,
 }: ProductCardProps & { onAdd?: (product: Product) => void; fill?: boolean }) {
   const tone = categoryToneMap[product.category.slug] ?? "linear-gradient(150deg,#3A6B57,#16352A)"
-  const price = formatPrice(product.salePrice ?? product.basePrice)
+  const { price: compactCardPrice, isFrom } = cardDisplayPrice(product)
+  const price = formatPrice(compactCardPrice)
   const primaryImage = product.images[0]
   const [imgError, setImgError] = useState(false)
 
@@ -372,6 +388,7 @@ export function ProductCardCompact({
           {product.name}
         </p>
         <p className="mt-1.5 font-mono font-bold text-forest" style={{ fontSize: "11.5px" }}>
+          {isFrom && <span className="font-normal text-sage">From </span>}
           {price}
         </p>
         {onAdd && (

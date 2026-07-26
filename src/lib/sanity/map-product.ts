@@ -1,5 +1,5 @@
 import type { Product, Category, Finish, Variant, BlogPost, Bundle } from "@/types"
-import { hexForFinishName } from "@/lib/finish-colors"
+import { hexForFinishName, normalizeFinishName } from "@/lib/finish-colors"
 
 // ── Raw GROQ result shapes (loose — this is the boundary where untyped CMS
 // JSON meets the app's real types; everything past this file is typed). ──

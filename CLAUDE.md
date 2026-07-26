@@ -208,3 +208,19 @@ Wait for consent; never auto-create ADRs. Group related decisions (stacks, authe
 
 ## Code Standards
 See `.specify/memory/constitution.md` for code quality, testing, performance, security, and architecture principles.
+
+## Sanity product seeding
+
+Product photos live outside the repo at `D:\Furniture\Generated` (mapped to
+`/mnt/d/Furniture/Generated` under WSL via `scripts/lib/paths.ts`). Every
+image gets watermarked (`scripts/lib/watermark.ts`) before upload — never
+upload an un-watermarked product photo.
+
+**When only one or a few products are new/changed, do NOT re-run a full
+batch seed script** (e.g. `seed-beds.ts`, `seed-vanities-nightstands-decor.ts`)
+— those re-upload and re-watermark every image for every product in the
+file each time, even ones that haven't changed, which wastes time and
+bandwidth. Instead, write a small one-off script that seeds just the
+affected product(s) (`client.createOrReplace` on that one `_id` only), run
+it, and it's fine to leave it in `scripts/` afterward or delete it — either
+way, only touch what actually changed.

@@ -200,6 +200,26 @@ async function seed() {
       tags: ["arched headboard bed", "twin panel bed", "cream bed", "king size bed", "modern bedroom"],
       finishes: [{ name: "Beige", images: ["Twin Arch Bed/Beige (1).png", "Twin Arch Bed/Beige (2).png"] }],
     },
+    {
+      _id: "product-two-tone-panel-bed",
+      name: "Two-Tone Panel Bed",
+      slug: "two-tone-panel-bed",
+      sku: "BED-2TP-01",
+      material: "16mm Lasani MDF frame with two-tone upholstery and leather strap accents",
+      care: CARE_VELVET,
+      height: "48",
+      description:
+        "Bed with a two-tone headboard — a cream center panel flanked by colored side wings, joined with brass-buckled leather straps — and a matching channel-tufted footboard. A layered, tailored king size bed for a modern bedroom.",
+      tags: ["two-tone bed", "panel bed", "strap accent bed", "king size bed", "modern bedroom"],
+      finishes: [
+        { name: "Brown",       images: ["Two-Tone Panel Bed/two-tone-panel-bed-brown-king-size-bed-1.png"] },
+        { name: "Taupe",       images: ["Two-Tone Panel Bed/two-tone-panel-bed-taupe-king-size-bed-1.png"] },
+        { name: "Beige",       images: ["Two-Tone Panel Bed/two-tone-panel-bed-beige-king-size-bed-1.png"] },
+        { name: "Dark Grey",   images: ["Two-Tone Panel Bed/two-tone-panel-bed-dark-grey-king-size-bed-1.png"] },
+        { name: "Olive Green", images: ["Two-Tone Panel Bed/two-tone-panel-bed-olive-green-king-size-bed-1.png"] },
+        { name: "Taupe Brown", images: ["Two-Tone Panel Bed/two-tone-panel-bed-taupe-brown-king-size-bed-1.png"] },
+      ],
+    },
   ]
 
   console.log(`Seeding ${beds.length} beds…`)

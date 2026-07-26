@@ -16,6 +16,7 @@ import { SocialSignals } from "@/components/product/social-signals"
 import { ShareButton } from "@/components/product/share-button"
 import type { Product } from "@/types"
 import { formatPrice } from "@/lib/utils"
+import { SIZE_VARIANT_WIDTH } from "@/lib/size-variants"
 import { WHATSAPP_NUMBER } from "@/lib/site-config"
 import { cn } from "@/lib/utils"
 import { useCartStore } from "@/lib/store"
@@ -99,6 +100,10 @@ export function ProductDetailClient({
 
   const tone = categoryTone[product.category.slug] ?? "linear-gradient(150deg,#3A6B57,#16352A)"
   const selectedVariant = product.variants[activeVariant]
+  // King/Queen/Single width is standard across every product offering these
+  // sizes — the product's own stored dimensions only need height/depth,
+  // which stay constant across sizes.
+  const variantWidth = selectedVariant ? SIZE_VARIANT_WIDTH[selectedVariant.size] : undefined
   const selectedFinish = product.finishes[activeFinish]
   // Switch the gallery to this finish's own photos, if any were uploaded
   // for it — otherwise keep showing the product's default photos.
@@ -369,7 +374,7 @@ export function ProductDetailClient({
                 <div className="flex items-center gap-4 px-4 py-3">
                   <span className="w-24 shrink-0 font-mono text-[10px] uppercase tracking-[1px] text-sage">Dimensions</span>
                   <span className="font-mono text-[12.5px] text-ink">
-                    {product.dimensions.width} × {product.dimensions.height} × {product.dimensions.depth} {product.dimensions.unit}
+                    {variantWidth ?? product.dimensions.width} × {product.dimensions.height} × {product.dimensions.depth} {product.dimensions.unit}
                   </span>
                 </div>
                 <div className="flex items-center gap-4 border-t border-border px-4 py-3">

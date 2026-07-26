@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { WARRANTY_SUMMARY } from "@/lib/site-config"
 
 export const metadata: Metadata = {
   title: "FAQ — Yousuf Living",
@@ -36,7 +37,7 @@ const faqs = [
   },
   {
     q: "What is the warranty?",
-    a: "5 years on structural defects. This covers joints, drawers, and similar issues under normal use. It does not cover scratches, stains, or water damage.",
+    a: WARRANTY_SUMMARY,
   },
   {
     q: "How do I care for my furniture?",

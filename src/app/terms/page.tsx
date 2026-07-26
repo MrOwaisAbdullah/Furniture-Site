@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { WARRANTY_LABEL } from "@/lib/site-config"
 
 export const metadata: Metadata = {
   title: "Terms & Conditions — Yousuf Living",
@@ -66,7 +67,7 @@ export default function TermsPage() {
           <section>
             <h2 className="mb-2 font-heading font-bold text-[16px] text-ink">Warranty</h2>
             <p>
-              Every piece of furniture comes with a 5 year warranty covering structural defects. This covers joints
+              Every piece of furniture comes with a {WARRANTY_LABEL} warranty covering structural defects. This covers joints
               failing under normal use, drawers that stop sliding, and similar issues. It does not cover scratches,
               stains, water damage, or cosmetic wear.
             </p>

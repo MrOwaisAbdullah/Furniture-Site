@@ -35,7 +35,7 @@ const categoryTones: Record<string, string> = {
 // anchor tile (big square); "decor" closes the grid as a wide banner.
 const BENTO_SPAN: Record<string, string> = {
   beds:  "lg:col-span-2 lg:row-span-2",
-  decor: "lg:col-span-2",
+  decor: "lg:col-span-4",
 }
 
 export function ShopByCategory({ categories }: { categories: Category[] }) {

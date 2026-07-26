@@ -1,22 +1,10 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import Link from "next/link"
-import Image from "next/image"
-import { formatPrice } from "@/lib/utils"
 import { SlidersHorizontal, X } from "lucide-react"
 import { PRICE_RANGES as PRICE_BRACKETS } from "@/lib/price-ranges"
-
-interface Product {
-  _id: string
-  name: string
-  slug: string
-  basePrice: number
-  salePrice?: number
-  category: { name: string; slug: string }
-  images?: string[] | null
-  featured?: boolean
-}
+import { ProductCard } from "@/components/product/product-card"
+import type { Product } from "@/types"
 
 interface PriceFilterProps {
   products: Product[]
@@ -118,7 +106,7 @@ export function PriceFilter({ products }: PriceFilterProps) {
         )}
       </p>
 
-      {/* Product grid - bento layout with proportional sizing */}
+      {/* Product grid — plain, uniform columns, same card used everywhere else on the site */}
       {filteredProducts.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-16 text-center">
           <p className="font-heading font-bold text-[17px] text-ink">No products in this range</p>
@@ -132,47 +120,10 @@ export function PriceFilter({ products }: PriceFilterProps) {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-4 auto-rows-fr">
-          {filteredProducts.map((product, index) => {
-            // Featured products span 2 columns, 2 rows for prominence
-            const isFeatured = product.featured
-            const isFirst = index === 0
-            const spanClass = (isFeatured || isFirst) ? "sm:col-span-2 sm:row-span-2" : ""
-
-            return (
-              <Link
-                key={product._id}
-                href={`/products/${product.slug}`}
-                className={`group relative overflow-hidden rounded-[16px] border border-border bg-white transition-all hover:shadow-lg ${spanClass}`}
-              >
-                <div className="relative h-full min-h-[200px]">
-                  {product.images && product.images[0] ? (
-                    <Image
-                      src={product.images[0]}
-                      alt={product.name}
-                      fill
-                      className="object-cover transition-transform duration-500 group-hover:scale-105"
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 33vw, 25vw"
-                    />
-                  ) : (
-                    <div
-                      className="h-full w-full"
-                      style={{ background: "linear-gradient(150deg,#e8e0d0,#d4caba)" }}
-                    />
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                </div>
-
-                <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                  <p className="font-mono text-[9px] uppercase tracking-[1.5px] text-bone/80">{product.category.name}</p>
-                  <p className="mt-1 font-heading font-bold text-[16px] leading-snug text-bone line-clamp-2">
-                    {product.name}
-                  </p>
-                  <p className="mt-2 font-mono text-[14px] font-bold text-gold">{formatPrice(product.salePrice || product.basePrice)}</p>
-                </div>
-              </Link>
-            )
-          })}
+        <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 lg:gap-5">
+          {filteredProducts.map((product) => (
+            <ProductCard key={product._id} product={product} />
+          ))}
         </div>
       )}
     </div>
