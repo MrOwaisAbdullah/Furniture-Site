@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
-import { getBundleBySlug } from "@/lib/sanity/queries"
+import { getBundleBySlug, getProductsByCategory } from "@/lib/sanity/queries"
 import { formatPrice } from "@/lib/utils"
 import { BundlePageClient } from "./bundle-page-client"
 
@@ -20,6 +20,8 @@ export default async function BundlePage({ params }: { params: Promise<{ set: st
   const { set: slug } = await params
   const bundle = await getBundleBySlug(slug)
   if (!bundle) notFound()
+
+  const decorProducts = await getProductsByCategory("decor")
 
   const firstFinish = bundle.finishNames[0]
   const sumIfSeparate = bundle.products.reduce((sum, p) => sum + (p.salePrice ?? p.basePrice), 0)
@@ -80,7 +82,7 @@ export default async function BundlePage({ params }: { params: Promise<{ set: st
 
       {/* Picker */}
       <div className="mx-auto max-w-6xl px-5 py-8 sm:px-8">
-        <BundlePageClient bundle={bundle} />
+        <BundlePageClient bundle={bundle} decorProducts={decorProducts} />
       </div>
     </div>
   )

@@ -31,7 +31,7 @@ export function FinishSwatch({ finishes, selected, onSelect, className }: Finish
             style={{ background: finish.colorCode }}
           />
           {/* Tooltip */}
-          <span className="pointer-events-none absolute -bottom-7 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-ink px-2 py-1 font-mono text-[9px] text-bone opacity-0 transition-opacity group-hover:opacity-100">
+          <span className="pointer-events-none absolute -bottom-7 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-md bg-ink px-2 py-1 font-mono text-[9px] text-bone opacity-0 transition-opacity group-hover:opacity-100">
             {finish.name}
           </span>
         </button>

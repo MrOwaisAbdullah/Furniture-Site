@@ -14,6 +14,7 @@ import { OrderSummarySidebar } from "@/components/checkout/order-summary-sidebar
 import { CheckoutUpsellModal } from "@/components/checkout/checkout-upsell-modal"
 import { trackEvent } from "@/lib/track-event"
 import { getCheckoutUpsells } from "@/lib/recommendations"
+import { ADVANCE_PERCENT } from "@/lib/site-config"
 import type { Product } from "@/types"
 
 const STEP_LABELS = ["Your details", "Delivery", "Review & advance", "Payment"]
@@ -65,7 +66,7 @@ export default function CheckoutPage() {
   )
 
   const finalTotal = Math.max(0, totalPrice - discount)
-  const advance = Math.round(finalTotal / 2)
+  const advance = Math.round(finalTotal * (ADVANCE_PERCENT / 100))
   const [showUpsell, setShowUpsell] = useState(false)
 
   useEffect(() => {
