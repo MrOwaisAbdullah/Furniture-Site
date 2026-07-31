@@ -26,6 +26,7 @@ export function ProductGallery({ images, name, tone, onSale }: ProductGalleryPro
   const [direction, setDirection] = useState(1)
   const [broken, setBroken] = useState<Record<number, boolean>>({})
   const [loaded, setLoaded] = useState<Record<number, boolean>>({})
+  const [imageAspectRatio, setImageAspectRatio] = useState<number | null>(null)
 
   const count = images.length
   const goTo = (i: number) => {
@@ -96,7 +97,11 @@ export function ProductGallery({ images, name, tone, onSale }: ProductGalleryPro
       {/* Main image — exactly one <Image> in the DOM at a time */}
       <div
         className="relative overflow-hidden rounded-2xl"
-        style={{ background: activeSrc ? undefined : tone, aspectRatio: "4/3", touchAction: "pan-y" }}
+        style={{
+          background: activeSrc ? undefined : tone,
+          aspectRatio: imageAspectRatio || "4/3",
+          touchAction: "pan-y"
+        }}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
@@ -123,7 +128,16 @@ export function ProductGallery({ images, name, tone, onSale }: ProductGalleryPro
                 fill
                 className="object-cover"
                 sizes={GALLERY_SIZES}
-                onLoad={() => setLoaded((l) => ({ ...l, [active]: true }))}
+                onLoad={(e) => {
+                  setLoaded((l) => ({ ...l, [active]: true }))
+                  // Set aspect ratio from first image
+                  if (active === 0 && !imageAspectRatio) {
+                    const img = e.target as HTMLImageElement
+                    if (img.naturalWidth && img.naturalHeight) {
+                      setImageAspectRatio(img.naturalWidth / img.naturalHeight)
+                    }
+                  }
+                }}
                 onError={() => setBroken((b) => ({ ...b, [active]: true }))}
               />
             )}

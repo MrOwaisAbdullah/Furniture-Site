@@ -62,6 +62,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
   const primaryImage = product.images[0] ?? product.finishes[0]?.images[0]
 
   const [imgError, setImgError] = useState(false)
+  const [imageAspectRatio, setImageAspectRatio] = useState<number | null>(null)
   const addItem = useCartStore((s) => s.addItem)
   const removeItem = useCartStore((s) => s.removeItem)
   const inCart = useCartStore((s) =>
@@ -137,7 +138,13 @@ export function ProductCard({ product, className }: ProductCardProps) {
         className="flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-white transition-all duration-300 group-hover:shadow-[0_12px_36px_-10px_rgba(22,53,42,.25)] group-hover:-translate-y-0.5"
       >
         {/* Image / gradient area */}
-        <div className="relative overflow-hidden" style={{ aspectRatio: "4/3", background: tone }}>
+        <div
+          className="relative overflow-hidden"
+          style={{
+            aspectRatio: imageAspectRatio || "4/3",
+            background: tone
+          }}
+        >
           {primaryImage && !imgError && (
             <Image
               src={primaryImage}
@@ -146,6 +153,12 @@ export function ProductCard({ product, className }: ProductCardProps) {
               className="object-cover transition-transform duration-500 group-hover:scale-105"
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               onError={() => setImgError(true)}
+              onLoad={(e) => {
+                const img = e.target as HTMLImageElement
+                if (img.naturalWidth && img.naturalHeight) {
+                  setImageAspectRatio(img.naturalWidth / img.naturalHeight)
+                }
+              }}
             />
           )}
 
@@ -360,6 +373,7 @@ export function ProductCardCompact({
   const price = formatPrice(compactCardPrice)
   const primaryImage = product.images[0]
   const [imgError, setImgError] = useState(false)
+  const [imageAspectRatio, setImageAspectRatio] = useState<number | null>(null)
 
   return (
     <Link
@@ -370,8 +384,11 @@ export function ProductCardCompact({
       )}
     >
       <div
-        className="relative h-24 overflow-hidden"
-        style={{ background: tone }}
+        className="relative overflow-hidden"
+        style={{
+          height: imageAspectRatio ? `${144 / imageAspectRatio}px` : "h-24",
+          background: tone
+        }}
       >
         {primaryImage && !imgError && (
           <Image
@@ -381,6 +398,12 @@ export function ProductCardCompact({
             className="object-cover transition-transform duration-400 group-hover:scale-105"
             sizes="144px"
             onError={() => setImgError(true)}
+            onLoad={(e) => {
+              const img = e.target as HTMLImageElement
+              if (img.naturalWidth && img.naturalHeight) {
+                setImageAspectRatio(img.naturalWidth / img.naturalHeight)
+              }
+            }}
           />
         )}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/20" />
