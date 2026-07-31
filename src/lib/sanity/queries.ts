@@ -48,7 +48,7 @@ export async function getProducts() {
 export async function getFeaturedProducts() {
   const [rows, sales] = await Promise.all([
     readClient.fetch<RawSanityProduct[]>(
-      `*[_type == "product" && featured == true && !(_id in path("drafts.**"))] | order(_createdAt desc) [0...6] { ${PRODUCT_PROJECTION} }`,
+      `*[_type == "product" && featured == true && !(_id in path("drafts.**"))] | order(_createdAt desc) [0...12] { ${PRODUCT_PROJECTION} }`,
       {},
       { next: { revalidate: 1800, tags: ["sanity", "product"] } }
     ),
