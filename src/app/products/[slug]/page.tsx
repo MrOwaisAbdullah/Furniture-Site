@@ -37,6 +37,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
   const pool = await withReviewRatings(await getProducts())
   const related = getRelatedProducts(product, pool, 4)
+  const rating = pool.find((p) => p.slug === product.slug)
 
   return (
     <>
@@ -46,6 +47,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         image={product.images[0] ?? ""}
         price={product.salePrice ?? product.basePrice}
         sku={product._id}
+        url={`https://yousufliving.pk/products/${product.slug}`}
+        rating={rating?.rating}
+        reviewCount={rating?.reviewCount}
       />
       <BreadcrumbJsonLd
         items={[

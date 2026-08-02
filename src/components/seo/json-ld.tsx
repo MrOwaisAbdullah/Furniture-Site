@@ -75,9 +75,9 @@ export function LocalBusinessJsonLd() {
         openingHoursSpecification: [
           {
             "@type": "OpeningHoursSpecification",
-            dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+            dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
             opens: "10:00",
-            closes: "21:00",
+            closes: "23:00",
           },
         ],
         priceRange: "$$",
@@ -95,6 +95,11 @@ interface ProductJsonLdProps {
   availability?: string
   sku?: string
   brand?: string
+  /** Real approved-review data — only pass when the product genuinely has reviews. */
+  rating?: number
+  reviewCount?: number
+  /** Absolute URL of the product page. */
+  url?: string
 }
 
 export function ProductJsonLd({
@@ -106,31 +111,87 @@ export function ProductJsonLd({
   availability = "https://schema.org/InStock",
   sku,
   brand = BUSINESS_NAME,
+  rating,
+  reviewCount,
+  url,
 }: ProductJsonLdProps) {
-  return (
-    <JsonLd
-      data={{
-        "@context": "https://schema.org",
-        "@type": "Product",
-        name,
-        description,
-        image,
-        sku,
-        brand: {
-          "@type": "Brand",
-          name: brand,
+  const offerUrl = url ?? `${BASE_URL}/shop`
+  const data: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name,
+    description,
+    image,
+    sku,
+    brand: {
+      "@type": "Brand",
+      name: brand,
+    },
+    offers: {
+      "@type": "Offer",
+      url: offerUrl,
+      priceCurrency: currency,
+      price: price,
+      availability: availability,
+      itemCondition: "https://schema.org/NewCondition",
+      // Merchant listings: return policy + shipping details (Google requires
+      // these on the Offer for merchant listing eligibility)
+      hasMerchantReturnPolicy: {
+        "@type": "MerchantReturnPolicy",
+        applicableCountry: "PK",
+        returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+        merchantReturnDays: 7,
+        returnMethod: "https://schema.org/ReturnByMail",
+        returnFees: "https://schema.org/FreeReturn",
+      },
+      shippingDetails: {
+        "@type": "OfferShippingDetails",
+        shippingDestination: {
+          "@type": "DefinedRegion",
+          addressCountry: "PK",
         },
-        offers: {
-          "@type": "Offer",
-          url: BASE_URL,
-          priceCurrency: currency,
-          price: price,
-          availability: availability,
-          itemCondition: "https://schema.org/NewCondition",
+        shippingRate: {
+          "@type": "MonetaryAmount",
+          value: 2000,
+          currency: "PKR",
         },
-      }}
-    />
-  )
+        shippingRateFreeThreshold: {
+          "@type": "MonetaryAmount",
+          value: 50000,
+          currency: "PKR",
+        },
+        deliveryTime: {
+          "@type": "ShippingDeliveryTime",
+          handlingTime: {
+            "@type": "QuantitativeValue",
+            minValue: 14,
+            maxValue: 21,
+            unitCode: "DAY",
+          },
+          transitTime: {
+            "@type": "QuantitativeValue",
+            minValue: 1,
+            maxValue: 5,
+            unitCode: "DAY",
+          },
+        },
+      },
+    },
+  }
+
+  // Real aggregate rating + review only when the product genuinely has
+  // approved reviews — never a fabricated/default number (Google policy).
+  if (typeof rating === "number" && typeof reviewCount === "number" && reviewCount > 0) {
+    data.aggregateRating = {
+      "@type": "AggregateRating",
+      ratingValue: Math.round(rating * 10) / 10,
+      reviewCount,
+      bestRating: 5,
+      worstRating: 1,
+    }
+  }
+
+  return <JsonLd data={data} />
 }
 
 interface BreadcrumbJsonLdProps {
