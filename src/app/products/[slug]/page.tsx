@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { getProductBySlug, getProducts } from "@/lib/sanity/queries"
 import { withReviewRatings } from "@/lib/reviews/apply-summaries"
+import { getApprovedReviewsByProduct } from "@/lib/neon/queries"
 import { getRelatedProducts } from "@/lib/recommendations"
 import { ProductJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld"
 import { ProductDetailClient } from "./product-detail-client"
@@ -38,6 +39,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const pool = await withReviewRatings(await getProducts())
   const related = getRelatedProducts(product, pool, 4)
   const rating = pool.find((p) => p.slug === product.slug)
+  const approvedReviews = await getApprovedReviewsByProduct(slug)
+  const saleActive =
+    typeof product.salePrice === "number" &&
+    typeof product.saleEndsAt === "string" &&
+    Date.parse(product.saleEndsAt) > Date.now()
 
   return (
     <>
@@ -48,8 +54,17 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         price={product.salePrice ?? product.basePrice}
         sku={product._id}
         url={`https://yousufliving.pk/products/${product.slug}`}
+        availability={
+          product.inStock ? "https://schema.org/InStock" : "https://schema.org/BackOrder"
+        }
+        priceValidUntil={saleActive ? product.saleEndsAt : undefined}
         rating={rating?.rating}
         reviewCount={rating?.reviewCount}
+        reviews={approvedReviews.slice(0, 3).map((r) => ({
+          name: r.name,
+          rating: r.rating,
+          body: r.body,
+        }))}
       />
       <BreadcrumbJsonLd
         items={[

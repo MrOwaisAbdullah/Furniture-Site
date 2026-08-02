@@ -92,14 +92,22 @@ interface ProductJsonLdProps {
   image: string
   price: number
   currency?: string
+  /** schema.org availability URL — pass explicitly from the product's real
+   * stock state (InStock for ready stock, BackOrder for made-to-order). */
   availability?: string
   sku?: string
   brand?: string
   /** Real approved-review data — only pass when the product genuinely has reviews. */
   rating?: number
   reviewCount?: number
+  /** Approved review content (visible on the product page) — top few, so
+   * Google can show individual review snippets. Never pass unapproved or
+   * fabricated reviews. */
+  reviews?: { name: string; rating: number; body: string }[]
   /** Absolute URL of the product page. */
   url?: string
+  /** Valid ISO date — only when a sale price is active and shown on the page. */
+  priceValidUntil?: string
 }
 
 export function ProductJsonLd({
@@ -113,7 +121,9 @@ export function ProductJsonLd({
   brand = BUSINESS_NAME,
   rating,
   reviewCount,
+  reviews,
   url,
+  priceValidUntil,
 }: ProductJsonLdProps) {
   const offerUrl = url ?? `${BASE_URL}/shop`
   const data: Record<string, unknown> = {
@@ -143,6 +153,7 @@ export function ProductJsonLd({
         merchantReturnDays: 7,
         returnMethod: "https://schema.org/ReturnByMail",
         returnFees: "https://schema.org/FreeReturn",
+        merchantReturnLink: `${BASE_URL}/returns`,
       },
       shippingDetails: {
         "@type": "OfferShippingDetails",
@@ -177,8 +188,14 @@ export function ProductJsonLd({
     },
   }
 
-  // Real aggregate rating + review only when the product genuinely has
-  // approved reviews — never a fabricated/default number (Google policy).
+  // Sale prices must carry a validity window so Google doesn't treat the
+  // discount as permanent — only when the sale is actually active.
+  if (priceValidUntil && Number.isFinite(Date.parse(priceValidUntil))) {
+    ;(data.offers as Record<string, unknown>).priceValidUntil = priceValidUntil
+  }
+
+  // Real aggregate rating only when the product genuinely has approved
+  // reviews — never a fabricated/default number (Google policy).
   if (typeof rating === "number" && typeof reviewCount === "number" && reviewCount > 0) {
     data.aggregateRating = {
       "@type": "AggregateRating",
@@ -187,6 +204,26 @@ export function ProductJsonLd({
       bestRating: 5,
       worstRating: 1,
     }
+  }
+
+  // Individual reviews, matching what's visible on the page — enables
+  // Google's review snippets. Requires: itemReviewed, reviewRating, author.
+  if (reviews && reviews.length > 0) {
+    data.review = reviews.slice(0, 3).map((r) => ({
+      "@type": "Review",
+      itemReviewed: { "@type": "Product", name },
+      reviewRating: {
+        "@type": "Rating",
+        ratingValue: r.rating,
+        bestRating: 5,
+        worstRating: 1,
+      },
+      author: {
+        "@type": "Person",
+        name: r.name,
+      },
+      ...(r.body ? { reviewBody: r.body } : {}),
+    }))
   }
 
   return <JsonLd data={data} />
