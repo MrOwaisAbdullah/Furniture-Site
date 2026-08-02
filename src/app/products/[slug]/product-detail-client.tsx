@@ -388,6 +388,12 @@ export function ProductDetailClient({
                   <span className="w-24 shrink-0 font-mono text-[10px] uppercase tracking-[1px] text-sage">Material</span>
                   <span className="font-mono text-[12.5px] text-ink">{product.material}</span>
                 </div>
+                {product.category.slug === "beds" && (
+                  <div className="flex items-center gap-4 border-t border-border px-4 py-3">
+                    <span className="w-24 shrink-0 font-mono text-[10px] uppercase tracking-[1px] text-sage">Note</span>
+                    <span className="font-mono text-[12.5px] text-ink">Delivered without mattress</span>
+                  </div>
+                )}
               </div>
             </div>
 

@@ -116,6 +116,9 @@ export function BundlePageClient({ bundle, decorProducts }: { bundle: Bundle; de
                 </li>
               ))}
             </ul>
+            {bundle.products.some((p) => p.category.slug === "beds") && (
+              <p className="mt-3 font-mono text-[11px] text-sage">Note: delivered without mattress</p>
+            )}
           </div>
         </div>
 

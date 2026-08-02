@@ -150,14 +150,12 @@ export function ProductJsonLd({
           "@type": "DefinedRegion",
           addressCountry: "PK",
         },
+        // Charges depend on location and the items ordered (furniture is
+        // heavy) — Rs 3,000 is the starting rate, quoted per order on
+        // WhatsApp. Only the minimum is exposed to Google.
         shippingRate: {
           "@type": "MonetaryAmount",
-          value: 2000,
-          currency: "PKR",
-        },
-        shippingRateFreeThreshold: {
-          "@type": "MonetaryAmount",
-          value: 50000,
+          value: 3000,
           currency: "PKR",
         },
         deliveryTime: {

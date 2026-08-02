@@ -18,8 +18,9 @@ export default function ShippingPage() {
           <section>
             <h2 className="mb-2 font-heading font-bold text-[16px] text-ink">Karachi delivery</h2>
             <p>
-              We deliver across Karachi with our own team. Orders above Rs 50,000 ship free. Smaller orders cost
-              Rs 2,000 flat. Once your piece is ready, we call to find a time that works, then WhatsApp you again
+              We deliver across Karachi with our own team. Delivery charges depend on your location and the items
+              you order — furniture is heavy, so charges start from Rs 3,000 and go up for bigger or heavier
+              pieces. Once your piece is ready, we call to find a time that works, then WhatsApp you again
               when we are on the way.
             </p>
             <p className="mt-2">
@@ -53,6 +54,14 @@ export default function ShippingPage() {
               Our crew brings the piece into your room and drops it where you want. They also haul away the
               packaging. If you spot damage during delivery, tell the driver right away and snap a few photos.
               We will fix it.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="mb-2 font-heading font-bold text-[16px] text-ink">Mattresses</h2>
+            <p>
+              Beds and bed sets are delivered without a mattress — the bed frame comes with its slat base ready
+              for any mattress. We can point you to a mattress that fits on WhatsApp if you like.
             </p>
           </section>
 
