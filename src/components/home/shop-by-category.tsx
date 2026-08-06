@@ -14,11 +14,19 @@ import { useReducedMotion } from "@/lib/use-reduced-motion"
 // dedicated category shot is added there too.
 const CAT_IMAGES: Record<string, string> = {
   "bedroom-sets":    "/assets/ashcombe-bedroom-set.png",
-  beds:              "/assets/Cloude-boucle-bed-Offwhite.png",
-  "dressing-tables": "/assets/cloud-mirror-vanity-white-dressing-table-mirror-2.png",
-  wardrobes:         "https://cdn.sanity.io/images/nelnbkzg/production/5bf8a7ca14d9ade0148691ee5930d213fc939f5e-1402x1122.png",
+  beds:              "/assets/wooden-bed-furniture-karachi.png",
+  "dressing-tables": "/assets/dressing-table-vanity-furniture-karachi.png",
+  wardrobes:         "/assets/wooden-wardrobe-furniture-karachi.png",
   "side-tables":     "/assets/marble-top-ribbed-nightstand-round-beige-nightstand-2.png",
   decor:             "/assets/channel-storage-bench-light-blue-storage-bench-decor-accent.png",
+}
+
+// Square mobile crops of the same product photos — used below the lg
+// breakpoint where cards are shorter (120px) and 2-per-row.
+const CAT_IMAGES_MOBILE: Record<string, string> = {
+  beds:              "/assets/wooden-bed-furniture-karachi-mobile.png",
+  "dressing-tables": "/assets/dressing-table-vanity-furniture-karachi-mobile.png",
+  wardrobes:         "/assets/wooden-wardrobe-furniture-karachi-mobile.png",
 }
 
 const categoryTones: Record<string, string> = {
@@ -64,6 +72,7 @@ export function ShopByCategory({ categories }: { categories: Category[] }) {
       <div className="grid grid-cols-2 gap-3 sm:gap-3.5 lg:grid-cols-4 lg:auto-rows-[150px] lg:grid-flow-dense lg:gap-4">
         {categories.map((cat, i) => {
           const img = CAT_IMAGES[cat.slug]
+          const imgMobile = CAT_IMAGES_MOBILE[cat.slug] ?? img
           const tone = categoryTones[cat.slug] ?? "linear-gradient(135deg,#16352A,#0c231b)"
           // On the 2-col mobile grid, an odd-numbered last card would be
           // left alone in its row with an empty cell beside it — span it
@@ -85,14 +94,23 @@ export function ShopByCategory({ categories }: { categories: Category[] }) {
                 className="group relative flex h-[120px] flex-col justify-end overflow-hidden rounded-[14px] p-3.5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_32px_-8px_rgba(22,53,42,.3)] lg:h-full"
                 style={{ background: tone }}
               >
-                {img && (
-                  <Image
-                    src={img}
-                    alt={`${cat.name} — browse ${cat.name.toLowerCase()} collection`}
-                    fill
-                    className="object-cover opacity-90 transition-transform duration-500 group-hover:scale-105"
-                    sizes="(max-width: 1024px) 50vw, 20vw"
-                  />
+                {img && imgMobile && (
+                  <>
+                    <Image
+                      src={img}
+                      alt={`${cat.name} — browse ${cat.name.toLowerCase()} collection`}
+                      fill
+                      className="hidden object-cover opacity-90 transition-transform duration-500 group-hover:scale-105 lg:block"
+                      sizes="(max-width: 1024px) 50vw, 20vw"
+                    />
+                    <Image
+                      src={imgMobile}
+                      alt={`${cat.name} — browse ${cat.name.toLowerCase()} collection`}
+                      fill
+                      className="object-cover opacity-90 transition-transform duration-500 group-hover:scale-105 lg:hidden"
+                      sizes="(max-width: 1024px) 50vw, 20vw"
+                    />
+                  </>
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/5 to-transparent" />
 

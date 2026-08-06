@@ -17,7 +17,7 @@ import { ShareButton } from "@/components/product/share-button"
 import type { Product } from "@/types"
 import { formatPrice } from "@/lib/utils"
 import { SIZE_VARIANT_WIDTH } from "@/lib/size-variants"
-import { WHATSAPP_NUMBER, ADVANCE_LABEL } from "@/lib/site-config"
+import { WHATSAPP_NUMBER, ADVANCE_LABEL, waLink } from "@/lib/site-config"
 import { cn } from "@/lib/utils"
 import { useCartStore } from "@/lib/store"
 import { wishlistClient } from "@/lib/wishlist-client"
@@ -352,6 +352,23 @@ export function ProductDetailClient({
                   )}
                 </div>
               )}
+
+              {/* More finishes available */}
+              <div className="flex items-start gap-2.5 rounded-[10px] border border-gold/25 bg-gold/8 px-3.5 py-3">
+                <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-gold-700" strokeWidth={2.25} />
+                <p className="text-[12.5px] leading-[1.6] text-slate">
+                  There are many more color and finish options than listed here —{" "}
+                  <a
+                    href={waLink(`Hi, I'm interested in the ${product.name}.`)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-bold text-forest underline decoration-forest/30 underline-offset-2 transition-colors hover:text-forest/80"
+                  >
+                    WhatsApp us
+                  </a>{" "}
+                  for the full list.
+                </p>
+              </div>
 
               {/* Size / configuration variant */}
               {product.variants.length > 1 && (
