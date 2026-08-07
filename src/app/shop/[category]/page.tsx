@@ -14,7 +14,14 @@ export async function generateMetadata({
   const { category } = await params
   const categories = await getCategories()
   const cat = categories.find((c) => c.slug === category)
-  if (!cat) return {}
+  // Missing category → real 404. noindex so Google drops it cleanly rather
+  // than holding it as a Soft 404 with the homepage title.
+  if (!cat) {
+    return {
+      title: "Page not found",
+      robots: { index: false, follow: false },
+    }
+  }
 
   return {
     title: `${cat.name} — Shop`,

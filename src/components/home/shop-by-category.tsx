@@ -13,20 +13,22 @@ import { useReducedMotion } from "@/lib/use-reduced-motion"
 // photo (still our real product, just not in public/assets) until a
 // dedicated category shot is added there too.
 const CAT_IMAGES: Record<string, string> = {
-  "bedroom-sets":    "/assets/ashcombe-bedroom-set.png",
+  "bedroom-sets":    "/assets/wooden-bedroom-set-furniture-karachi.png",
   beds:              "/assets/wooden-bed-furniture-karachi.png",
   "dressing-tables": "/assets/dressing-table-vanity-furniture-karachi.png",
   wardrobes:         "/assets/wooden-wardrobe-furniture-karachi.png",
-  "side-tables":     "/assets/marble-top-ribbed-nightstand-round-beige-nightstand-2.png",
+  "side-tables":     "/assets/wooden-side-table-furniture-karachi.png",
   decor:             "/assets/wooden-decor-furniture-karachi.png",
 }
 
 // Square mobile crops of the same product photos — used below the lg
 // breakpoint where cards are shorter (120px) and 2-per-row.
 const CAT_IMAGES_MOBILE: Record<string, string> = {
+  "bedroom-sets":    "/assets/wooden-bedroom-set-furniture-karachi-mobile.png",
   beds:              "/assets/wooden-bed-furniture-karachi-mobile.png",
   "dressing-tables": "/assets/dressing-table-vanity-furniture-karachi-mobile.png",
   wardrobes:         "/assets/wooden-wardrobe-furniture-karachi-mobile.png",
+  "side-tables":     "/assets/wooden-side-table-furniture-karachi-mobile.png",
 }
 
 const categoryTones: Record<string, string> = {

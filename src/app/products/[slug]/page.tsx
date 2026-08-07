@@ -11,7 +11,14 @@ import { BUSINESS_NAME } from "@/lib/site-config"
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
   const product = await getProductBySlug(slug)
-  if (!product) return {}
+  // Missing product → real 404. Mark noindex so Google drops it instead of
+  // treating a "200 + homepage title" page as a Soft 404 that lingers.
+  if (!product) {
+    return {
+      title: "Page not found",
+      robots: { index: false, follow: false },
+    }
+  }
   const price = product.salePrice ?? product.basePrice
   return {
     title: product.name,
