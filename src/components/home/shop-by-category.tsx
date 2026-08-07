@@ -18,7 +18,7 @@ const CAT_IMAGES: Record<string, string> = {
   "dressing-tables": "/assets/dressing-table-vanity-furniture-karachi.png",
   wardrobes:         "/assets/wooden-wardrobe-furniture-karachi.png",
   "side-tables":     "/assets/marble-top-ribbed-nightstand-round-beige-nightstand-2.png",
-  decor:             "/assets/channel-storage-bench-light-blue-storage-bench-decor-accent.png",
+  decor:             "/assets/wooden-decor-furniture-karachi.png",
 }
 
 // Square mobile crops of the same product photos — used below the lg
@@ -79,6 +79,16 @@ export function ShopByCategory({ categories }: { categories: Category[] }) {
           // full width instead. Desktop's bento spans (below) take over there.
           const isLastOfOddRow = i === categories.length - 1 && categories.length % 2 === 1
           const bentoSpan = BENTO_SPAN[cat.slug]
+          // Match the rendered tile width so the image optimizer fetches a
+          // big enough source (a too-small `sizes` → upscaled, blurry tiles):
+          // decor is a full-width banner, beds is a 2-col tile, the rest are
+          // 1-col on the desktop 4-col grid.
+          const imgSizes =
+            cat.slug === "decor"
+              ? "(max-width: 1024px) 100vw, 95vw"
+              : cat.slug === "beds"
+                ? "(max-width: 1024px) 50vw, 48vw"
+                : "(max-width: 1024px) 50vw, 22vw"
 
           return (
             <motion.div
@@ -101,7 +111,7 @@ export function ShopByCategory({ categories }: { categories: Category[] }) {
                       alt={`${cat.name} — browse ${cat.name.toLowerCase()} collection`}
                       fill
                       className="hidden object-cover opacity-90 transition-transform duration-500 group-hover:scale-105 lg:block"
-                      sizes="(max-width: 1024px) 50vw, 20vw"
+                      sizes={imgSizes}
                     />
                     <Image
                       src={imgMobile}
