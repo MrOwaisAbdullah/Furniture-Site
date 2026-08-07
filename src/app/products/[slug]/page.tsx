@@ -28,6 +28,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       description: product.description,
       images: [product.images[0] ?? ""],
     },
+    alternates: {
+      canonical: `https://yousufliving.pk/products/${slug}`,
+    },
   }
 }
 

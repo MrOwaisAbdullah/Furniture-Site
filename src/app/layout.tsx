@@ -51,6 +51,20 @@ export const metadata: Metadata = {
     `Workshop-built bedroom sets, fairly priced. Beds, wardrobes, dressing tables and complete sets — made to order in ${ADDRESS_CITY}.`,
   keywords: ["furniture", "Karachi", "Pakistani furniture", "bedroom sets", "workshop furniture", "shaadi furniture"],
   manifest: "/manifest.json",
+  // Make indexability explicit at the root so every page inherits a clear
+  // "index, follow" directive — rather than relying on the absence of a
+  // noindex tag. (Admin/checkout/etc. can still override per-route.)
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
   icons: {
     icon: [
       { url: "/assets/icon-192.png", sizes: "192x192", type: "image/png" },
