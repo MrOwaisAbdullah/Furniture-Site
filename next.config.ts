@@ -22,11 +22,11 @@ const nextConfig: NextConfig = {
     ]
   },
   images: {
-    // Next 16 requires an explicit allowlist; restricting it to just 90
-    // means every <Image> that doesn't set its own `quality` prop (they
-    // default internally to 75) gets coerced up to this one allowed value —
-    // a sitewide sharpness bump without touching every call site.
-    qualities: [90],
+    // Custom loader: transforms are delegated to the origin CDNs
+    // (Sanity / Unsplash) via URL params instead of Vercel's optimizer,
+    // keeping free-tier Image Optimization usage at ~0.
+    loader: "custom",
+    loaderFile: "./src/lib/image-loader.ts",
     remotePatterns: [
       {
         protocol: "https",
