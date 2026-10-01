@@ -7,7 +7,7 @@ import { formatPrice } from "@/lib/utils"
 export const dynamic = "force-dynamic"
 
 export default async function AdminProductsPage() {
-  const products = await getProducts()
+  const products = await getProducts({ includeInactive: true })
 
   return (
     <div className="p-6">
@@ -47,7 +47,12 @@ export default async function AdminProductsPage() {
                     </div>
                     <div className="min-w-0">
                       <p className="font-heading font-bold text-[13.5px] text-ink truncate">{p.name}</p>
-                      <p className="mt-0.5 font-mono text-[10.5px] text-sage">{p.category.name}</p>
+                      <p className="mt-0.5 font-mono text-[10.5px] text-sage">
+                        {p.category.name}
+                        {p.active === false && (
+                          <span className="ml-1.5 rounded bg-error/10 px-1.5 py-0.5 font-semibold text-error">Inactive</span>
+                        )}
+                      </p>
                     </div>
                   </div>
                 </td>

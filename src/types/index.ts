@@ -18,6 +18,9 @@ export interface Product {
   careInstructions: string;
   images: string[];
   featured: boolean;
+  /** Storefront visibility toggle from the Sanity product schema — false only
+   * when explicitly switched off; a missing field counts as active. */
+  active: boolean;
   inStock: boolean;
   stockCount: number;
   sku: string;

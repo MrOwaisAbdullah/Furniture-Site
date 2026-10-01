@@ -37,6 +37,7 @@ export interface RawSanityProduct {
   stockCount?: number | null
   inStock?: boolean | null
   featured?: boolean | null
+  active?: boolean | null
   bundleCoversCategories?: string[] | null
   images?: string[] | null
   finishes?: RawSanityFinish[] | null
@@ -188,6 +189,7 @@ export function mapSanityProduct(raw: RawSanityProduct, activeSales: RawSanitySa
     careInstructions: raw.careInstructions ?? "",
     images: raw.images ?? [],
     featured: raw.featured ?? false,
+    active: raw.active !== false,
     inStock: raw.inStock ?? true,
     stockCount: raw.stockCount ?? 0,
     sku: raw.sku ?? "",

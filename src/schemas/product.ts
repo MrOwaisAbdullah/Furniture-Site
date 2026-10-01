@@ -9,6 +9,7 @@ export const product = {
   title: "Product",
   type: "document",
   fields: [
+    { name: "active",      type: "boolean",  title: "Active",      initialValue: true, description: "Turn this off to hide the product from the whole storefront (shop, search, category pages, related) without deleting it. Inactive products stay editable here." },
     { name: "name",        type: "string",   title: "Name",        validation: (R: { required: () => unknown }) => R.required() },
     { name: "slug",        type: "slug",     title: "Slug",        options: { source: "name" }, validation: (R: { required: () => unknown }) => R.required() },
     { name: "category",    type: "reference", title: "Category",   to: [{ type: "category" }], validation: (R: { required: () => unknown }) => R.required() },
@@ -103,6 +104,13 @@ export const product = {
     },
   ],
   preview: {
-    select: { title: "name", subtitle: "category.name", media: "images.0" },
+    select: { title: "name", subtitle: "category.name", media: "images.0", active: "active" },
+    prepare(selection: { title?: string; subtitle?: string; media?: never; active?: boolean }) {
+      return {
+        title: selection.title,
+        subtitle: selection.active === false ? `Inactive · ${selection.subtitle ?? ""}` : selection.subtitle,
+        media: selection.media,
+      }
+    },
   },
 }

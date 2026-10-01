@@ -21,6 +21,7 @@ function toCardProduct(item: RecentlyViewedItem): Product {
     material: "",
     careInstructions: "",
     featured: false,
+    active: true,
     inStock: true,
     stockCount: 0,
     sku: "",

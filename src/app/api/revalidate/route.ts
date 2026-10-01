@@ -7,7 +7,7 @@ import { isValidSignature, SIGNATURE_HEADER_NAME } from "@sanity/webhook"
 // Configure in sanity.io/manage → API → Webhooks:
 //   • URL:     https://yousufliving.pk/api/revalidate
 //   • Trigger: Create, Update, Delete
-//   • Filter:  _type in ["product", "category", "sale", "blogPost", "siteSettings", "promoPopup"]
+//   • Filter:  _type in ["product", "category", "sale", "blogPost", "siteSettings", "promoPopup", "bundle"]
 //   • Projection: { _type, "slug": slug.current }
 //   • Secret:  same value as SANITY_REVALIDATE_SECRET below
 //
@@ -51,16 +51,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Missing _type" }, { status: 400 })
   }
 
-  // Always purge the type-level tag; add the specific-document tag when a slug
-  // is present so single-item pages (product/category/blog detail) refresh too.
-  const tags = new Set<string>([_type])
+  // Always purge the umbrella `sanity` tag (every query carries it, so a
+  // future query tagged only `sanity` can never be silently stale) plus the
+  // type-level tag; add the specific-document tag when a slug is present so
+  // single-item pages (product/category/blog detail) refresh too.
+  const tags = new Set<string>(["sanity", _type])
   if (slug) tags.add(`${_type}:${slug}`)
 
-  // A product/category/sale change can shift computed prices and listings that
-  // read the shared product pool, so purge product + category alongside it.
+  // A product/category/sale change can shift computed prices, category
+  // product counts, and listings that read the shared product pool — and
+  // bundle pages embed full product projections + sale-resolved prices —
+  // so purge product + category + bundle alongside it.
   if (_type === "product" || _type === "category" || _type === "sale") {
     tags.add("product")
     tags.add("category")
+    tags.add("bundle")
   }
 
   // Next 16: route handlers pass "max" to purge immediately (updateTag is

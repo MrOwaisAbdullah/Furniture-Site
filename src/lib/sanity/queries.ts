@@ -9,13 +9,19 @@ import {
 const PRODUCT_PROJECTION = `
   _id, name, "slug": slug.current,
   category->{_id, name, "slug": slug.current, description, "image": image.asset->url},
-  basePrice, compareAtPrice, sku, stockCount, inStock, featured, bundleCoversCategories,
+  basePrice, compareAtPrice, sku, stockCount, inStock, featured, active, bundleCoversCategories,
   "images": images[].asset->url,
   finishes[]{ _key, name, priceModifier, "images": images[].asset->url },
   variants[]{ _key, size, priceModifier },
   dimensions, material, description, careInstructions, tags,
   "_createdAt": _createdAt, "_updatedAt": _updatedAt
 `
+
+// Visibility filter for every storefront product query: a product is live
+// unless explicitly switched off in Studio. Deliberately `!= false` (not
+// `== true`) so docs written by the seed scripts (createOrReplace without an
+// `active` field) keep counting as live instead of silently vanishing.
+const VISIBLE = `active != false &&`
 
 // ── Sales ─────────────────────────────────────────────────────────────────────
 
@@ -33,10 +39,11 @@ async function getActiveSales(): Promise<RawSanitySale[]> {
 
 // ── Products ──────────────────────────────────────────────────────────────────
 
-export async function getProducts() {
+export async function getProducts({ includeInactive = false }: { includeInactive?: boolean } = {}) {
+  const visibility = includeInactive ? "" : `${VISIBLE} `
   const [rows, sales] = await Promise.all([
     readClient.fetch<RawSanityProduct[]>(
-      `*[_type == "product" && !(_id in path("drafts.**"))] | order(_createdAt desc) { ${PRODUCT_PROJECTION} }`,
+      `*[_type == "product" && ${visibility}!(_id in path("drafts.**"))] | order(_createdAt desc) { ${PRODUCT_PROJECTION} }`,
       {},
       { next: { revalidate: 3600, tags: ["sanity", "product"] } }
     ),
@@ -48,7 +55,7 @@ export async function getProducts() {
 export async function getFeaturedProducts() {
   const [rows, sales] = await Promise.all([
     readClient.fetch<RawSanityProduct[]>(
-      `*[_type == "product" && featured == true && !(_id in path("drafts.**"))] | order(_createdAt desc) [0...12] { ${PRODUCT_PROJECTION} }`,
+      `*[_type == "product" && ${VISIBLE} featured == true && !(_id in path("drafts.**"))] | order(_createdAt desc) [0...12] { ${PRODUCT_PROJECTION} }`,
       {},
       { next: { revalidate: 1800, tags: ["sanity", "product"] } }
     ),
@@ -60,7 +67,7 @@ export async function getFeaturedProducts() {
 export async function getProductBySlug(slug: string) {
   const [row, sales] = await Promise.all([
     readClient.fetch<RawSanityProduct | null>(
-      `*[_type == "product" && slug.current == $slug && !(_id in path("drafts.**"))][0] { ${PRODUCT_PROJECTION} }`,
+      `*[_type == "product" && ${VISIBLE} slug.current == $slug && !(_id in path("drafts.**"))][0] { ${PRODUCT_PROJECTION} }`,
       { slug },
       { next: { revalidate: 3600, tags: ["sanity", "product", `product:${slug}`] } }
     ),
@@ -72,7 +79,7 @@ export async function getProductBySlug(slug: string) {
 export async function getProductsByCategory(categorySlug: string) {
   const [rows, sales] = await Promise.all([
     readClient.fetch<RawSanityProduct[]>(
-      `*[_type == "product" && category->slug.current == $categorySlug && !(_id in path("drafts.**"))] | order(_createdAt desc) { ${PRODUCT_PROJECTION} }`,
+      `*[_type == "product" && ${VISIBLE} category->slug.current == $categorySlug && !(_id in path("drafts.**"))] | order(_createdAt desc) { ${PRODUCT_PROJECTION} }`,
       { categorySlug },
       { next: { revalidate: 3600, tags: ["sanity", "product", "category", `category:${categorySlug}`] } }
     ),
@@ -88,7 +95,7 @@ export async function getCategories() {
     `*[_type == "category" && !(_id in path("drafts.**"))] | order(order asc) {
       _id, name, "slug": slug.current, description,
       "image": image.asset->url,
-      "productCount": count(*[_type == "product" && references(^._id)])
+      "productCount": count(*[_type == "product" && ${VISIBLE} references(^._id)])
     }`,
     {},
     { next: { revalidate: 3600, tags: ["sanity", "category"] } }
@@ -133,10 +140,14 @@ const BUNDLE_PROJECTION = `
   "variantOverrides": variantOverrides[]{ "productId": product._ref, variantSize }
 `
 
+// A bundle's price is a flat price for the whole set, so it's only
+// sellable while every piece in it is still live — hide the entire bundle
+// when any referenced product is switched off (`active == false`), rather
+// than showing a set that's missing a piece at the same price.
 export async function getBundles() {
   const [rows, sales] = await Promise.all([
     readClient.fetch<RawSanityBundle[]>(
-      `*[_type == "bundle" && active == true && count(products) > 0] | order(_createdAt desc) { ${BUNDLE_PROJECTION} }`,
+      `*[_type == "bundle" && active == true && count(products) > 0 && count(products[@->active == false]) == 0] | order(_createdAt desc) { ${BUNDLE_PROJECTION} }`,
       {},
       { next: { revalidate: 3600, tags: ["sanity", "bundle"] } }
     ),
@@ -148,7 +159,7 @@ export async function getBundles() {
 export async function getBundleBySlug(slug: string) {
   const [row, sales] = await Promise.all([
     readClient.fetch<RawSanityBundle | null>(
-      `*[_type == "bundle" && slug.current == $slug && active == true][0] { ${BUNDLE_PROJECTION} }`,
+      `*[_type == "bundle" && slug.current == $slug && active == true && count(products[@->active == false]) == 0][0] { ${BUNDLE_PROJECTION} }`,
       { slug },
       { next: { revalidate: 3600, tags: ["sanity", "bundle", `bundle:${slug}`] } }
     ),
